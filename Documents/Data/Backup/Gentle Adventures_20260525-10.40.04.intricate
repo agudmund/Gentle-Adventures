@@ -1,0 +1,32 @@
+{
+  "version": "1.0",
+  "description": "",
+  "description_signature": null,
+  "nodes": [
+    {
+      "node_id": 0,
+      "node_type": "about",
+      "title": "Note",
+      "uuid": "8c9cc57909794f318b17b03316a1c221",
+      "x": -231.1806706699544,
+      "y": -7.597486829529089,
+      "width": 168.0,
+      "height": 29.0,
+      "z_value": -9.999,
+      "ports_visible": false,
+      "shelf_visible": false,
+      "label": "Becoming Yours",
+      "depth_front": false,
+      "node_tint": ""
+    }
+  ],
+  "connections": [],
+  "viewport": {
+    "camera_x": 20.621749965864524,
+    "camera_y": 161.7179339428319,
+    "camera_zoom": 0.9213573063125589
+  },
+  "ui_migrations": [],
+  "last_browse_dirs": {},
+  "checksum": "eaa4d174697d5922"
+}
