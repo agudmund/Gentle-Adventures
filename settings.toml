@@ -1,0 +1,21 @@
+# Gentle Adventures — local settings for the NPU adventure
+# Live theme/window values live here. The Gemini API key is resolved at
+# runtime from environment variables (GEMINI_API_KEY or
+# SingleSharedBraincell_GeminiKey) — never written to this file.
+
+[window]
+title = "Gentle Adventures"
+width = 960
+height = 1080
+
+[gemini]
+# Active model for live scene image generation.
+# Swap if Google renames the model — keep the path syntax.
+model = "gemini-2.5-flash-image-preview"
+
+[paths]
+scenes_dir = "scenes"
+
+[game]
+# Persisted resume point — the launcher reads this on startup.
+last_scene = ""

@@ -3,3 +3,8 @@ __pycache__/
 .env
 *.log
 logs/
+
+# Local secrets and runtime state — never commit
+.gemini_key
+.gemini_model
+scenes/*.png
