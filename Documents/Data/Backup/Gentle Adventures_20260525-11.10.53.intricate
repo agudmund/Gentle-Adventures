@@ -1,14 +1,17 @@
 {
   "version": "1.0",
-  "description": "Just a single blank note sitting on the canvas \u2014 looks like you're just getting started",
+  "description": "Just a git status and a little note keeping each other company \u2014 feels like the very start of something",
   "description_signature": {
-    "n_nodes": 1,
+    "n_nodes": 2,
     "n_edges": 0,
     "density": 0.0,
     "type_hist": {
-      "about": 1.0
+      "git": 0.5,
+      "about": 0.5
     },
     "tag_bag": [
+      "git",
+      "status",
       "note",
       "becoming",
       "yours"
