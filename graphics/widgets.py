@@ -28,6 +28,7 @@ from graphics.Theme import Theme
 from pretty_widgets.graphics.Theme import Theme as Fam
 from pretty_widgets.utils.fonts import chandler42
 from pretty_widgets.PrettyTooltip import install_tooltip
+from pretty_widgets.PrettyCombo import combo as pretty_combo
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -36,69 +37,71 @@ from pretty_widgets.PrettyTooltip import install_tooltip
 
 
 class TitleBar(QWidget):
-    """The family-signature frameless title strip — ported from Intricate.
+    """Family-signature frameless titlebar — absolute-positioned to match
+    Intricate / The Majestic.
 
-    Layout:  [ ✦ curtains | (infobar lives here) | centered title | – □ ✕ ]
+    Layout (left → right):
+        [ PrettyCombo "Gentle Adventures" | ✦ curtains | InfoBar typewriter … | – □ ✕ ]
 
-    Brand/curtains button rolls the window up into this strip and back out;
-    minimize / maximize / exid controls on the right; drag anywhere to move;
-    double-click the LEFT half to toggle fullscreen (kept off the right so it
-    never clashes with the control cluster — same reasoning as Intricate's
-    hidden gesture). The OS titlebar is hidden, so this bar is the only handle.
+    Children are placed by counting pixels from the LEFT edge (combo at
+    _COMBO_X, curtains right of it) — the family technique that lands cleanly,
+    instead of Qt auto-centering which never does. min/max/exid are pinned to
+    the right edge; the InfoBar typewriter fills the gap. Drag anywhere to move;
+    double-click the left half toggles fullscreen. OS titlebar hidden, so this
+    is the only handle.
     """
 
     curtains_clicked = Signal()    # roll up into the strip / expand back out
 
-    # Family-consistent proportions from the shared Theme: thin bar, small
-    # square controls. _BAR_H tracks handleHeightTop, nudged up just enough that
-    # the Chandler42 title isn't clipped. Trivially tunable.
+    # Family-consistent proportions from the shared Theme.
     _BAR_H = max(Fam.handleHeightTop, Fam.titleFontSize + 8)
     _BTN_W = _BAR_H
+    _GAP   = Fam.toolbarBtnGap
+    # Fixed pixel offset from the left for the combo (the family's toolbarTitleX
+    # trick — deterministic, no auto-centering). Tuned for GA's 960px default;
+    # nudge this one number to slide the combo + curtains cluster left/right.
+    _COMBO_X = 360
+    _COMBO_W = 172
 
     def __init__(self):
         super().__init__()
         self.setFixedHeight(self._BAR_H)
         self.setStyleSheet(f"background-color: {Fam.windowBg};")
 
-        # ── brand / curtains button (far left) ──
+        # ── center: single-entry PrettyCombo faking a project selector — the
+        #    same look-and-feel trick The Majestic uses ──
+        self._combo = pretty_combo()
+        self._combo.addItem("Gentle Adventures")
+        self._combo.setParent(self)
+        self._combo.setFixedWidth(self._COMBO_W)
+
+        # ── brand / curtains button ──
         self._btn_curtains = self._control(
             "✦", self.curtains_clicked.emit, accent=True,
             tooltip="Roll the window up into this strip — click again to expand",
         )
+        self._btn_curtains.setParent(self)
 
-        # InfoBar / title — Chandler42 script-italic in lombardi-lake teal, the
-        # family's headline treatment. set_title() types it out char-by-char
-        # (the "infobar typing speed"), so a scene title reveals like a line of
-        # typewriter prose.
-        self._label = QLabel("")
+        # ── InfoBar / title — Chandler42 script-italic in lombardi-lake teal.
+        #    set_title() types it out char-by-char (the "infobar typing speed"),
+        #    so a scene title reveals like a line of typewriter prose. Fills the
+        #    central gap between the curtains button and the right cluster. ──
+        self._label = QLabel("", self)
         self._label.setAlignment(Qt.AlignCenter)
-        # Click-through so a press over the title text still drags the window.
+        # Click-through so a press over the title still drags the window.
         self._label.setAttribute(Qt.WA_TransparentForMouseEvents, True)
         self._label.setFont(chandler42(size_px=Fam.titleFontSize))
         self._label.setStyleSheet(f"color: {Fam.titleColor};")
 
-        # 2-button-wide spacer so that, with 1 curtains button on the left and
-        # the 3-button cluster on the right, the title sits dead-center.
-        left_spacer = QWidget()
-        left_spacer.setFixedWidth(self._BTN_W * 2)
-        left_spacer.setAttribute(Qt.WA_TransparentForMouseEvents, True)
-
+        # ── right cluster: minimize / maximize / exid ──
         self._btn_min = self._control("–", self._on_minimize, tooltip="Minimize")
         self._btn_max = self._control("□", self._on_maximize, tooltip="Maximize")
         self._btn_close = self._control(
             "✕", self._on_close, close=True,
             tooltip="Exid, not a typo.  It's an exit button named exid",
         )
-
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        layout.addWidget(self._btn_curtains)
-        layout.addWidget(left_spacer)
-        layout.addWidget(self._label, stretch=1)
-        layout.addWidget(self._btn_min)
-        layout.addWidget(self._btn_max)
-        layout.addWidget(self._btn_close)
+        for b in (self._btn_min, self._btn_max, self._btn_close):
+            b.setParent(self)
 
         self._drag_pos = None
         # typewriter state for the title / infobar reveal
@@ -128,6 +131,41 @@ class TitleBar(QWidget):
         )
         btn.clicked.connect(slot)
         return btn
+
+    # ── absolute layout — pixels from the left (the family technique) ─────────
+
+    def _reposition(self):
+        h, gap = self._BAR_H, self._GAP
+
+        # Combo at a fixed offset from the left; curtains immediately right of it.
+        self._combo.move(self._COMBO_X, (h - self._combo.height()) // 2)
+        self._combo.raise_()
+        cur_x = self._COMBO_X + self._combo.width() + gap * 3
+        self._btn_curtains.move(cur_x, (h - self._btn_curtains.height()) // 2)
+        self._btn_curtains.raise_()
+
+        # Right cluster pinned to the right edge: exid, then max, then min.
+        w = self.width()
+        ex = w - self._btn_close.width() - Fam.toolbarRightMargin
+        mx = ex - self._btn_max.width() - gap
+        mn = mx - self._btn_min.width() - gap
+        for btn, x in ((self._btn_close, ex), (self._btn_max, mx), (self._btn_min, mn)):
+            btn.move(x, (h - btn.height()) // 2)
+            btn.raise_()
+
+        # InfoBar fills the gap between the curtains button and the right cluster.
+        left_edge  = cur_x + self._btn_curtains.width() + gap * 4
+        right_edge = mn - gap * 4
+        self._label.setGeometry(left_edge, 0, max(40, right_edge - left_edge), h)
+        self._label.raise_()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._reposition()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self._reposition()
 
     def _on_minimize(self):
         self.window().showMinimized()
