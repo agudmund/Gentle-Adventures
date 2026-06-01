@@ -11,7 +11,9 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-logger = logging.getLogger("gentle")
+from utils.logger import get_logger
+
+logger = get_logger("gentle")
 
 
 class SceneCache:

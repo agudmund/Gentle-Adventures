@@ -15,7 +15,9 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-logger = logging.getLogger("gentle")
+from utils.logger import get_logger
+
+logger = get_logger("gentle")
 
 
 def probe_npu() -> str | None:

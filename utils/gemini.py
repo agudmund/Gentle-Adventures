@@ -17,7 +17,9 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-logger = logging.getLogger("gentle")
+from utils.logger import get_logger
+
+logger = get_logger("gentle")
 
 GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta"
 KEY_FILENAME = ".gemini_key"

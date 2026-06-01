@@ -35,8 +35,9 @@ from utils.gemini import (
 )
 from utils.probe import probe_lm_studio, probe_npu
 from utils.scene_cache import SceneCache
+from utils.logger import get_logger
 
-logger = logging.getLogger("gentle")
+logger = get_logger("gentle")
 
 STUDIO_URL = "https://aistudio.google.com/apikey"
 
