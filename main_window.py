@@ -8,7 +8,10 @@
 
 from __future__ import annotations
 
+import json
 import logging
+import subprocess
+import sys
 import webbrowser
 from pathlib import Path
 
@@ -131,10 +134,13 @@ class GentleAdventuresApp(QMainWindow):
         self._curtain_anim = None
         self._is_maxed = False
         self._restore_geom_max = None
+        self._quitting = False            # tray "Exit" / Ctrl-C set this; ✕ restarts
+        self._restore_maximized = False   # set by _restore_window_geometry
+        self._window_state_path = app_dir / "window_state.json"
 
         win_cfg = settings.get("window", {})
         self.setWindowTitle(win_cfg.get("title", "Gentle Adventures"))
-        self.resize(int(win_cfg.get("width", 960)), int(win_cfg.get("height", 1080)))
+        self._restore_window_geometry(win_cfg)
         self._apply_window_theme()
         # Frameless + always-on-top: hide the OS titlebar (our custom TitleBar
         # provides controls + drag) and float above other windows — the family
@@ -147,6 +153,11 @@ class GentleAdventuresApp(QMainWindow):
         self._build_layout()
         self._setup_system_tray()
         self._start()
+
+        # Re-apply last session's maximized state once the loop is running
+        # (work_area needs the shown window's screen).
+        if self._restore_maximized:
+            QTimer.singleShot(0, self.maximize_window)
 
     # ───── theme ─────
 
@@ -309,7 +320,7 @@ class GentleAdventuresApp(QMainWindow):
             tray_menu = QMenu(self)
         tray_menu.addAction("Show", self._restore_from_tray)
         tray_menu.addSeparator()
-        tray_menu.addAction("Exit", self.close)
+        tray_menu.addAction("Exit", self._quit_app)
         self._tray_icon.setContextMenu(tray_menu)
         self._tray_icon.activated.connect(self._on_tray_activated)
 
@@ -577,10 +588,13 @@ class GentleAdventuresApp(QMainWindow):
     # ───── shutdown ─────
 
     def closeEvent(self, event):
-        """Sweep Python bytecode on the way out — the ✕ button (and every other
-        exit path, since they all funnel through here) clears the cache so the
-        next launch always runs fresh code. Mirrors Intricate's shutdown janitor;
-        the whole point of the edit→restart loop staying painless."""
+        """The ✕ button refreshes the app: save window state, sweep bytecode,
+        relaunch a fresh instance, and close this one — Intricate's
+        restart-on-close, so the edit→restart loop never touches the console.
+        Tray 'Exit' and Ctrl-C set self._quitting to skip the relaunch and
+        actually leave. pycache is swept BEFORE the spawn so the child's own
+        startup purge owns a clean tree (no race)."""
+        self._save_window_state()
         try:
             from utils.housekeeping import clean_pycache
             n = clean_pycache(self.app_dir)
@@ -589,7 +603,63 @@ class GentleAdventuresApp(QMainWindow):
             logger.warning(f"pycache cleanup on exit failed: {e}")
         if hasattr(self, "_tray_icon"):
             self._tray_icon.hide()
+        if not self._quitting:
+            self._spawn_restart()
         super().closeEvent(event)
+
+    # ───── window state + restart ─────
+
+    def _restore_window_geometry(self, win_cfg: dict) -> None:
+        """Restore last session's size/position from the JSON sidecar, falling
+        back to settings.toml [window] defaults. Maximized state is re-applied
+        after show (see __init__) since work_area needs the live screen."""
+        state = {}
+        try:
+            if self._window_state_path.exists():
+                state = json.loads(self._window_state_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            logger.warning(f"window state load failed: {e}")
+        w = int(state.get("width", win_cfg.get("width", 960)))
+        h = int(state.get("height", win_cfg.get("height", 1080)))
+        self.resize(w, h)
+        if "x" in state and "y" in state:
+            self.move(int(state["x"]), int(state["y"]))
+        self._restore_maximized = bool(state.get("maximized", False))
+
+    def _save_window_state(self) -> None:
+        """Persist size/position + maximized flag so the next launch reopens the
+        same way. When maximized, store the pre-maximize geometry so a later
+        unmaximize returns to a sane size rather than the work-area rect."""
+        maxed = self._is_maxed
+        geom = (self._restore_geom_max
+                if maxed and self._restore_geom_max is not None else self.geometry())
+        state = {
+            "x": geom.x(), "y": geom.y(),
+            "width": geom.width(), "height": geom.height(),
+            "maximized": maxed,
+        }
+        try:
+            self._window_state_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
+        except Exception as e:
+            logger.warning(f"window state save failed: {e}")
+
+    def _quit_app(self) -> None:
+        """True exit (tray 'Exit') — sets the quit flag so closeEvent skips the
+        ✕-button relaunch and the app actually leaves."""
+        self._quitting = True
+        self.close()
+
+    def _spawn_restart(self) -> None:
+        """Relaunch a fresh instance. The child inherits this console (no
+        creationflags), so logs keep flowing and Ctrl-C still quits — unlike
+        Intricate's CREATE_NO_WINDOW, which fits its .lnk launch but would
+        detach our dev console. To leave for good: tray 'Exit' or Ctrl-C."""
+        try:
+            main_py = self.app_dir / "main.py"
+            subprocess.Popen([sys.executable, str(main_py)])
+            logger.info("[restart] spawned a fresh session — back in a blink ✨")
+        except Exception as e:
+            logger.warning(f"[restart] spawn failed (closing without relaunch): {e}")
 
     # ───── input dispatch ─────
 
