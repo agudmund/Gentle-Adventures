@@ -29,9 +29,18 @@ from graphics.Theme import Theme
 
 
 class TitleBar(QWidget):
-    """Custom frameless title strip: centered title + minimize/maximize/close
-    controls, draggable to move the window. Mirrors Intricate's chrome — the OS
-    titlebar is hidden, so this bar is the window's only handle."""
+    """The family-signature frameless title strip — ported from Intricate.
+
+    Layout:  [ ✦ curtains | (infobar lives here) | centered title | – □ ✕ ]
+
+    Brand/curtains button rolls the window up into this strip and back out;
+    minimize / maximize / exid controls on the right; drag anywhere to move;
+    double-click the LEFT half to toggle fullscreen (kept off the right so it
+    never clashes with the control cluster — same reasoning as Intricate's
+    hidden gesture). The OS titlebar is hidden, so this bar is the only handle.
+    """
+
+    curtains_clicked = Signal()    # roll up into the strip / expand back out
 
     _BTN_W = 46
     _BAR_H = 56
@@ -40,6 +49,12 @@ class TitleBar(QWidget):
         super().__init__()
         self.setFixedHeight(self._BAR_H)
         self.setStyleSheet(f"background-color: {Theme.title_bg};")
+
+        # ── brand / curtains button (far left) ──
+        self._btn_curtains = self._control(
+            "✦", self.curtains_clicked.emit,
+            tooltip="Roll the window up into this strip — click again to expand",
+        )
 
         self._label = QLabel("GENTLE ADVENTURES")
         self._label.setAlignment(Qt.AlignCenter)
@@ -52,19 +67,24 @@ class TitleBar(QWidget):
         self._label.setFont(font)
         self._label.setStyleSheet(f"color: {Theme.title_text};")
 
-        # Left spacer mirrors the control cluster so the title stays centered.
-        left_pad = QWidget()
-        left_pad.setFixedWidth(self._BTN_W * 3)
-        left_pad.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        # 2-button-wide spacer so that, with 1 curtains button on the left and
+        # the 3-button cluster on the right, the title sits dead-center.
+        left_spacer = QWidget()
+        left_spacer.setFixedWidth(self._BTN_W * 2)
+        left_spacer.setAttribute(Qt.WA_TransparentForMouseEvents, True)
 
-        self._btn_min   = self._control("–", self._on_minimize)            # –
-        self._btn_max   = self._control("□", self._on_maximize)            # □
-        self._btn_close = self._control("✕", self._on_close, close=True)   # ✕
+        self._btn_min = self._control("–", self._on_minimize, tooltip="Minimize")
+        self._btn_max = self._control("□", self._on_maximize, tooltip="Maximize")
+        self._btn_close = self._control(
+            "✕", self._on_close, close=True,
+            tooltip="Exid, not a typo.  It's an exit button named exid",
+        )
 
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(8, 0, 0, 0)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-        layout.addWidget(left_pad)
+        layout.addWidget(self._btn_curtains)
+        layout.addWidget(left_spacer)
         layout.addWidget(self._label, stretch=1)
         layout.addWidget(self._btn_min)
         layout.addWidget(self._btn_max)
@@ -74,11 +94,13 @@ class TitleBar(QWidget):
 
     # ── window controls ──────────────────────────────────────────────────────
 
-    def _control(self, glyph: str, slot, close: bool = False) -> QPushButton:
+    def _control(self, glyph: str, slot, close: bool = False, tooltip: str = "") -> QPushButton:
         btn = QPushButton(glyph)
         btn.setFixedSize(self._BTN_W, self._BAR_H)
         btn.setCursor(Qt.PointingHandCursor)
         btn.setFocusPolicy(Qt.NoFocus)
+        if tooltip:
+            btn.setToolTip(tooltip)
         hover_bg = "#c0392b" if close else Theme.button_bg_hover
         hover_fg = "#ffffff" if close else Theme.button_text
         btn.setStyleSheet(
@@ -104,6 +126,13 @@ class TitleBar(QWidget):
 
     def _on_close(self):
         self.window().close()
+
+    def _toggle_fullscreen(self):
+        w = self.window()
+        if w.isFullScreen():
+            w.showNormal()
+        else:
+            w.showFullScreen()
 
     # ── window drag (frameless) — Intricate's globalPosition-delta move ───────
 
@@ -133,8 +162,9 @@ class TitleBar(QWidget):
         super().mouseReleaseEvent(event)
 
     def mouseDoubleClickEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self._on_maximize()
+        # Left half only → fullscreen toggle; right half is the control cluster.
+        if event.button() == Qt.LeftButton and event.position().x() < self.width() / 2:
+            self._toggle_fullscreen()
             event.accept()
         else:
             super().mouseDoubleClickEvent(event)

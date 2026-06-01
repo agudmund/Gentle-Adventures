@@ -12,7 +12,7 @@ import logging
 import webbrowser
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtCore import Qt, QThread, Signal, QPropertyAnimation, QEasingCurve, QRect
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget
 
@@ -102,11 +102,18 @@ class GentleAdventuresApp(QMainWindow):
         self.current_scene: dict | None = None
         self.available_models: list[str] = []
         self.phase: str = "quest"  # set properly in _start
+        self._curtains_collapsed = False
+        self._curtain_anim = None
+        self._restore_geom = None
 
         win_cfg = settings.get("window", {})
         self.setWindowTitle(win_cfg.get("title", "Gentle Adventures"))
         self.resize(int(win_cfg.get("width", 960)), int(win_cfg.get("height", 1080)))
-        self.setStyleSheet(f"background-color: {Theme.frame_black};")
+        self.setStyleSheet(
+            f"QMainWindow {{ background-color: {Theme.frame_black}; }}"
+            f"QToolTip {{ background: {Theme.title_bg}; color: {Theme.title_text};"
+            f" border: 1px solid {Theme.button_border}; padding: 5px 9px; }}"
+        )
         # Frameless: hide the OS titlebar — our custom TitleBar provides the
         # window controls + drag (mirrors Intricate's chrome). Deliberately NOT
         # WindowStaysOnTopHint: this is an app window, not an always-on-top overlay.
@@ -128,6 +135,7 @@ class GentleAdventuresApp(QMainWindow):
         self.narrative = NarrativePanel()
         self.interaction = InteractionBar()
         self.interaction.choice_made.connect(self._on_choice)
+        self.title_bar.curtains_clicked.connect(self.toggle_curtains)
 
         layout.addWidget(self.title_bar)
         layout.addWidget(self.scene_view, stretch=1)
@@ -135,6 +143,30 @@ class GentleAdventuresApp(QMainWindow):
         layout.addWidget(self.interaction)
 
         self.setCentralWidget(central)
+
+    # ───── curtains ─────
+
+    def toggle_curtains(self):
+        """Roll the window up into just its titlebar strip, or expand it back
+        out (auto-maximizing on expand). Mirrors Intricate's curtains gesture —
+        animated geometry, no resize-grip fiddling."""
+        bar_h = self.title_bar.height()
+        self.setMinimumHeight(0)  # allow shrinking below the natural minimum
+        collapsing = not self._curtains_collapsed
+        start = self.geometry()
+
+        anim = QPropertyAnimation(self, b"geometry", self)
+        anim.setDuration(240)
+        anim.setEasingCurve(QEasingCurve.OutCubic)
+        anim.setStartValue(start)
+        if collapsing:
+            self._restore_geom = start
+            anim.setEndValue(QRect(start.x(), start.y(), start.width(), bar_h))
+        else:
+            anim.setEndValue(self.screen().availableGeometry())  # auto-maximize
+        anim.start()
+        self._curtain_anim = anim          # keep a ref so it isn't GC'd mid-roll
+        self._curtains_collapsed = collapsing
 
     # ───── boot flow ─────
 
