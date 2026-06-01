@@ -29,13 +29,22 @@ from graphics.Theme import Theme
 
 
 class TitleBar(QWidget):
+    """Custom frameless title strip: centered title + minimize/maximize/close
+    controls, draggable to move the window. Mirrors Intricate's chrome — the OS
+    titlebar is hidden, so this bar is the window's only handle."""
+
+    _BTN_W = 46
+    _BAR_H = 56
+
     def __init__(self):
         super().__init__()
-        self.setFixedHeight(56)
+        self.setFixedHeight(self._BAR_H)
         self.setStyleSheet(f"background-color: {Theme.title_bg};")
 
         self._label = QLabel("GENTLE ADVENTURES")
         self._label.setAlignment(Qt.AlignCenter)
+        # Click-through so a press over the title text still drags the window.
+        self._label.setAttribute(Qt.WA_TransparentForMouseEvents, True)
         font = QFont()
         font.setPointSize(Theme.title_font_pt)
         font.setBold(True)
@@ -43,9 +52,92 @@ class TitleBar(QWidget):
         self._label.setFont(font)
         self._label.setStyleSheet(f"color: {Theme.title_text};")
 
+        # Left spacer mirrors the control cluster so the title stays centered.
+        left_pad = QWidget()
+        left_pad.setFixedWidth(self._BTN_W * 3)
+        left_pad.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+
+        self._btn_min   = self._control("–", self._on_minimize)            # –
+        self._btn_max   = self._control("□", self._on_maximize)            # □
+        self._btn_close = self._control("✕", self._on_close, close=True)   # ✕
+
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(20, 0, 20, 0)
-        layout.addWidget(self._label)
+        layout.setContentsMargins(8, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(left_pad)
+        layout.addWidget(self._label, stretch=1)
+        layout.addWidget(self._btn_min)
+        layout.addWidget(self._btn_max)
+        layout.addWidget(self._btn_close)
+
+        self._drag_pos = None
+
+    # ── window controls ──────────────────────────────────────────────────────
+
+    def _control(self, glyph: str, slot, close: bool = False) -> QPushButton:
+        btn = QPushButton(glyph)
+        btn.setFixedSize(self._BTN_W, self._BAR_H)
+        btn.setCursor(Qt.PointingHandCursor)
+        btn.setFocusPolicy(Qt.NoFocus)
+        hover_bg = "#c0392b" if close else Theme.button_bg_hover
+        hover_fg = "#ffffff" if close else Theme.button_text
+        btn.setStyleSheet(
+            "QPushButton {"
+            f"  background: transparent; color: {Theme.title_text};"
+            "   border: none; font-size: 15px; font-family: 'Segoe UI Symbol'; }"
+            f"QPushButton:hover {{ background: {hover_bg}; color: {hover_fg}; }}"
+        )
+        btn.clicked.connect(slot)
+        return btn
+
+    def _on_minimize(self):
+        self.window().showMinimized()
+
+    def _on_maximize(self):
+        w = self.window()
+        if w.isMaximized():
+            w.showNormal()
+            self._btn_max.setText("□")    # □
+        else:
+            w.showMaximized()
+            self._btn_max.setText("❐")    # ❐ (restore)
+
+    def _on_close(self):
+        self.window().close()
+
+    # ── window drag (frameless) — Intricate's globalPosition-delta move ───────
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self._drag_pos = event.globalPosition().toPoint()
+            event.accept()
+        else:
+            super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self._drag_pos is not None and (event.buttons() & Qt.LeftButton):
+            w = self.window()
+            if w.isMaximized():
+                # Dragging a maximized window restores it, then follows the cursor.
+                w.showNormal()
+                self._btn_max.setText("□")
+            new_pos = event.globalPosition().toPoint()
+            w.move(w.pos() + (new_pos - self._drag_pos))
+            self._drag_pos = new_pos
+            event.accept()
+        else:
+            super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        self._drag_pos = None
+        super().mouseReleaseEvent(event)
+
+    def mouseDoubleClickEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self._on_maximize()
+            event.accept()
+        else:
+            super().mouseDoubleClickEvent(event)
 
     def set_title(self, text: str):
         self._label.setText(text)

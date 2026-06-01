@@ -12,7 +12,7 @@ import logging
 import webbrowser
 from pathlib import Path
 
-from PySide6.QtCore import QThread, Signal
+from PySide6.QtCore import Qt, QThread, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget
 
@@ -107,6 +107,10 @@ class GentleAdventuresApp(QMainWindow):
         self.setWindowTitle(win_cfg.get("title", "Gentle Adventures"))
         self.resize(int(win_cfg.get("width", 960)), int(win_cfg.get("height", 1080)))
         self.setStyleSheet(f"background-color: {Theme.frame_black};")
+        # Frameless: hide the OS titlebar — our custom TitleBar provides the
+        # window controls + drag (mirrors Intricate's chrome). Deliberately NOT
+        # WindowStaysOnTopHint: this is an app window, not an always-on-top overlay.
+        self.setWindowFlag(Qt.FramelessWindowHint, True)
 
         self._build_layout()
         self._start()
