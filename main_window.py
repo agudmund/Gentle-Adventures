@@ -71,11 +71,24 @@ class SceneRequestWorker(QThread):
         self.scene_id = scene_id
 
     def run(self):
+        import time
+        logger.info(
+            f"[image] requesting '{self.scene_id}' via {self.client.model} "
+            f"(prompt {len(self.prompt)} chars) — painter is painting"
+        )
+        t0 = time.perf_counter()
         try:
             data = self.client.generate(self.prompt)
+            logger.info(
+                f"[image] '{self.scene_id}' delivered in "
+                f"{time.perf_counter() - t0:.1f}s ({len(data)} bytes)"
+            )
             self.image_ready.emit(data, self.scene_id)
         except (GeminiAuthError, GeminiAPIError) as e:
-            logger.warning(f"Image gen failed for {self.scene_id}: {e}")
+            logger.warning(
+                f"[image] '{self.scene_id}' failed after "
+                f"{time.perf_counter() - t0:.1f}s: {e}"
+            )
             self.image_failed.emit(str(e), self.scene_id)
 
 
