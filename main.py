@@ -11,6 +11,26 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+# ── Startup bytecode purge — runs BEFORE any project import ───────────────────
+# If a previous run crashed or was force-killed, closeEvent's sweep never ran,
+# so a stale .pyc could be sitting here waiting to be imported. Clear it first,
+# with raw shutil inline — never load a project helper to do this, because that
+# helper's own .pyc could be the stale one. Sweeps the in-tree __pycache__ and,
+# when bytecode is redirected (PYTHONPYCACHEPREFIX), this app's mirror subtree.
+import shutil as _shutil
+
+_APP_DIR = Path(__file__).resolve().parent
+_purge_roots = [_APP_DIR]
+_pc_prefix = getattr(sys, "pycache_prefix", None)
+if _pc_prefix:
+    _purge_roots.append(Path(_pc_prefix, *_APP_DIR.parts[1:]))
+for _base in _purge_roots:
+    for _pc in list(_base.rglob("__pycache__")):
+        try:
+            _shutil.rmtree(_pc)
+        except Exception:
+            pass
+
 from PySide6.QtWidgets import QApplication
 
 from main_window import GentleAdventuresApp
