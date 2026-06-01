@@ -18,7 +18,7 @@ from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QSystemTrayIcon
 
 from data.quest import QUEST, get_scene
 from pretty_widgets.graphics.Theme import Theme as Fam
-from graphics.widgets import InteractionBar, NarrativePanel, SceneView, TitleBar
+from graphics.widgets import BottomToolbar, InteractionBar, NarrativePanel, SceneView, TitleBar
 from utils.gemini import (
     GeminiAPIError,
     GeminiAuthError,
@@ -149,6 +149,8 @@ class GentleAdventuresApp(QMainWindow):
         self._apply_window_theme()
         if hasattr(self, "title_bar"):
             self.title_bar.restyle()
+        if hasattr(self, "bottom_toolbar"):
+            self.bottom_toolbar.restyle()
 
     # ───── layout ─────
 
@@ -159,16 +161,29 @@ class GentleAdventuresApp(QMainWindow):
         layout.setSpacing(0)
 
         self.title_bar = TitleBar()
+        self.title_bar.curtains_clicked.connect(self.toggle_curtains)
+        layout.addWidget(self.title_bar)
+
+        # Everything below the titlebar lives in one container so the curtain
+        # roll can hide it in a single move — and, crucially, hide it on a
+        # *delay* so it stays visible for the first stretch of the roll (the
+        # "oompf"). Grouping also means no stray sliver peeks past the strip.
+        self._body = QWidget()
+        body_layout = QVBoxLayout(self._body)
+        body_layout.setContentsMargins(0, 0, 0, 0)
+        body_layout.setSpacing(0)
+
         self.scene_view = SceneView()
         self.narrative = NarrativePanel()
         self.interaction = InteractionBar()
         self.interaction.choice_made.connect(self._on_choice)
-        self.title_bar.curtains_clicked.connect(self.toggle_curtains)
+        self.bottom_toolbar = BottomToolbar()
 
-        layout.addWidget(self.title_bar)
-        layout.addWidget(self.scene_view, stretch=1)
-        layout.addWidget(self.narrative)
-        layout.addWidget(self.interaction)
+        body_layout.addWidget(self.scene_view, stretch=1)
+        body_layout.addWidget(self.narrative)
+        body_layout.addWidget(self.interaction)
+        body_layout.addWidget(self.bottom_toolbar)
+        layout.addWidget(self._body, stretch=1)
 
         self.setCentralWidget(central)
 
@@ -183,14 +198,29 @@ class GentleAdventuresApp(QMainWindow):
         collapsing = not self._curtains_collapsed
         start = self.geometry()
 
+        # Family roll timing: up snappy, down weighted, OutExpo easing — the
+        # same feel as Intricate / The Majestic (windowRollTimingUp/Down).
+        duration = Fam.windowRollTimingUp if collapsing else Fam.windowRollTimingDown
         anim = QPropertyAnimation(self, b"geometry", self)
-        anim.setDuration(240)
-        anim.setEasingCurve(QEasingCurve.OutCubic)
+        anim.setDuration(duration)
+        anim.setEasingCurve(getattr(QEasingCurve, Fam.windowRollEasing, QEasingCurve.OutExpo))
         anim.setStartValue(start)
         anim.setEndValue(
             QRect(start.x(), start.y(), start.width(), bar_h) if collapsing
             else self.work_area()      # auto-maximize on expand
         )
+
+        if collapsing:
+            # Delay-hide the body so it stays visible for the first ~2/3 of the
+            # roll — the window reads as physically pulling its thickness up
+            # into the strip (bottom toolbar and all), not just shrinking. That
+            # stagger is the "oompf". Mirrors Intricate main_window.py:1187.
+            hide_delay = max(1, int(duration * 2 / 3))
+            QTimer.singleShot(hide_delay, self._body.hide)
+        else:
+            # Show the body up front so it grows back into view as we expand.
+            self._body.show()
+
         anim.start()
         self._curtain_anim = anim          # keep a ref so it isn't GC'd mid-roll
         self._curtains_collapsed = collapsing
@@ -216,6 +246,11 @@ class GentleAdventuresApp(QMainWindow):
     def maximize_window(self):
         if not self._is_maxed:
             self._restore_geom_max = self.geometry()
+        # If we were rolled up, bring the body back before growing — otherwise
+        # the window would expand to a blank strip.
+        if self._curtains_collapsed and hasattr(self, "_body"):
+            self._body.show()
+            self._curtains_collapsed = False
         self.setGeometry(self.work_area())
         self._is_maxed = True
         self.title_bar.reflect_maximized(True)

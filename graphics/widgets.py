@@ -506,3 +506,102 @@ class InteractionBar(QWidget):
             return
         self._parser.clear()
         self.choice_made.emit(None, text)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Bottom toolbar — branded weight beneath the interaction bar
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class BottomToolbar(QWidget):
+    """Family-signature bottom toolbar — the branded strip that gives the
+    window visual weight below the 'ask the ship' prompt and frames the
+    rolled-up silhouette.
+
+    A thin infobar strip (gentle-white whisper, click to collapse) sits over a
+    row of placeholder feature buttons. Collapsing slides the buttons away,
+    leaving just the strip pinned to the bottom edge. The simple cousin of
+    Intricate's bottom bar — no splitter, no InfoBar routing, just chrome.
+    """
+
+    strip_clicked = Signal()    # emitted on collapse/expand toggle
+
+    _STRIP_H = max(Fam.handleHeightTop, 28)
+    # A touch larger than the titlebar's 9px whisper — the bottom strip is
+    # roomier, so the infobar can breathe without shouting. Same gentle white.
+    _INFO_FONT_PX = max(8, round(Fam.handleHeightTop * 11 / 25))
+    # Feature placeholders to wire up during dev — clicking whispers a status
+    # into the strip until the real feature lands.
+    _PLACEHOLDERS = ("inventory", "map", "journal", "codex")
+
+    def __init__(self):
+        super().__init__()
+        self.setStyleSheet(f"background-color: {Fam.windowBg};")
+        self._collapsed = False
+
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(10, 0, 10, 6)
+        outer.setSpacing(4)
+
+        # ── infobar strip (doubles as the collapse handle) ──
+        self._strip = QWidget()
+        self._strip.setFixedHeight(self._STRIP_H)
+        self._strip.setCursor(Qt.PointingHandCursor)
+        self._strip.setStyleSheet("background: transparent;")
+        strip_layout = QHBoxLayout(self._strip)
+        strip_layout.setContentsMargins(0, 0, 0, 0)
+        strip_layout.setSpacing(0)
+        self._info = QLabel("", self._strip)
+        self._info.setAlignment(Qt.AlignCenter)
+        self._info.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self._info.setFont(chandler42(size_px=self._INFO_FONT_PX))
+        self._info.setStyleSheet(f"color: {Fam.textPrimary};")
+        strip_layout.addWidget(self._info, stretch=1)
+        outer.addWidget(self._strip)
+        self._strip.mousePressEvent = lambda e: self.toggle_collapse()
+
+        # ── placeholder feature buttons ──
+        self._buttons_row = QWidget()
+        row = QHBoxLayout(self._buttons_row)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(8)
+        row.addStretch(1)
+        self._buttons: list[QPushButton] = []
+        for name in self._PLACEHOLDERS:
+            btn = QPushButton(name)
+            btn.setCursor(Qt.PointingHandCursor)
+            btn.setMinimumWidth(96)
+            btn.setStyleSheet(self._placeholder_qss())
+            btn.clicked.connect(lambda _c=False, n=name: self.set_info(f"✦ {n} — not wired up yet ✦"))
+            row.addWidget(btn)
+            self._buttons.append(btn)
+        row.addStretch(1)
+        outer.addWidget(self._buttons_row)
+
+    def _placeholder_qss(self) -> str:
+        # Muted (primaryBorder text/border) so placeholders read as dormant
+        # tools, not live actions — they brighten to the teal accent on hover.
+        return (
+            f"QPushButton {{ background: {Fam.buttonBg}; color: {Fam.primaryBorder};"
+            f" border: 1px solid {Fam.primaryBorder}; border-radius: 12px;"
+            f" padding: 6px 14px; font-size: 10pt; }}"
+            f"QPushButton:hover {{ border: 1px solid {Fam.titleColor};"
+            f" color: {Fam.textPrimary}; }}"
+        )
+
+    def set_info(self, text: str):
+        """Whisper a line into the bottom infobar strip."""
+        self._info.setText(text)
+
+    def toggle_collapse(self):
+        """Slide the buttons away (collapse to the strip) or bring them back."""
+        self._collapsed = not self._collapsed
+        self._buttons_row.setVisible(not self._collapsed)
+        self.strip_clicked.emit()
+
+    def restyle(self):
+        """Re-tint from the live family palette (settings watcher → reload)."""
+        self.setStyleSheet(f"background-color: {Fam.windowBg};")
+        self._info.setStyleSheet(f"color: {Fam.textPrimary};")
+        for b in self._buttons:
+            b.setStyleSheet(self._placeholder_qss())
