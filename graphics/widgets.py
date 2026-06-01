@@ -295,28 +295,50 @@ class TitleBar(QWidget):
 
 
 class SceneView(QWidget):
+    # Framed like an Intricate node — a gentle padded border around the scene
+    # image. _MARGIN insets the frame from the window edge; _PADDING is the
+    # breathing gap between the border and the image (nodeBg matte shows
+    # through, exactly like a node's content inset).
+    _MARGIN = 16
+    _PADDING = 10
+
     def __init__(self):
         super().__init__()
         self.setMinimumHeight(560)
-        self.setStyleSheet(f"background-color: {Fam.backDrop};")
+        self.setStyleSheet(f"background-color: {Fam.windowBg};")
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self._image_label = QLabel()
         self._image_label.setAlignment(Qt.AlignCenter)
-        self._image_label.setStyleSheet(
-            f"color: {Fam.primaryBorder}; "
-            f"background-color: {Fam.backDrop};"
-        )
+        self._image_label.setStyleSheet(self._frame_qss())
         font = QFont()
         font.setPointSize(11)
         font.setItalic(True)
         self._image_label.setFont(font)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setContentsMargins(self._MARGIN, self._MARGIN, self._MARGIN, self._MARGIN)
         layout.addWidget(self._image_label)
 
         self._current_pixmap: QPixmap | None = None
+
+    def _frame_qss(self) -> str:
+        """Intricate's node frame, drawn from the family Theme so it matches the
+        canvas nodes (nodeBorder / nodeBorderWidth / nodeRoundRadius / nodeBg)
+        and re-tints with primary_border live."""
+        return (
+            f"QLabel {{ color: {Fam.primaryBorder};"
+            f" background-color: {Fam.nodeBg};"
+            f" border: {int(Fam.nodeBorderWidth)}px solid {Fam.nodeBorder};"
+            f" border-radius: {int(Fam.nodeRoundRadius)}px;"
+            f" padding: {self._PADDING}px; }}"
+        )
+
+    def restyle(self):
+        """Re-tint the frame from the live family palette (settings watcher)."""
+        self.setStyleSheet(f"background-color: {Fam.windowBg};")
+        self._image_label.setStyleSheet(self._frame_qss())
+        self._rescale()
 
     def show_loading(self):
         self.show_placeholder("✦ the painter is painting ✦")
@@ -346,8 +368,12 @@ class SceneView(QWidget):
     def _rescale(self):
         if self._current_pixmap is None or self._current_pixmap.isNull():
             return
+        # Fit inside the frame: drop the outer margin, the border, and the inner
+        # padding on each side so the image sits within the padded node border.
+        inset = 2 * (self._MARGIN + int(Fam.nodeBorderWidth) + self._PADDING)
+        target = QSize(max(1, self.width() - inset), max(1, self.height() - inset))
         scaled = self._current_pixmap.scaled(
-            self.size(),
+            target,
             Qt.KeepAspectRatio,
             Qt.SmoothTransformation,
         )

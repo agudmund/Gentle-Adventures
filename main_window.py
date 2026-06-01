@@ -172,6 +172,8 @@ class GentleAdventuresApp(QMainWindow):
             self.title_bar.restyle()
         if hasattr(self, "bottom_toolbar"):
             self.bottom_toolbar.restyle()
+        if hasattr(self, "scene_view"):
+            self.scene_view.restyle()
 
     # ───── layout ─────
 
