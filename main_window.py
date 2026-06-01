@@ -615,7 +615,9 @@ class GentleAdventuresApp(QMainWindow):
         if kind is None:
             return None
         if kind == "npu":
-            return probe_npu()
+            # probe_npu now returns the engine descriptor (or None); the
+            # narrative's verified flag just needs the truthiness.
+            return probe_npu() is not None
         if kind == "lm_studio":
             return probe_lm_studio()
         return None
