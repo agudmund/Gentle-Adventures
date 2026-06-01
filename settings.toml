@@ -11,7 +11,9 @@ height = 1080
 [gemini]
 # Active model for live scene image generation.
 # Swap if Google renames the model — keep the path syntax.
-model = "gemini-2.5-flash-image-preview"
+# gemini-2.5-flash-image is the latency+stability pick for this live loop
+# (~6s, ~1.4MB crisp PNG). The "-preview" alias 404s now — use the bare name.
+model = "gemini-2.5-flash-image"
 
 [paths]
 scenes_dir = "scenes"

@@ -111,7 +111,7 @@ class GentleAdventuresApp(QMainWindow):
         self.scenes_dir = app_dir / scenes_subdir
         self.scenes_dir.mkdir(exist_ok=True)
 
-        default_model = settings.get("gemini", {}).get("model", "gemini-2.5-flash-image-preview")
+        default_model = settings.get("gemini", {}).get("model", "gemini-2.5-flash-image")
         selected = load_selected_model(app_dir) or default_model
         self.image_client = GeminiImageClient(app_dir=app_dir, model=selected)
 

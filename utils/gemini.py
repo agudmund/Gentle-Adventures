@@ -159,14 +159,26 @@ def list_image_models(api_key: str) -> list[str]:
     return accessible
 
 
-def pick_default_image_model(models: list[str]) -> str | None:
-    """From a sorted list of accessible image models, pick the strongest default.
+# Pinned default for this framework. Per the 2026-06-01 model review:
+# gemini-2.5-flash-image is the latency + stability sweet spot (~6s, ~1.4MB
+# crisp PNG). The newer flash *preview* tier was both slower (~24s) and
+# occasionally stalled past the 90s timeout — in a live interactive loop a
+# fast, reliable cycle beats an incremental quality bump. Newer models stay
+# available as manual picks in the brush selector; this is just the default.
+_PREFERRED_MODEL = "gemini-2.5-flash-image"
 
-    Preference order: highest gemini-*-image, then highest imagen-*.
-    Returns None if the list is empty.
+
+def pick_default_image_model(models: list[str]) -> str | None:
+    """From a sorted list of accessible image models, pick the default.
+
+    Prefers the pinned _PREFERRED_MODEL when the key can reach it; otherwise
+    falls back to the highest gemini-*-image, then highest imagen-*. Returns
+    None if the list is empty.
     """
     if not models:
         return None
+    if _PREFERRED_MODEL in models:
+        return _PREFERRED_MODEL
     gemini_image = [m for m in models if not m.lower().startswith("imagen")]
     return gemini_image[0] if gemini_image else models[0]
 
@@ -190,7 +202,7 @@ def validate_key(api_key: str) -> list[str]:
 class GeminiImageClient:
     """Minimal HTTP client for Gemini image-output models. Raw stdlib only."""
 
-    def __init__(self, app_dir: Path, model: str = "gemini-2.5-flash-image-preview"):
+    def __init__(self, app_dir: Path, model: str = _PREFERRED_MODEL):
         self.app_dir = app_dir
         self.model = model
 
