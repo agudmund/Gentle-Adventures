@@ -142,15 +142,14 @@ class TitleBar(QWidget):
 
     def _btn_qss(self, close: bool, accent: bool) -> str:
         """Per-button stylesheet derived from the family palette; shared by
-        _control (build) and restyle (live re-tint)."""
-        base_fg  = Fam.titleColor if accent else Fam.textPrimary
-        hover_bg = "#c0392b" if close else Fam.backDrop
-        hover_fg = "#ffffff" if close else Fam.textPrimary
+        _control (build) and restyle (live re-tint). No hover glow — the icon
+        buttons are tactile enough on their own, so hovering leaves them blank
+        (close/accent kept in the signature for call-site stability)."""
+        base_fg = Fam.titleColor if accent else Fam.textPrimary
         return (
             "QPushButton {"
             f"  background: transparent; color: {base_fg};"
             "   border: none; font-size: 13px; font-family: 'Segoe UI Symbol'; }"
-            f"QPushButton:hover {{ background: {hover_bg}; color: {hover_fg}; }}"
         )
 
     def restyle(self):
