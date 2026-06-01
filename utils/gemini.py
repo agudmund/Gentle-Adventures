@@ -104,7 +104,19 @@ def _http_request(url: str, *, data: bytes | None = None, timeout: float = 30.0)
         if e.code in (401, 403):
             raise GeminiAuthError(f"Gemini rejected the key (HTTP {e.code}): {body[:300]}") from e
         raise GeminiAPIError(f"HTTP {e.code} from Gemini: {body[:400]}") from e
+    except TimeoutError as e:
+        # A read-phase timeout (server slow to respond) raises a bare
+        # TimeoutError that sails past URLError — convert it so the worker's
+        # GeminiAPIError handler catches it instead of crashing QThread.run().
+        raise GeminiAPIError(
+            f"Gemini timed out after {timeout:.0f}s — the model or network was slow. "
+            "Try again, or switch to a lighter model."
+        ) from e
     except urllib.error.URLError as e:
+        # urllib wraps connect-phase timeouts in URLError(reason=TimeoutError);
+        # surface those cleanly too.
+        if isinstance(getattr(e, "reason", None), TimeoutError):
+            raise GeminiAPIError(f"Gemini connection timed out after {timeout:.0f}s.") from e
         raise GeminiAPIError(f"Network failure reaching Gemini: {e.reason}") from e
 
 
