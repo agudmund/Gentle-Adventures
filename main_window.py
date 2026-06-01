@@ -13,8 +13,8 @@ import webbrowser
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QThread, Signal, QPropertyAnimation, QEasingCurve, QRect
-from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget
+from PySide6.QtGui import QPixmap, QIcon
+from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QSystemTrayIcon
 
 from data.quest import QUEST, get_scene
 from pretty_widgets.graphics.Theme import Theme as Fam
@@ -115,12 +115,16 @@ class GentleAdventuresApp(QMainWindow):
         self.setWindowTitle(win_cfg.get("title", "Gentle Adventures"))
         self.resize(int(win_cfg.get("width", 960)), int(win_cfg.get("height", 1080)))
         self._apply_window_theme()
-        # Frameless: hide the OS titlebar — our custom TitleBar provides the
-        # window controls + drag (mirrors Intricate's chrome). Deliberately NOT
-        # WindowStaysOnTopHint: this is an app window, not an always-on-top overlay.
-        self.setWindowFlag(Qt.FramelessWindowHint, True)
+        # Frameless + always-on-top: hide the OS titlebar (our custom TitleBar
+        # provides controls + drag) and float above other windows — the family
+        # default (Intricate, The Majestic, The Settlers all set this). No
+        # overlap headache: each app's titlebar is the only persistent chrome,
+        # and the curtains gesture rolls the window down to a thin strip when
+        # it needs to get out of the way.
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
 
         self._build_layout()
+        self._setup_system_tray()
         self._start()
 
     # ───── theme ─────
@@ -224,6 +228,122 @@ class GentleAdventuresApp(QMainWindow):
 
     def toggle_maximize(self):
         self.restore_window() if self._is_maxed else self.maximize_window()
+
+    # ───── system tray ─────
+
+    def _setup_system_tray(self) -> None:
+        """System tray icon with a Show / Exit menu. The icon is playIconic —
+        Gentle Adventures' brand mark, copied into icons/ from the family set."""
+        self._tray_icon = QSystemTrayIcon(self)
+        icon_path = self.app_dir / "icons" / "playIconic.ico"
+        if icon_path.exists():
+            self._tray_icon.setIcon(QIcon(str(icon_path)))
+        else:
+            self._tray_icon.setIcon(self.windowIcon())
+        # Tooltip doubles as the Windows Personalization-panel display name.
+        self._tray_icon.setToolTip("Gentle Adventures")
+
+        try:
+            from pretty_widgets.PrettyMenu import PrettyMenu
+            tray_menu = PrettyMenu(self)
+        except Exception:
+            from PySide6.QtWidgets import QMenu
+            tray_menu = QMenu(self)
+        tray_menu.addAction("Show", self._restore_from_tray)
+        tray_menu.addSeparator()
+        tray_menu.addAction("Exit", self.close)
+        self._tray_icon.setContextMenu(tray_menu)
+        self._tray_icon.activated.connect(self._on_tray_activated)
+
+        # Self-heal the Personalization > Taskbar panel so the entry reads
+        # "Gentle Adventures" with the playIconic mark instead of "Python" with
+        # a stale snapshot. Silent no-op on failure — see Intricate's
+        # Documents/Design/Icon Pipeline.md › The Brand Mark Refresh Chain.
+        try:
+            self._heal_systray_panel_metadata()
+        except Exception:
+            logger.debug("[systray] panel-metadata self-heal raised — continuing", exc_info=True)
+
+    def _heal_systray_panel_metadata(self) -> None:
+        """Write our identity to the two HKCU surfaces Windows reads for the
+        systray Personalization panel: the AUMID metadata key and any matching
+        NotifyIconSettings entry (snapshot PNG + tooltip). Idempotent, HKCU-only,
+        non-fatal on every step."""
+        import sys
+        import winreg
+        from PySide6.QtCore import QBuffer, QIODevice
+
+        icon_path = self.app_dir / "icons" / "playIconic.ico"
+        if not icon_path.exists():
+            return
+
+        try:
+            aumid_key = r"Software\Classes\AppUserModelId\SingleSharedBraincell.GentleAdventures"
+            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, aumid_key) as k:
+                winreg.SetValueEx(k, "DisplayName", 0, winreg.REG_SZ, "Gentle Adventures")
+                winreg.SetValueEx(k, "IconUri", 0, winreg.REG_SZ, str(icon_path))
+        except OSError:
+            pass
+
+        pixmap = QIcon(str(icon_path)).pixmap(32, 32)
+        if pixmap.isNull():
+            return
+        buf = QBuffer()
+        buf.open(QIODevice.OpenModeFlag.WriteOnly)
+        pixmap.save(buf, "PNG")
+        png_bytes = bytes(buf.data())
+        buf.close()
+        if not png_bytes:
+            return
+
+        my_exe = Path(sys.executable).name.lower()
+        targets = {my_exe}
+        if my_exe == "pythonw.exe":
+            targets.add("python.exe")
+        elif my_exe == "python.exe":
+            targets.add("pythonw.exe")
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER,
+                                r"Control Panel\NotifyIconSettings") as nis:
+                i = 0
+                while True:
+                    try:
+                        subname = winreg.EnumKey(nis, i)
+                    except OSError:
+                        break
+                    i += 1
+                    try:
+                        with winreg.OpenKey(nis, subname, 0,
+                                            winreg.KEY_QUERY_VALUE | winreg.KEY_SET_VALUE) as k:
+                            try:
+                                exe, _ = winreg.QueryValueEx(k, "ExecutablePath")
+                            except FileNotFoundError:
+                                continue
+                            if not exe or Path(exe).name.lower() not in targets:
+                                continue
+                            winreg.SetValueEx(k, "InitialTooltip", 0, winreg.REG_SZ, "Gentle Adventures")
+                            winreg.SetValueEx(k, "IconSnapshot", 0, winreg.REG_BINARY, png_bytes)
+                    except OSError:
+                        continue
+        except OSError:
+            pass
+
+    def minimize_to_tray(self) -> None:
+        """Hide the window into the system tray (the titlebar – button)."""
+        self._tray_icon.show()
+        self.hide()
+
+    def _restore_from_tray(self) -> None:
+        """Bring the window back from the tray."""
+        self.show()
+        self.raise_()
+        self.activateWindow()
+        self._tray_icon.hide()
+
+    def _on_tray_activated(self, reason) -> None:
+        if reason in (QSystemTrayIcon.ActivationReason.Trigger,
+                      QSystemTrayIcon.ActivationReason.DoubleClick):
+            self._restore_from_tray()
 
     # ───── boot flow ─────
 
@@ -394,6 +514,8 @@ class GentleAdventuresApp(QMainWindow):
             logger.info(f"Cleaned Python cache on exit ({n} tree(s) swept).")
         except Exception as e:
             logger.warning(f"pycache cleanup on exit failed: {e}")
+        if hasattr(self, "_tray_icon"):
+            self._tray_icon.hide()
         super().closeEvent(event)
 
     # ───── input dispatch ─────

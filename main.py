@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import ctypes
 import signal
 import sys
 from pathlib import Path
@@ -32,6 +33,7 @@ for _base in _purge_roots:
         except Exception:
             pass
 
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication
 
 from main_window import GentleAdventuresApp
@@ -53,7 +55,19 @@ def main() -> int:
     init_logger(app_dir)
     settings = load_settings(app_dir / "settings.toml")
 
+    # Windows taskbar identity — bind the taskbar / jumplist / systray to our
+    # own AUMID instead of the generic "Python" launcher. Mirrors The Majestic.
+    try:
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+            "SingleSharedBraincell.GentleAdventures")
+    except Exception:
+        pass
+
     app = QApplication(sys.argv)
+    # Window + taskbar icon: playIconic, Gentle Adventures' brand mark.
+    _app_icon = app_dir / "icons" / "playIconic.ico"
+    if _app_icon.exists():
+        app.setWindowIcon(QIcon(str(_app_icon)))
     register_app_fonts()  # load Chandler42's full style table before any widget builds
 
     # Load the shared family Theme (colors + [theme.icons]) so the titlebar

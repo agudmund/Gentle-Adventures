@@ -61,6 +61,13 @@ class TitleBar(QWidget):
     # nudge this one number to slide the combo + curtains cluster left/right.
     _COMBO_X = 360
     _COMBO_W = 172
+    # Titlebar InfoBar font — 9px at a 25px handle, the family reference ratio
+    # (Intricate main_window.py:456). Gentle white (textPrimary), never the teal
+    # title accent: the infobar whispers, it doesn't shout.
+    _INFO_FONT_PX = max(6, round(Fam.handleHeightTop * 9 / 25))
+    # Curtains brand: the colourful share-arrow sticker (Family-3), copied from
+    # intricate/icons/Stickers — the bright version of the iconic.png fallback.
+    _CURTAINS_ICON = "Stickers/Intricate.ico"
 
     def __init__(self):
         super().__init__()
@@ -76,7 +83,7 @@ class TitleBar(QWidget):
 
         # ── brand / curtains button ──
         self._btn_curtains = self._control(
-            "✦", self.curtains_clicked.emit, icon_name=Fam.iconCurtains, accent=True,
+            "✦", self.curtains_clicked.emit, icon_name=self._CURTAINS_ICON, accent=True,
             tooltip="Roll the window up into this strip — click again to expand",
         )
         self._btn_curtains.setParent(self)
@@ -89,8 +96,8 @@ class TitleBar(QWidget):
         self._label.setAlignment(Qt.AlignCenter)
         # Click-through so a press over the title still drags the window.
         self._label.setAttribute(Qt.WA_TransparentForMouseEvents, True)
-        self._label.setFont(chandler42(size_px=Fam.titleFontSize))
-        self._label.setStyleSheet(f"color: {Fam.titleColor};")
+        self._label.setFont(chandler42(size_px=self._INFO_FONT_PX))
+        self._label.setStyleSheet(f"color: {Fam.textPrimary};")
 
         # ── right cluster: minimize / maximize / exid ──
         self._btn_min = self._control("–", self._on_minimize, icon_name=Fam.iconTray, tooltip="Minimize")
@@ -154,7 +161,7 @@ class TitleBar(QWidget):
         for b in (self._btn_curtains, self._btn_min, self._btn_max, self._btn_close):
             b.setStyleSheet(self._btn_qss(bool(b.property("_qss_close")),
                                           bool(b.property("_qss_accent"))))
-        self._label.setStyleSheet(f"color: {Fam.titleColor};")
+        self._label.setStyleSheet(f"color: {Fam.textPrimary};")
 
     # ── absolute layout — pixels from the left (the family technique) ─────────
 
@@ -192,7 +199,9 @@ class TitleBar(QWidget):
         self._reposition()
 
     def _on_minimize(self):
-        self.window().showMinimized()
+        # Minimize-to-tray (family behaviour): hide the window and surface the
+        # tray icon. It comes back via the tray icon click or its Show menu.
+        self.window().minimize_to_tray()
 
     def _on_maximize(self):
         # Taskbar-aware maximize lives on the window (work_area / manual
