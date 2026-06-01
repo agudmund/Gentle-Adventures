@@ -37,6 +37,7 @@ from PySide6.QtWidgets import QApplication
 from main_window import GentleAdventuresApp
 from utils.logger import init_logger
 from utils.settings import load_settings
+from pretty_widgets.utils.fonts import register_app_fonts
 
 
 def main() -> int:
@@ -51,6 +52,7 @@ def main() -> int:
     settings = load_settings(app_dir / "settings.toml")
 
     app = QApplication(sys.argv)
+    register_app_fonts()  # load Chandler42's full style table before any widget builds
     window = GentleAdventuresApp(settings=settings, app_dir=app_dir)
     window.show()
     return app.exec()

@@ -8,7 +8,9 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
+import random
+
+from PySide6.QtCore import Qt, Signal, QTimer
 from PySide6.QtGui import QFont, QPixmap
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -21,6 +23,11 @@ from PySide6.QtWidgets import (
 )
 
 from graphics.Theme import Theme
+# Family chrome — the titlebar matches Intricate / The Majestic by drawing from
+# the shared Pretty Widgets Theme, the Chandler42 font helper, and pill tooltips.
+from pretty_widgets.graphics.Theme import Theme as Fam
+from pretty_widgets.utils.fonts import chandler42
+from pretty_widgets.PrettyTooltip import install_tooltip
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -42,30 +49,33 @@ class TitleBar(QWidget):
 
     curtains_clicked = Signal()    # roll up into the strip / expand back out
 
-    _BTN_W = 46
-    _BAR_H = 56
+    # Family-consistent proportions from the shared Theme: thin bar, small
+    # square controls. _BAR_H tracks handleHeightTop, nudged up just enough that
+    # the Chandler42 title isn't clipped. Trivially tunable.
+    _BAR_H = max(Fam.handleHeightTop, Fam.titleFontSize + 8)
+    _BTN_W = _BAR_H
 
     def __init__(self):
         super().__init__()
         self.setFixedHeight(self._BAR_H)
-        self.setStyleSheet(f"background-color: {Theme.title_bg};")
+        self.setStyleSheet(f"background-color: {Fam.windowBg};")
 
         # ── brand / curtains button (far left) ──
         self._btn_curtains = self._control(
-            "✦", self.curtains_clicked.emit,
+            "✦", self.curtains_clicked.emit, accent=True,
             tooltip="Roll the window up into this strip — click again to expand",
         )
 
-        self._label = QLabel("GENTLE ADVENTURES")
+        # InfoBar / title — Chandler42 script-italic in lombardi-lake teal, the
+        # family's headline treatment. set_title() types it out char-by-char
+        # (the "infobar typing speed"), so a scene title reveals like a line of
+        # typewriter prose.
+        self._label = QLabel("")
         self._label.setAlignment(Qt.AlignCenter)
         # Click-through so a press over the title text still drags the window.
         self._label.setAttribute(Qt.WA_TransparentForMouseEvents, True)
-        font = QFont()
-        font.setPointSize(Theme.title_font_pt)
-        font.setBold(True)
-        font.setLetterSpacing(QFont.AbsoluteSpacing, 2.0)
-        self._label.setFont(font)
-        self._label.setStyleSheet(f"color: {Theme.title_text};")
+        self._label.setFont(chandler42(size_px=Fam.titleFontSize))
+        self._label.setStyleSheet(f"color: {Fam.titleColor};")
 
         # 2-button-wide spacer so that, with 1 curtains button on the left and
         # the 3-button cluster on the right, the title sits dead-center.
@@ -91,22 +101,29 @@ class TitleBar(QWidget):
         layout.addWidget(self._btn_close)
 
         self._drag_pos = None
+        # typewriter state for the title / infobar reveal
+        self._tw_full = ""
+        self._tw_index = 0
+        self._tw_timer = None
 
     # ── window controls ──────────────────────────────────────────────────────
 
-    def _control(self, glyph: str, slot, close: bool = False, tooltip: str = "") -> QPushButton:
+    def _control(self, glyph: str, slot, close: bool = False, accent: bool = False,
+                 tooltip: str = "") -> QPushButton:
         btn = QPushButton(glyph)
         btn.setFixedSize(self._BTN_W, self._BAR_H)
         btn.setCursor(Qt.PointingHandCursor)
         btn.setFocusPolicy(Qt.NoFocus)
         if tooltip:
             btn.setToolTip(tooltip)
-        hover_bg = "#c0392b" if close else Theme.button_bg_hover
-        hover_fg = "#ffffff" if close else Theme.button_text
+            install_tooltip(btn)   # pill-shaped family tooltip (Chandler42 italic)
+        base_fg  = Fam.titleColor if accent else Fam.textPrimary
+        hover_bg = "#c0392b" if close else Fam.backDrop
+        hover_fg = "#ffffff" if close else Fam.textPrimary
         btn.setStyleSheet(
             "QPushButton {"
-            f"  background: transparent; color: {Theme.title_text};"
-            "   border: none; font-size: 15px; font-family: 'Segoe UI Symbol'; }"
+            f"  background: transparent; color: {base_fg};"
+            "   border: none; font-size: 13px; font-family: 'Segoe UI Symbol'; }"
             f"QPushButton:hover {{ background: {hover_bg}; color: {hover_fg}; }}"
         )
         btn.clicked.connect(slot)
@@ -168,8 +185,33 @@ class TitleBar(QWidget):
         else:
             super().mouseDoubleClickEvent(event)
 
+    # ── InfoBar typewriter — the family's Chandler42 reveal ───────────────────
+
     def set_title(self, text: str):
-        self._label.setText(text)
+        """Type the title/message out char-by-char at the family's infobar pace
+        — 85% brisk keystrokes, 15% little pauses — for an organic reveal.
+        Replaces the old instant setText (Majestic / Intricate do the same)."""
+        if self._tw_timer is not None:
+            self._tw_timer.stop()
+        self._tw_full = text or ""
+        self._tw_index = 0
+        self._label.setText("")
+        self._tw_timer = QTimer(self)
+        self._tw_timer.setSingleShot(True)
+        self._tw_timer.timeout.connect(self._tw_tick)
+        self._tw_timer.start(random.randint(20, 60))
+
+    def _tw_tick(self):
+        self._tw_index += 1
+        self._label.setText(self._tw_full[:self._tw_index])
+        if self._tw_index < len(self._tw_full):
+            delay = random.choices(
+                [random.randint(25, 65), random.randint(80, 160)],
+                weights=[85, 15],
+            )[0]
+            self._tw_timer.start(delay)
+        else:
+            self._tw_timer = None
 
 
 # ─────────────────────────────────────────────────────────────────────────────
