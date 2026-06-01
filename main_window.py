@@ -292,6 +292,21 @@ class GentleAdventuresApp(QMainWindow):
         if self.current_scene is not None and self.current_scene["id"] == scene_id:
             self.scene_view.show_error(error)
 
+    # ───── shutdown ─────
+
+    def closeEvent(self, event):
+        """Sweep Python bytecode on the way out — the ✕ button (and every other
+        exit path, since they all funnel through here) clears the cache so the
+        next launch always runs fresh code. Mirrors Intricate's shutdown janitor;
+        the whole point of the edit→restart loop staying painless."""
+        try:
+            from utils.housekeeping import clean_pycache
+            n = clean_pycache(self.app_dir)
+            logger.info(f"Cleaned Python cache on exit ({n} tree(s) swept).")
+        except Exception as e:
+            logger.warning(f"pycache cleanup on exit failed: {e}")
+        super().closeEvent(event)
+
     # ───── input dispatch ─────
 
     def _on_choice(self, choice: object, free_text: str):
