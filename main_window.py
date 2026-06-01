@@ -85,6 +85,10 @@ class SceneRequestWorker(QThread):
 
 
 class GentleAdventuresApp(QMainWindow):
+    # Leave a sliver below a maximized window so an auto-hide taskbar can still
+    # be triggered and never gets occluded — matches Intricate's constant.
+    _TASKBAR_TRIGGER_MARGIN = 5
+
     def __init__(self, settings: dict, app_dir: Path):
         super().__init__()
         self.settings = settings
@@ -104,7 +108,8 @@ class GentleAdventuresApp(QMainWindow):
         self.phase: str = "quest"  # set properly in _start
         self._curtains_collapsed = False
         self._curtain_anim = None
-        self._restore_geom = None
+        self._is_maxed = False
+        self._restore_geom_max = None
 
         win_cfg = settings.get("window", {})
         self.setWindowTitle(win_cfg.get("title", "Gentle Adventures"))
@@ -148,8 +153,8 @@ class GentleAdventuresApp(QMainWindow):
 
     def toggle_curtains(self):
         """Roll the window up into just its titlebar strip, or expand it back
-        out (auto-maximizing on expand). Mirrors Intricate's curtains gesture —
-        animated geometry, no resize-grip fiddling."""
+        out — auto-maximizing to the taskbar-aware work area on expand. Mirrors
+        Intricate's curtains gesture (animated geometry, no resize-grip)."""
         bar_h = self.title_bar.height()
         self.setMinimumHeight(0)  # allow shrinking below the natural minimum
         collapsing = not self._curtains_collapsed
@@ -159,14 +164,47 @@ class GentleAdventuresApp(QMainWindow):
         anim.setDuration(240)
         anim.setEasingCurve(QEasingCurve.OutCubic)
         anim.setStartValue(start)
-        if collapsing:
-            self._restore_geom = start
-            anim.setEndValue(QRect(start.x(), start.y(), start.width(), bar_h))
-        else:
-            anim.setEndValue(self.screen().availableGeometry())  # auto-maximize
+        anim.setEndValue(
+            QRect(start.x(), start.y(), start.width(), bar_h) if collapsing
+            else self.work_area()      # auto-maximize on expand
+        )
         anim.start()
         self._curtain_anim = anim          # keep a ref so it isn't GC'd mid-roll
         self._curtains_collapsed = collapsing
+        self._is_maxed = not collapsing    # the expanded strip fills the work area
+        self.title_bar.reflect_maximized(self._is_maxed)
+
+    # ───── maximize (taskbar-aware work area, family-consistent) ─────
+
+    def work_area(self) -> QRect:
+        """The taskbar-aware work rectangle. Qt's availableGeometry already
+        excludes a visible taskbar; trim _TASKBAR_TRIGGER_MARGIN off the bottom
+        so an auto-hide taskbar's reveal zone stays reachable. This is the
+        known-good baseline Intricate falls back to (it layers a 5-reader
+        resolution consensus on top for driver-botch edge cases; the plain
+        availableGeometry path is the default we share here)."""
+        a = self.screen().availableGeometry()
+        return QRect(a.x(), a.y(), a.width(),
+                     max(1, a.height() - self._TASKBAR_TRIGGER_MARGIN))
+
+    def is_window_maximized(self) -> bool:
+        return self._is_maxed
+
+    def maximize_window(self):
+        if not self._is_maxed:
+            self._restore_geom_max = self.geometry()
+        self.setGeometry(self.work_area())
+        self._is_maxed = True
+        self.title_bar.reflect_maximized(True)
+
+    def restore_window(self):
+        if self._restore_geom_max is not None:
+            self.setGeometry(self._restore_geom_max)
+        self._is_maxed = False
+        self.title_bar.reflect_maximized(False)
+
+    def toggle_maximize(self):
+        self.restore_window() if self._is_maxed else self.maximize_window()
 
     # ───── boot flow ─────
 

@@ -116,13 +116,13 @@ class TitleBar(QWidget):
         self.window().showMinimized()
 
     def _on_maximize(self):
-        w = self.window()
-        if w.isMaximized():
-            w.showNormal()
-            self._btn_max.setText("□")    # □
-        else:
-            w.showMaximized()
-            self._btn_max.setText("❐")    # ❐ (restore)
+        # Taskbar-aware maximize lives on the window (work_area / manual
+        # geometry, family-consistent) — the bar just triggers it.
+        self.window().toggle_maximize()
+
+    def reflect_maximized(self, maxed: bool):
+        """Window calls this to keep the glyph in sync with maximize state."""
+        self._btn_max.setText("❐" if maxed else "□")
 
     def _on_close(self):
         self.window().close()
@@ -146,10 +146,9 @@ class TitleBar(QWidget):
     def mouseMoveEvent(self, event):
         if self._drag_pos is not None and (event.buttons() & Qt.LeftButton):
             w = self.window()
-            if w.isMaximized():
+            if getattr(w, "is_window_maximized", None) and w.is_window_maximized():
                 # Dragging a maximized window restores it, then follows the cursor.
-                w.showNormal()
-                self._btn_max.setText("□")
+                w.restore_window()
             new_pos = event.globalPosition().toPoint()
             w.move(w.pos() + (new_pos - self._drag_pos))
             self._drag_pos = new_pos
