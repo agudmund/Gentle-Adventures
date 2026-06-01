@@ -38,6 +38,8 @@ from main_window import GentleAdventuresApp
 from utils.logger import init_logger
 from utils.settings import load_settings
 from pretty_widgets.utils.fonts import register_app_fonts
+from pretty_widgets.graphics.Theme import Theme as FamTheme
+from pretty_widgets.utils.settings import init_watcher
 
 
 def main() -> int:
@@ -53,6 +55,14 @@ def main() -> int:
 
     app = QApplication(sys.argv)
     register_app_fonts()  # load Chandler42's full style table before any widget builds
+
+    # Load the shared family Theme (colors + [theme.icons]) so the titlebar
+    # icons resolve from the asset vault, and live-reload it when the shared
+    # settings.toml changes — same wiring as the rest of the suite.
+    FamTheme.reload()
+    _watcher = init_watcher()
+    _watcher.changed.connect(FamTheme.reload)
+
     window = GentleAdventuresApp(settings=settings, app_dir=app_dir)
     window.show()
     return app.exec()

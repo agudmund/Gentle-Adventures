@@ -1,38 +1,20 @@
 {
   "version": "1.0",
-  "description": "Just a git status and a little note keeping each other company \u2014 feels like the very start of something",
+  "description": "A single empty note, sitting quietly \u2014 the start of something, or maybe just the page before the page",
   "description_signature": {
-    "n_nodes": 2,
+    "n_nodes": 1,
     "n_edges": 0,
     "density": 0.0,
     "type_hist": {
-      "git": 0.5,
-      "about": 0.5
+      "about": 1.0
     },
     "tag_bag": [
-      "git",
-      "status",
       "note",
       "becoming",
       "yours"
     ]
   },
   "nodes": [
-    {
-      "node_id": 0,
-      "node_type": "git",
-      "title": "Git Status",
-      "uuid": "e48022e0159b492ab8b6041b4a67dbbb",
-      "x": 0.0,
-      "y": 0.0,
-      "width": 300.0,
-      "height": 212.0,
-      "z_value": 0.0,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "depth_front": false,
-      "node_tint": ""
-    },
     {
       "node_id": 0,
       "node_type": "about",
@@ -52,11 +34,11 @@
   ],
   "connections": [],
   "viewport": {
-    "camera_x": 17.365684181780694,
-    "camera_y": -42.32885519309025,
+    "camera_x": 31.475302579477443,
+    "camera_y": 321.2651573629414,
     "camera_zoom": 0.9213573063125589
   },
   "ui_migrations": [],
   "last_browse_dirs": {},
-  "checksum": "9da93267cde24f9d"
+  "checksum": "f6db3729a9cfa493"
 }

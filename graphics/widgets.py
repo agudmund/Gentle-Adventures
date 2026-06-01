@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import random
 
-from PySide6.QtCore import Qt, Signal, QTimer
-from PySide6.QtGui import QFont, QPixmap
+from PySide6.QtCore import Qt, Signal, QTimer, QSize
+from PySide6.QtGui import QFont, QPixmap, QIcon
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -77,7 +77,7 @@ class TitleBar(QWidget):
 
         # ── brand / curtains button ──
         self._btn_curtains = self._control(
-            "✦", self.curtains_clicked.emit, accent=True,
+            "✦", self.curtains_clicked.emit, icon_name=Fam.iconCurtains, accent=True,
             tooltip="Roll the window up into this strip — click again to expand",
         )
         self._btn_curtains.setParent(self)
@@ -94,10 +94,10 @@ class TitleBar(QWidget):
         self._label.setStyleSheet(f"color: {Fam.titleColor};")
 
         # ── right cluster: minimize / maximize / exid ──
-        self._btn_min = self._control("–", self._on_minimize, tooltip="Minimize")
-        self._btn_max = self._control("□", self._on_maximize, tooltip="Maximize")
+        self._btn_min = self._control("–", self._on_minimize, icon_name=Fam.iconTray, tooltip="Minimize")
+        self._btn_max = self._control("□", self._on_maximize, icon_name=Fam.iconMaximize, tooltip="Maximize")
         self._btn_close = self._control(
-            "✕", self._on_close, close=True,
+            "✕", self._on_close, icon_name=Fam.iconClose, close=True,
             tooltip="Exid, not a typo.  It's an exit button named exid",
         )
         for b in (self._btn_min, self._btn_max, self._btn_close):
@@ -111,12 +111,20 @@ class TitleBar(QWidget):
 
     # ── window controls ──────────────────────────────────────────────────────
 
-    def _control(self, glyph: str, slot, close: bool = False, accent: bool = False,
-                 tooltip: str = "") -> QPushButton:
-        btn = QPushButton(glyph)
+    def _control(self, glyph: str = "", slot=None, icon_name: str | None = None,
+                 close: bool = False, accent: bool = False, tooltip: str = "") -> QPushButton:
+        btn = QPushButton()
         btn.setFixedSize(self._BTN_W, self._BAR_H)
         btn.setCursor(Qt.PointingHandCursor)
         btn.setFocusPolicy(Qt.NoFocus)
+        if icon_name:
+            # Family icons resolve via Theme.icon() → app icons/ then the asset
+            # vault ($SingleSharedBraincell_AssetVault/Icons). Missing → honest
+            # circle, no crash. main.py's FamTheme.reload() loads the mappings.
+            btn.setIcon(QIcon(Fam.icon(icon_name)))
+            btn.setIconSize(QSize(Fam.toolbarBtnIconSize, Fam.toolbarBtnIconSize))
+        elif glyph:
+            btn.setText(glyph)
         if tooltip:
             btn.setToolTip(tooltip)
             install_tooltip(btn)   # pill-shaped family tooltip (Chandler42 italic)
@@ -176,8 +184,13 @@ class TitleBar(QWidget):
         self.window().toggle_maximize()
 
     def reflect_maximized(self, maxed: bool):
-        """Window calls this to keep the glyph in sync with maximize state."""
-        self._btn_max.setText("❐" if maxed else "□")
+        """Keep the max/restore icon in sync with the window state.
+
+        restore_node.ico is dev-only (intricate/icons) and not in the shared
+        asset vault yet, so the maximize icon stays for both states until it
+        lands there — Fam.icon() would otherwise draw an honest circle.
+        """
+        self._btn_max.setIcon(QIcon(Fam.icon(Fam.iconMaximize)))
 
     def _on_close(self):
         self.window().close()

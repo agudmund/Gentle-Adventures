@@ -1,5 +1,6 @@
 {
   "version": "1.0",
+  "display_name": "Gentle Adventures",
   "description": "A single empty note, sitting quietly \u2014 the start of something, or maybe just the page before the page",
   "description_signature": {
     "n_nodes": 1,
@@ -15,6 +16,20 @@
     ]
   },
   "nodes": [
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Infinite Wisdom",
+      "uuid": "ef53f9359d324c59b7b3de44f00f5825",
+      "x": -645.7863805099666,
+      "y": 405.9228677491219,
+      "width": 300.0,
+      "height": 200.0,
+      "z_value": -9.998000000000001,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "Testing the discord thing"
+    },
     {
       "node_id": 0,
       "node_type": "about",
@@ -34,11 +49,13 @@
   ],
   "connections": [],
   "viewport": {
-    "camera_x": 31.475302579477443,
-    "camera_y": 321.2651573629414,
+    "camera_x": 30.38994731811608,
+    "camera_y": 778.1997223960439,
     "camera_zoom": 0.9213573063125589
   },
-  "ui_migrations": [],
+  "ui_migrations": [
+    "image_border_default_on_v1"
+  ],
   "last_browse_dirs": {},
-  "checksum": "f6db3729a9cfa493"
+  "checksum": "f4de203f49e201a4"
 }
