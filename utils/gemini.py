@@ -209,13 +209,19 @@ class GeminiImageClient:
     def set_model(self, model: str) -> None:
         self.model = model
 
-    def generate(self, prompt: str, timeout: float = 90.0) -> bytes:
+    def generate(self, prompt: str, reference_path: Path | None = None,
+                 timeout: float = 90.0) -> bytes:
         """Generate a single image from `prompt`. Returns raw PNG bytes.
 
         Routes by model family — the two image families on the Gemini API speak
         different endpoints:
           • imagen-*           → :predict  (dedicated image models)
           • gemini-*-image-*   → :generateContent  (chat models with IMAGE output)
+
+        `reference_path`, when given, primes a gemini-*-image render with a
+        prior scene's PNG so palette, lighting, and character design carry
+        forward (image-to-image style seeding). Ignored by imagen :predict,
+        which has no inline-reference channel.
         """
         key = load_api_key(self.app_dir)
         if not key:
@@ -224,15 +230,34 @@ class GeminiImageClient:
             )
 
         if self.model.lower().startswith("imagen"):
+            if reference_path is not None:
+                logger.debug("[gemini] imagen :predict has no style-reference channel — text only")
             return self._generate_imagen(prompt, key, timeout)
-        return self._generate_content(prompt, key, timeout)
+        return self._generate_content(prompt, key, timeout, reference_path)
 
-    def _generate_content(self, prompt: str, key: str, timeout: float) -> bytes:
+    def _generate_content(self, prompt: str, key: str, timeout: float,
+                          reference_path: Path | None = None) -> bytes:
         """gemini-*-image models: chat-style :generateContent with IMAGE modality.
-        The image comes back inline as base64 in candidates[].content.parts[]."""
+        The image comes back inline as base64 in candidates[].content.parts[].
+
+        When `reference_path` points at a prior scene PNG, it's base64-inlined
+        ahead of the prompt with a style-continuity bridge so the model grounds
+        colour, lighting, and character design on it."""
         url = f"{GEMINI_BASE}/models/{self.model}:generateContent?key={key}"
+        parts = [{"text": prompt}]
+        if reference_path is not None and Path(reference_path).exists():
+            ref_b64 = base64.b64encode(Path(reference_path).read_bytes()).decode("utf-8")
+            # Reference image first, then a bridge line, then the new prompt —
+            # the order that primes style most reliably.
+            parts = [
+                {"inline_data": {"mime_type": "image/png", "data": ref_b64}},
+                {"text": ("Maintain the exact visual style, character design, "
+                          "colour grading, and soft lighting of this reference "
+                          "image for the next scene:")},
+                {"text": prompt},
+            ]
         body = {
-            "contents": [{"parts": [{"text": prompt}]}],
+            "contents": [{"parts": parts}],
             "generationConfig": {"responseModalities": ["IMAGE", "TEXT"]},
         }
         payload = _http_request(url, data=json.dumps(body).encode("utf-8"), timeout=timeout)

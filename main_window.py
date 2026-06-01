@@ -65,21 +65,25 @@ class SceneRequestWorker(QThread):
     image_ready = Signal(bytes, str)
     image_failed = Signal(str, str)
 
-    def __init__(self, client: GeminiImageClient, prompt: str, scene_id: str):
+    def __init__(self, client: GeminiImageClient, prompt: str, scene_id: str,
+                 reference_path: Path | None = None):
         super().__init__()
         self.client = client
         self.prompt = prompt
         self.scene_id = scene_id
+        self.reference_path = reference_path
 
     def run(self):
         import time
+        seed = (f", seeded from {self.reference_path.name}"
+                if self.reference_path and self.reference_path.exists() else "")
         logger.info(
             f"[image] requesting '{self.scene_id}' via {self.client.model} "
-            f"(prompt {len(self.prompt)} chars) — painter is painting"
+            f"(prompt {len(self.prompt)} chars{seed}) — painter is painting"
         )
         t0 = time.perf_counter()
         try:
-            data = self.client.generate(self.prompt)
+            data = self.client.generate(self.prompt, reference_path=self.reference_path)
             logger.info(
                 f"[image] '{self.scene_id}' delivered in "
                 f"{time.perf_counter() - t0:.1f}s ({len(data)} bytes)"
@@ -517,26 +521,43 @@ class GentleAdventuresApp(QMainWindow):
             return
 
         logger.info(f"Loading scene: {scene_id}")
+        # The scene we're leaving — its cached image seeds the next render so
+        # palette, lighting, and character design carry forward (image-to-image).
+        prev_scene_id = self.current_scene["id"] if self.current_scene else None
         self.current_scene = scene
 
         self.title_bar.set_title(scene["title"])
-        verified = self._verify(scene.get("verify"))
+
+        verify_kind = scene.get("verify")
+        npu_engine = probe_npu() if verify_kind == "npu" else None
+        if verify_kind == "npu":
+            verified = npu_engine is not None
+        else:
+            verified = self._verify(verify_kind)
         self.narrative.set_text(scene["narrative"], verified=verified)
         self.interaction.set_choices(scene["choices"])
         self.interaction.set_parser_mode("free")
+
+        # When a scene checks the NPU, the ship names the engine it found on the
+        # bottom strip — the game teaching you your actual silicon, by name.
+        if npu_engine:
+            self.bottom_toolbar.set_info(f"✦ engine detected: {npu_engine} ✦")
 
         if self.scene_cache.has(scene_id):
             # Baked art — reload it, never re-commission the painter.
             self.scene_view.show_image(QPixmap(str(self.scene_cache.path(scene_id))))
         else:
             self.scene_view.show_loading()
-            self._request_image(scene["id"], scene["image_prompt"])
+            # Seed from the previous scene's image when we have one cached.
+            ref = (self.scene_cache.path(prev_scene_id)
+                   if prev_scene_id and self.scene_cache.has(prev_scene_id) else None)
+            self._request_image(scene["id"], scene["image_prompt"], ref)
 
-    def _request_image(self, scene_id: str, prompt: str):
+    def _request_image(self, scene_id: str, prompt: str, reference_path: Path | None = None):
         if isinstance(self.current_worker, QThread) and self.current_worker.isRunning():
             self.current_worker.quit()
             self.current_worker.wait()
-        worker = SceneRequestWorker(self.image_client, prompt, scene_id)
+        worker = SceneRequestWorker(self.image_client, prompt, scene_id, reference_path)
         worker.image_ready.connect(self._on_image_ready)
         worker.image_failed.connect(self._on_image_failed)
         worker.start()
@@ -614,10 +635,8 @@ class GentleAdventuresApp(QMainWindow):
     def _verify(self, kind: str | None):
         if kind is None:
             return None
-        if kind == "npu":
-            # probe_npu now returns the engine descriptor (or None); the
-            # narrative's verified flag just needs the truthiness.
-            return probe_npu() is not None
+        # 'npu' is resolved directly in _load_scene — it needs the engine
+        # descriptor (for the bottom strip), not just this bool.
         if kind == "lm_studio":
             return probe_lm_studio()
         return None
