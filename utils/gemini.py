@@ -186,13 +186,26 @@ class GeminiImageClient:
         self.model = model
 
     def generate(self, prompt: str, timeout: float = 90.0) -> bytes:
-        """Generate a single image from `prompt`. Returns raw PNG bytes."""
+        """Generate a single image from `prompt`. Returns raw PNG bytes.
+
+        Routes by model family — the two image families on the Gemini API speak
+        different endpoints:
+          • imagen-*           → :predict  (dedicated image models)
+          • gemini-*-image-*   → :generateContent  (chat models with IMAGE output)
+        """
         key = load_api_key(self.app_dir)
         if not key:
             raise GeminiAuthError(
                 "No Gemini API key found. Set one through the in-app prompt and try again."
             )
 
+        if self.model.lower().startswith("imagen"):
+            return self._generate_imagen(prompt, key, timeout)
+        return self._generate_content(prompt, key, timeout)
+
+    def _generate_content(self, prompt: str, key: str, timeout: float) -> bytes:
+        """gemini-*-image models: chat-style :generateContent with IMAGE modality.
+        The image comes back inline as base64 in candidates[].content.parts[]."""
         url = f"{GEMINI_BASE}/models/{self.model}:generateContent?key={key}"
         body = {
             "contents": [{"parts": [{"text": prompt}]}],
@@ -210,3 +223,27 @@ class GeminiImageClient:
             raise GeminiAPIError(f"Unexpected Gemini response shape: {e}") from e
 
         raise GeminiAPIError("Gemini response contained no image payload")
+
+    def _generate_imagen(self, prompt: str, key: str, timeout: float) -> bytes:
+        """imagen-* models: the dedicated :predict endpoint.
+
+        Different shape from :generateContent — the prompt goes in `instances`,
+        knobs in `parameters`, and the image returns as base64 in
+        predictions[].bytesBase64Encoded. sampleCount is pinned to 1 (the -ultra
+        variant only ever returns a single image anyway)."""
+        url = f"{GEMINI_BASE}/models/{self.model}:predict?key={key}"
+        body = {
+            "instances": [{"prompt": prompt}],
+            "parameters": {"sampleCount": 1},
+        }
+        payload = _http_request(url, data=json.dumps(body).encode("utf-8"), timeout=timeout)
+
+        try:
+            for pred in payload["predictions"]:
+                b64 = pred.get("bytesBase64Encoded") or pred.get("bytes_base64_encoded")
+                if b64:
+                    return base64.b64decode(b64)
+        except (KeyError, IndexError, TypeError) as e:
+            raise GeminiAPIError(f"Unexpected Imagen response shape: {e}") from e
+
+        raise GeminiAPIError("Imagen response contained no image payload")
