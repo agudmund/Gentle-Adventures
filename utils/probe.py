@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 import os
+import shutil
 import subprocess
 import urllib.error
 import urllib.request
@@ -91,10 +92,15 @@ def _npu_descriptor(npu_name: str, cpu_name: str) -> str:
     return npu_name or "Neural Processing Unit"
 
 
-def probe_lm_studio() -> bool:
+def probe_fastflowlm() -> bool:
+    """True if FastFlowLM (the `flm` NPU runtime) is installed — detected via the
+    flm CLI on PATH, with a couple of known install locations as backup. This is
+    the genuine 'oracle on the NPU' tool scene 04 summons."""
+    if shutil.which("flm"):
+        return True
     candidates = [
-        Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "LM Studio" / "LM Studio.exe",
-        Path(os.environ.get("ProgramFiles", "")) / "LM Studio" / "LM Studio.exe",
+        Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "FastFlowLM" / "flm.exe",
+        Path(os.environ.get("ProgramFiles", "")) / "FastFlowLM" / "flm.exe",
     ]
     return any(p.exists() for p in candidates if str(p))
 

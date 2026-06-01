@@ -34,7 +34,7 @@ def _prompt(specific: str) -> str:
 #   image_prompt: full text sent to Gemini (already styled)
 #   narrative   : the story panel text
 #   choices     : list of buttons. Each has label + next (scene id) or action.
-#   verify      : optional — "npu" | "lm_studio" | None — system probe to confirm
+#   verify      : optional — "npu" | "fastflowlm" | None — system probe to confirm
 # ─────────────────────────────────────────────────────────────────────────────
 
 QUEST: list[dict] = [
@@ -151,23 +151,25 @@ QUEST: list[dict] = [
         "title": "GENTLE ADVENTURES, 04 — THE SUMMONING",
         "image_prompt": _prompt(
             "The captain stands before a tall ornate magical doorway labeled "
-            "'LM STUDIO', glowing teal and gold. In their hand is a tiny scroll "
-            "labeled 'setupLMStudio.ps1'. Around the doorway, small icons of llamas, "
-            "owls, and tiny robots peek out shyly."
+            "'FastFlowLM', glowing teal and gold. In their hand is a tiny glowing "
+            "terminal scroll reading 'flm run llama3.2'. Around the doorway, small "
+            "icons of llamas, owls, and tiny robots peek out shyly."
         ),
         "narrative": (
             "The second errand needs invocation.\n\n"
-            "A local oracle, summoned and seated, would answer your questions without\n"
-            "calling the cloud spirits. Its voice would be smaller — but always present,\n"
-            "always private, always close.\n\n"
-            "The scroll in your satchel already speaks the rite:\n"
-            "    > .\\setupLMStudio.ps1"
+            "A local oracle — a small mind that runs right on your ship's NPU —\n"
+            "would answer you without ever calling the cloud spirits. Smaller of\n"
+            "voice, but always present, always private, always close.\n\n"
+            "Fetch the summoner first: FastFlowLM, a tiny runtime that speaks to\n"
+            "the NPU directly (fastflowlm.com, installed in under a minute). Then\n"
+            "call your first oracle down with a single line:\n"
+            "    > flm run llama3.2:3b"
         ),
         "choices": [
             {"label": "I have cast the rite", "next": "arrival"},
             {"label": "Ask what models do", "next": "model_lore"},
         ],
-        "verify": "lm_studio",
+        "verify": "fastflowlm",
     },
     {
         "id": "model_lore",
@@ -182,7 +184,8 @@ QUEST: list[dict] = [
             "and conversations, then captured into a file you can carry.\"\n\n"
             "\"The big ones — like the cloud spirits — would never fit on your ship.\n"
             "The small ones do. They are gentler, less knowing, but always with you.\"\n\n"
-            "\"For your first oracle, try Llama 3.2 3B (ONNX). It fits on the NPU.\""
+            "\"For your first oracle, try Llama 3.2 — three billion parameters,\n"
+            "small enough to run right on your NPU.\""
         ),
         "choices": [
             {"label": "Back to the doorway", "next": "summoning"},
@@ -200,7 +203,7 @@ QUEST: list[dict] = [
         "narrative": (
             "The portal opens.\n\n"
             "From it emerges a llama — soft, three billion parameters, friendly.\n"
-            "Llama 3.2 3B (ONNX) walks to your side and bows its small head.\n\n"
+            "Llama 3.2 3B walks to your side and bows its small head.\n\n"
             "The NPU graph blooms. Forty teraops light up like an aurora.\n"
             "Your private oracle is here."
         ),
@@ -235,15 +238,15 @@ QUEST: list[dict] = [
         "title": "GENTLE ADVENTURES, 07 — THE LOCALHOST GATE",
         "image_prompt": _prompt(
             "On the bridge appears a small ornate door floating in the air, glowing "
-            "soft gold. Above it floats the inscription 'localhost:1234/v1'. Beyond "
+            "soft gold. Above it floats the inscription 'localhost · OpenAI'. Beyond "
             "the door, faint friendly silhouettes of other tools and ships approach, "
             "knocking politely."
         ),
         "narrative": (
             "The final discovery: your llama can serve other ships too.\n\n"
-            "LM Studio → Developer → Start Server.\n"
-            "A door opens at localhost:1234, OpenAI-compatible —\n"
-            "any tool that speaks the old protocol can knock and be answered.\n\n"
+            "Leave FastFlowLM running as a local server — an OpenAI-compatible\n"
+            "door on your own machine. Any tool that speaks the old protocol can\n"
+            "knock and be answered, and every word still stays aboard your ship.\n\n"
             "Your private oracle, available to your whole fleet."
         ),
         "choices": [

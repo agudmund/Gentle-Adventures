@@ -33,7 +33,7 @@ from utils.gemini import (
     save_selected_model,
     validate_key,
 )
-from utils.probe import probe_lm_studio, probe_npu
+from utils.probe import probe_fastflowlm, probe_npu
 from utils.scene_cache import SceneCache
 from utils.logger import get_logger
 
@@ -721,6 +721,6 @@ class GentleAdventuresApp(QMainWindow):
             return None
         # 'npu' is resolved directly in _load_scene — it needs the engine
         # descriptor (for the bottom strip), not just this bool.
-        if kind == "lm_studio":
-            return probe_lm_studio()
+        if kind == "fastflowlm":
+            return probe_fastflowlm()
         return None
