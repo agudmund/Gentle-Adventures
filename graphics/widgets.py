@@ -304,7 +304,7 @@ class SceneView(QWidget):
 
     def __init__(self):
         super().__init__()
-        self.setMinimumHeight(560)
+        self.setMinimumSize(360, 360)
         self.setStyleSheet(f"background-color: {Fam.windowBg};")
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
@@ -316,9 +316,11 @@ class SceneView(QWidget):
         font.setItalic(True)
         self._image_label.setFont(font)
 
+        # Centre the framed square in the view — the border hugs the image (no
+        # dead side-matte), windowBg breathing around it in the column.
         layout = QVBoxLayout(self)
         layout.setContentsMargins(self._MARGIN, self._MARGIN, self._MARGIN, self._MARGIN)
-        layout.addWidget(self._image_label)
+        layout.addWidget(self._image_label, alignment=Qt.AlignCenter)
 
         self._current_pixmap: QPixmap | None = None
 
@@ -338,7 +340,7 @@ class SceneView(QWidget):
         """Re-tint the frame from the live family palette (settings watcher)."""
         self.setStyleSheet(f"background-color: {Fam.windowBg};")
         self._image_label.setStyleSheet(self._frame_qss())
-        self._rescale()
+        self._fit()
 
     def show_loading(self):
         self.show_placeholder("✦ the painter is painting ✦")
@@ -347,11 +349,12 @@ class SceneView(QWidget):
         self._current_pixmap = None
         self._image_label.setPixmap(QPixmap())
         self._image_label.setText(text)
+        self._fit()
 
     def show_image(self, pixmap: QPixmap):
         self._current_pixmap = pixmap
         self._image_label.setText("")
-        self._rescale()
+        self._fit()
 
     def show_error(self, message: str):
         self._current_pixmap = None
@@ -360,24 +363,26 @@ class SceneView(QWidget):
             f"the painter went quiet\n\n{message}\n\n"
             f"(check your GEMINI_API_KEY and try again)"
         )
+        self._fit()
 
     def resizeEvent(self, event):  # noqa: N802 — Qt naming
         super().resizeEvent(event)
-        self._rescale()
+        self._fit()
 
-    def _rescale(self):
-        if self._current_pixmap is None or self._current_pixmap.isNull():
-            return
-        # Fit inside the frame: drop the outer margin, the border, and the inner
-        # padding on each side so the image sits within the padded node border.
-        inset = 2 * (self._MARGIN + int(Fam.nodeBorderWidth) + self._PADDING)
-        target = QSize(max(1, self.width() - inset), max(1, self.height() - inset))
-        scaled = self._current_pixmap.scaled(
-            target,
-            Qt.KeepAspectRatio,
-            Qt.SmoothTransformation,
-        )
-        self._image_label.setPixmap(scaled)
+    def _fit(self):
+        """Hug a centred square. The framed label is sized to the smaller of the
+        available width/height (minus the outer margin), so the node border
+        wraps the square image with no dead matte; windowBg breathes around it.
+        Square source art fills the frame exactly; text placeholders centre in
+        the same square box so loading/error read consistently."""
+        inset = 2 * (int(Fam.nodeBorderWidth) + self._PADDING)
+        box = max(1, min(self.width(), self.height()) - 2 * self._MARGIN)
+        self._image_label.setFixedSize(box, box)
+        if self._current_pixmap is not None and not self._current_pixmap.isNull():
+            side = max(1, box - inset)
+            scaled = self._current_pixmap.scaled(
+                QSize(side, side), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            self._image_label.setPixmap(scaled)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -388,8 +393,11 @@ class SceneView(QWidget):
 class NarrativePanel(QWidget):
     def __init__(self):
         super().__init__()
-        self.setMinimumHeight(140)
-        self.setStyleSheet(f"background-color: {Fam.nodeBg};")
+        self.setMinimumWidth(280)
+        # Blend with the window — in the side-by-side layout the narrative is a
+        # text column on windowBg, with the framed image as the one bordered
+        # focal element beside it (no competing panel block).
+        self.setStyleSheet(f"background-color: {Fam.windowBg};")
 
         self._text = QLabel()
         self._text.setWordWrap(True)
@@ -406,11 +414,18 @@ class NarrativePanel(QWidget):
         vfont.setBold(True)
         self._verified.setFont(vfont)
 
+        # Story at the top of the column, verification line pinned to the bottom.
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(28, 18, 28, 14)
+        layout.setContentsMargins(40, 32, 28, 20)
         layout.setSpacing(6)
         layout.addWidget(self._text)
+        layout.addStretch(1)
         layout.addWidget(self._verified)
+
+    def restyle(self):
+        """Re-tint from the live family palette (settings watcher → reload)."""
+        self.setStyleSheet(f"background-color: {Fam.windowBg};")
+        self._text.setStyleSheet(f"color: {Fam.textPrimary};")
 
     def set_text(self, body: str, verified: bool | None = None):
         self._text.setText(body)

@@ -17,7 +17,7 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt, QThread, Signal, QPropertyAnimation, QEasingCurve, QRect, QTimer
 from PySide6.QtGui import QPixmap, QIcon
-from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QSystemTrayIcon
+from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QSystemTrayIcon
 
 from data.quest import QUEST, get_scene
 from pretty_widgets.graphics.Theme import Theme as Fam
@@ -186,6 +186,8 @@ class GentleAdventuresApp(QMainWindow):
             self.bottom_toolbar.restyle()
         if hasattr(self, "scene_view"):
             self.scene_view.restyle()
+        if hasattr(self, "narrative"):
+            self.narrative.restyle()
 
     # ───── layout ─────
 
@@ -214,8 +216,17 @@ class GentleAdventuresApp(QMainWindow):
         self.interaction.choice_made.connect(self._on_choice)
         self.bottom_toolbar = BottomToolbar()
 
-        body_layout.addWidget(self.scene_view, stretch=1)
-        body_layout.addWidget(self.narrative)
+        # Visual-novel split: narrative column on the left, framed scene image
+        # on the right. Choices/parser and the bottom toolbar span full width
+        # beneath it. The 1:1 stretch is a one-number taste knob.
+        split = QWidget()
+        split_row = QHBoxLayout(split)
+        split_row.setContentsMargins(0, 0, 0, 0)
+        split_row.setSpacing(0)
+        split_row.addWidget(self.narrative, stretch=1)
+        split_row.addWidget(self.scene_view, stretch=1)
+
+        body_layout.addWidget(split, stretch=1)
         body_layout.addWidget(self.interaction)
         body_layout.addWidget(self.bottom_toolbar)
         layout.addWidget(self._body, stretch=1)
