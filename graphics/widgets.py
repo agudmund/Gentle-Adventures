@@ -22,7 +22,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from graphics.Theme import Theme
 # Family chrome — the titlebar matches Intricate / The Majestic by drawing from
 # the shared Pretty Widgets Theme, the Chandler42 font helper, and pill tooltips.
 from pretty_widgets.graphics.Theme import Theme as Fam
@@ -291,14 +290,14 @@ class SceneView(QWidget):
     def __init__(self):
         super().__init__()
         self.setMinimumHeight(560)
-        self.setStyleSheet(f"background-color: {Theme.scene_placeholder_bg};")
+        self.setStyleSheet(f"background-color: {Fam.backDrop};")
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self._image_label = QLabel()
         self._image_label.setAlignment(Qt.AlignCenter)
         self._image_label.setStyleSheet(
-            f"color: {Theme.scene_placeholder_text}; "
-            f"background-color: {Theme.scene_placeholder_bg};"
+            f"color: {Fam.primaryBorder}; "
+            f"background-color: {Fam.backDrop};"
         )
         font = QFont()
         font.setPointSize(11)
@@ -356,15 +355,15 @@ class NarrativePanel(QWidget):
     def __init__(self):
         super().__init__()
         self.setMinimumHeight(140)
-        self.setStyleSheet(f"background-color: {Theme.narrative_bg};")
+        self.setStyleSheet(f"background-color: {Fam.nodeBg};")
 
         self._text = QLabel()
         self._text.setWordWrap(True)
         self._text.setAlignment(Qt.AlignLeft | Qt.AlignTop)
         font = QFont()
-        font.setPointSize(Theme.narrative_font_pt)
+        font.setPointSize(13)
         self._text.setFont(font)
-        self._text.setStyleSheet(f"color: {Theme.narrative_text};")
+        self._text.setStyleSheet(f"color: {Fam.textPrimary};")
 
         self._verified = QLabel()
         self._verified.setAlignment(Qt.AlignRight)
@@ -383,10 +382,10 @@ class NarrativePanel(QWidget):
         self._text.setText(body)
         if verified is True:
             self._verified.setText("★ system confirmed")
-            self._verified.setStyleSheet(f"color: {Theme.verified_text};")
+            self._verified.setStyleSheet(f"color: {Fam.healthColorCalm};")
         elif verified is False:
             self._verified.setText("○ not yet detected — try the step on your machine")
-            self._verified.setStyleSheet(f"color: {Theme.narrative_dim};")
+            self._verified.setStyleSheet(f"color: {Fam.primaryBorder};")
         else:
             self._verified.setText("")
 
@@ -402,7 +401,7 @@ class InteractionBar(QWidget):
     def __init__(self):
         super().__init__()
         self.setMinimumHeight(110)
-        self.setStyleSheet(f"background-color: {Theme.interaction_bg};")
+        self.setStyleSheet(f"background-color: {Fam.windowBg};")
 
         self._buttons_row = QHBoxLayout()
         self._buttons_row.setSpacing(10)
@@ -411,14 +410,14 @@ class InteractionBar(QWidget):
         self._parser.setPlaceholderText("✦ ask the ship anything ✦")
         self._parser.setStyleSheet(
             f"QLineEdit {{ "
-            f"background-color: {Theme.parser_bg}; "
-            f"color: {Theme.parser_text}; "
-            f"border: 1px solid {Theme.parser_border}; "
+            f"background-color: {Fam.backDrop}; "
+            f"color: {Fam.textPrimary}; "
+            f"border: 1px solid {Fam.primaryBorder}; "
             f"border-radius: 16px; "
             f"padding: 8px 16px; "
             f"font-size: 13pt; "
             f"}}"
-            f"QLineEdit:focus {{ border: 1px solid {Theme.button_border}; }}"
+            f"QLineEdit:focus {{ border: 1px solid {Fam.titleColor}; }}"
         )
         pfont = QFont()
         pfont.setPointSize(12)
@@ -449,14 +448,15 @@ class InteractionBar(QWidget):
             btn.setCursor(Qt.PointingHandCursor)
             btn.setStyleSheet(
                 f"QPushButton {{ "
-                f"background-color: {Theme.button_bg}; "
-                f"color: {Theme.button_text}; "
-                f"border: 1px solid {Theme.button_border}; "
+                f"background-color: {Fam.buttonBg}; "
+                f"color: {Fam.textPrimary}; "
+                f"border: 1px solid {Fam.buttonBorder}; "
                 f"border-radius: 14px; "
                 f"padding: 8px 18px; "
                 f"font-size: 12pt; "
                 f"}}"
-                f"QPushButton:hover {{ background-color: {Theme.button_bg_hover}; }}"
+                f"QPushButton:hover {{ background-color: {Fam.backDrop}; "
+                f"border: 1px solid {Fam.titleColor}; color: {Fam.buttonTextHover}; }}"
             )
             btn.clicked.connect(lambda _checked=False, i=idx: self._on_button(i))
             self._buttons_row.addWidget(btn)

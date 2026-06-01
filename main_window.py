@@ -17,7 +17,6 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget
 
 from data.quest import QUEST, get_scene
-from graphics.Theme import Theme
 from pretty_widgets.graphics.Theme import Theme as Fam
 from graphics.widgets import InteractionBar, NarrativePanel, SceneView, TitleBar
 from utils.gemini import (
