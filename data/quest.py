@@ -125,7 +125,7 @@ QUEST: list[dict] = [
     },
     {
         "id": "blur",
-        "title": "GENTLE ADVENTURES, 03 — THE SPECTRAL OVERLAY",
+        "title": "GENTLE ADVENTURES, 03 — THE GENTLE BLUR",
         "image_prompt": _prompt(
             "The captain stands inside a glowing video-call window. Behind them, the "
             "bridge has softened into a pastel galaxy of bokeh and stars — magical "
@@ -134,10 +134,11 @@ QUEST: list[dict] = [
         ),
         "narrative": (
             "Your first errand is gentle.\n\n"
-            "Settings → Bluetooth & devices → Cameras → your webcam → effects.\n"
-            "Toggle the spectral overlay on. Then open any camera preview.\n\n"
+            "Settings → Bluetooth & devices → Cameras → your webcam.\n"
+            "Under Windows Studio Effects, switch on Background blur.\n"
+            "Then open any camera preview — the Camera app will do.\n\n"
             "Watch the meters. CPU stays cool. Fans stay quiet. The NPU — finally —\n"
-            "stirs. This is what gentle work looks like."
+            "stirs, painting the blur in real time. This is what gentle work looks like."
         ),
         "choices": [
             {"label": "It works ✦", "next": "summoning"},
