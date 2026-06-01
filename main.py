@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import signal
 import sys
 from pathlib import Path
 
@@ -39,6 +40,12 @@ from utils.settings import load_settings
 
 
 def main() -> int:
+    # Emergency dev interrupt: restore the OS-default SIGINT so Ctrl-C in the
+    # launching shell hard-kills the app even while Qt's event loop holds the
+    # GIL (Python signal handlers otherwise never get a turn). Mirrors Intricate.
+    # A hard kill skips closeEvent's sweep — the startup purge above covers it.
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+
     app_dir = Path(__file__).resolve().parent
     init_logger(app_dir)
     settings = load_settings(app_dir / "settings.toml")
