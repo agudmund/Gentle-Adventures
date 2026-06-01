@@ -7,4 +7,7 @@ logs/
 # Local secrets and runtime state — never commit
 .gemini_key
 .gemini_model
-scenes/*.png
+
+# NOTE: scenes/*.png ARE committed on purpose — a generated scene image is
+# canonical game art, baked into the repo so it travels with a fresh clone and
+# reloads on revisit/relaunch instead of re-commissioning the painter.

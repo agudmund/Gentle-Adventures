@@ -31,6 +31,7 @@ from utils.gemini import (
     validate_key,
 )
 from utils.probe import probe_lm_studio, probe_npu
+from utils.scene_cache import SceneCache
 
 logger = logging.getLogger("gentle")
 
@@ -109,7 +110,10 @@ class GentleAdventuresApp(QMainWindow):
 
         scenes_subdir = settings.get("paths", {}).get("scenes_dir", "scenes")
         self.scenes_dir = app_dir / scenes_subdir
-        self.scenes_dir.mkdir(exist_ok=True)
+        # Image-state manager — checks/loads/stores baked scene art so a scene
+        # is painted once and reloaded forever (the cache is committed to the
+        # repo, so it travels with a clone and survives close/reopen).
+        self.scene_cache = SceneCache(self.scenes_dir)
 
         default_model = settings.get("gemini", {}).get("model", "gemini-2.5-flash-image")
         selected = load_selected_model(app_dir) or default_model
@@ -521,9 +525,9 @@ class GentleAdventuresApp(QMainWindow):
         self.interaction.set_choices(scene["choices"])
         self.interaction.set_parser_mode("free")
 
-        cached = self.scenes_dir / f"{scene_id}.png"
-        if cached.exists():
-            self.scene_view.show_image(QPixmap(str(cached)))
+        if self.scene_cache.has(scene_id):
+            # Baked art — reload it, never re-commission the painter.
+            self.scene_view.show_image(QPixmap(str(self.scene_cache.path(scene_id))))
         else:
             self.scene_view.show_loading()
             self._request_image(scene["id"], scene["image_prompt"])
@@ -539,9 +543,7 @@ class GentleAdventuresApp(QMainWindow):
         self.current_worker = worker
 
     def _on_image_ready(self, data: bytes, scene_id: str):
-        cache_path = self.scenes_dir / f"{scene_id}.png"
-        cache_path.write_bytes(data)
-        logger.info(f"Cached scene image: {cache_path.name} ({len(data)} bytes)")
+        cache_path = self.scene_cache.store(scene_id, data)
         if self.current_scene is not None and self.current_scene["id"] == scene_id:
             self.scene_view.show_image(QPixmap(str(cache_path)))
 
