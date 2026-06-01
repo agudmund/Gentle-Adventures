@@ -128,17 +128,34 @@ class TitleBar(QWidget):
         if tooltip:
             btn.setToolTip(tooltip)
             install_tooltip(btn)   # pill-shaped family tooltip (Chandler42 italic)
+        btn.setProperty("_qss_close", close)
+        btn.setProperty("_qss_accent", accent)
+        btn.setStyleSheet(self._btn_qss(close, accent))
+        btn.clicked.connect(slot)
+        return btn
+
+    def _btn_qss(self, close: bool, accent: bool) -> str:
+        """Per-button stylesheet derived from the family palette; shared by
+        _control (build) and restyle (live re-tint)."""
         base_fg  = Fam.titleColor if accent else Fam.textPrimary
         hover_bg = "#c0392b" if close else Fam.backDrop
         hover_fg = "#ffffff" if close else Fam.textPrimary
-        btn.setStyleSheet(
+        return (
             "QPushButton {"
             f"  background: transparent; color: {base_fg};"
             "   border: none; font-size: 13px; font-family: 'Segoe UI Symbol'; }"
             f"QPushButton:hover {{ background: {hover_bg}; color: {hover_fg}; }}"
         )
-        btn.clicked.connect(slot)
-        return btn
+
+    def restyle(self):
+        """Re-tint the bar + controls from the live family palette. The settings
+        watcher fires this after Theme.reload(), so a Color Picker edit in The
+        Settlers ripples into the titlebar without a restart."""
+        self.setStyleSheet(f"background-color: {Fam.windowBg};")
+        for b in (self._btn_curtains, self._btn_min, self._btn_max, self._btn_close):
+            b.setStyleSheet(self._btn_qss(bool(b.property("_qss_close")),
+                                          bool(b.property("_qss_accent"))))
+        self._label.setStyleSheet(f"color: {Fam.titleColor};")
 
     # ── absolute layout — pixels from the left (the family technique) ─────────
 

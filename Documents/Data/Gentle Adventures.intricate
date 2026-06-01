@@ -49,13 +49,13 @@
   ],
   "connections": [],
   "viewport": {
-    "camera_x": 30.38994731811608,
-    "camera_y": 778.1997223960439,
+    "camera_x": -156.29115763602553,
+    "camera_y": 320.1798021015801,
     "camera_zoom": 0.9213573063125589
   },
   "ui_migrations": [
     "image_border_default_on_v1"
   ],
   "last_browse_dirs": {},
-  "checksum": "f4de203f49e201a4"
+  "checksum": "bfa5e9bbb7486d22"
 }

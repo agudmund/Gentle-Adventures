@@ -64,6 +64,7 @@ def main() -> int:
     _watcher.changed.connect(FamTheme.reload)
 
     window = GentleAdventuresApp(settings=settings, app_dir=app_dir)
+    _watcher.changed.connect(window._reapply_theme)  # live palette ripple from The Settlers
     window.show()
     return app.exec()
 

@@ -18,6 +18,7 @@ from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget
 
 from data.quest import QUEST, get_scene
 from graphics.Theme import Theme
+from pretty_widgets.graphics.Theme import Theme as Fam
 from graphics.widgets import InteractionBar, NarrativePanel, SceneView, TitleBar
 from utils.gemini import (
     GeminiAPIError,
@@ -114,11 +115,7 @@ class GentleAdventuresApp(QMainWindow):
         win_cfg = settings.get("window", {})
         self.setWindowTitle(win_cfg.get("title", "Gentle Adventures"))
         self.resize(int(win_cfg.get("width", 960)), int(win_cfg.get("height", 1080)))
-        self.setStyleSheet(
-            f"QMainWindow {{ background-color: {Theme.frame_black}; }}"
-            f"QToolTip {{ background: {Theme.title_bg}; color: {Theme.title_text};"
-            f" border: 1px solid {Theme.button_border}; padding: 5px 9px; }}"
-        )
+        self._apply_window_theme()
         # Frameless: hide the OS titlebar — our custom TitleBar provides the
         # window controls + drag (mirrors Intricate's chrome). Deliberately NOT
         # WindowStaysOnTopHint: this is an app window, not an always-on-top overlay.
@@ -126,6 +123,29 @@ class GentleAdventuresApp(QMainWindow):
 
         self._build_layout()
         self._start()
+
+    # ───── theme ─────
+
+    def _apply_window_theme(self):
+        """Paint the window chrome from the shared family palette.
+
+        window_bg / primary_border / text_primary all flow from The Settlers'
+        Color Picker via the shared settings.toml, so a tweak there ripples into
+        Gentle Adventures exactly as it does across the rest of the family
+        (Window Bg #282828 by default).
+        """
+        self.setStyleSheet(
+            f"QMainWindow {{ background-color: {Fam.windowBg}; }}"
+            f"QToolTip {{ background: {Fam.windowBg}; color: {Fam.textPrimary};"
+            f" border: 1px solid {Fam.primaryBorder}; padding: 5px 9px; }}"
+        )
+
+    def _reapply_theme(self):
+        """Live re-tint: the settings watcher fires this after Theme.reload(),
+        so an external palette edit repaints the window and titlebar at once."""
+        self._apply_window_theme()
+        if hasattr(self, "title_bar"):
+            self.title_bar.restyle()
 
     # ───── layout ─────
 
