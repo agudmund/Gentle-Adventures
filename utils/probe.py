@@ -92,6 +92,68 @@ def _npu_descriptor(npu_name: str, cpu_name: str) -> str:
     return npu_name or "Neural Processing Unit"
 
 
+def probe_gpu() -> str | None:
+    """This machine's GPU name(s), joined — or None off Windows / on failure.
+    Clones probe_npu's dependency-free PowerShell idiom (Win32_VideoController)."""
+    if os.name != "nt":
+        return None
+    try:
+        script = (
+            "(Get-CimInstance Win32_VideoController -ErrorAction SilentlyContinue | "
+            "Select-Object -ExpandProperty Name) -join '; '"
+        )
+        result = subprocess.run(
+            ["powershell", "-NoProfile", "-Command", script],
+            capture_output=True, text=True, timeout=8,
+        )
+        out = result.stdout.strip()
+        return out or None
+    except Exception as e:
+        logger.debug(f"GPU probe failed: {e}")
+        return None
+
+
+def raw_hardware_spec() -> dict:
+    """Gather RAW hardware strings (CPU / GPU / NPU device names, RAM in GB) —
+    distinct from probe_npu's *friendly* descriptor. This is what the Hardware
+    Oracle sends up to the text model so it can speak about the actual silicon.
+    Returns {} off Windows or on failure (the Oracle is cosmetic — never blocks).
+    """
+    if os.name != "nt":
+        return {}
+    try:
+        # All single-quoted PS strings + the -f operator (no nested double quotes
+        # to escape), matching probe_npu's style. One call gathers everything.
+        script = (
+            "$cpu = (Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue | "
+            "Select-Object -First 1 -ExpandProperty Name); "
+            "$gpu = ((Get-CimInstance Win32_VideoController -ErrorAction SilentlyContinue | "
+            "Select-Object -ExpandProperty Name) -join '; '); "
+            "$npu = (Get-PnpDevice -PresentOnly -ErrorAction SilentlyContinue | "
+            "Where-Object { $_.Class -eq 'ComputeAccelerator' -or "
+            "$_.FriendlyName -match 'NPU|IPU|Neural|AI Engine|AI Boost|XDNA|Hexagon' } | "
+            "Select-Object -First 1 -ExpandProperty FriendlyName); "
+            "$ram = [math]::Round((Get-CimInstance Win32_ComputerSystem "
+            "-ErrorAction SilentlyContinue).TotalPhysicalMemory / 1GB); "
+            "Write-Output ('CPU={0}' -f $cpu); Write-Output ('GPU={0}' -f $gpu); "
+            "Write-Output ('NPU={0}' -f $npu); Write-Output ('RAM={0}' -f $ram)"
+        )
+        result = subprocess.run(
+            ["powershell", "-NoProfile", "-Command", script],
+            capture_output=True, text=True, timeout=10,
+        )
+        spec: dict = {}
+        for line in result.stdout.splitlines():
+            key, sep, val = line.strip().partition("=")
+            if sep and val.strip():
+                spec[key.strip().lower()] = val.strip()
+        logger.info(f"hardware spec: {spec}")
+        return spec
+    except Exception as e:
+        logger.debug(f"hardware spec probe failed: {e}")
+        return {}
+
+
 def probe_fastflowlm() -> bool:
     """True if FastFlowLM (the `flm` NPU runtime) is installed — detected via the
     flm CLI on PATH, with a couple of known install locations as backup. This is

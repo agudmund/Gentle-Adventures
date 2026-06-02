@@ -8,6 +8,12 @@
 
 from __future__ import annotations
 
+import json
+
+from utils.logger import get_logger
+
+logger = get_logger("gentle")
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Shared visual contract for the image-gen prompts.
 # Every scene prompt is composed by combining this preamble with the
@@ -281,8 +287,140 @@ QUEST: list[dict] = [
 ]
 
 
-_BY_ID = {scene["id"]: scene for scene in QUEST}
+# ─────────────────────────────────────────────────────────────────────────────
+# The Ledger — the quest's source of truth.
+#
+# The 11 scenes above are now the BUNDLED FALLBACK. The live source is the
+# Quest_Log tab of the shared Google Sheet (read through utils/sheets.py over
+# the Apps Script proxy). When the sheet is populated, edits made in a browser
+# flow into the game; when it's empty or unreachable, the bundled scenes keep
+# the quest fully playable. Either way main_window's get_scene() contract is
+# unchanged.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Quest_Log column header → scene-dict key. Mapped by NAME (robust to column
+# reordering in the sheet), not by fixed index.
+_SHEET_COLUMNS = {
+    "Scene_ID": "id",
+    "Title": "title",
+    "Narrative_Template": "narrative",
+    "Choices_JSON": "choices",
+    "Verify_Trigger": "verify",
+    "Image_Prompt": "image_prompt",
+}
+
+
+def _rows_to_scenes(rows: list[list]) -> list[dict]:
+    """Map a Quest_Log value matrix (header row first) into scene dicts.
+    Returns [] when there's nothing usable, so the caller can fall back."""
+    if not rows or len(rows) < 2:
+        return []
+    header = [str(h).strip() for h in rows[0]]
+    scenes: list[dict] = []
+    for raw in rows[1:]:
+        if not raw or not str(raw[0]).strip():
+            continue  # skip blank rows
+        cells = dict(zip(header, raw))
+        sid = str(cells.get("Scene_ID", "")).strip()
+        if not sid:
+            continue
+        # Choices_JSON is hand-editable in a browser cell — guard the parse so a
+        # malformed edit degrades to a dead-end scene instead of crashing the app.
+        raw_choices = cells.get("Choices_JSON") or "[]"
+        try:
+            choices = json.loads(raw_choices) if isinstance(raw_choices, str) else raw_choices
+            if not isinstance(choices, list):
+                raise ValueError("Choices_JSON did not parse to a list")
+        except Exception as e:
+            logger.warning(f"[ledger] scene {sid!r}: bad Choices_JSON ({e}); using empty choices")
+            choices = []
+        scenes.append({
+            "id": sid,
+            "title": str(cells.get("Title", "") or ""),
+            "narrative": str(cells.get("Narrative_Template", "") or ""),
+            "choices": choices,
+            "verify": (str(cells.get("Verify_Trigger") or "").strip() or None),
+            "image_prompt": str(cells.get("Image_Prompt", "") or ""),
+        })
+    return scenes
+
+
+class _Ledger:
+    """Live Quest_Log with the bundled QUEST as a graceful fallback.
+
+    v1 fetches the sheet ONCE and caches it for the process (fast, no per-node
+    UI freeze). refresh() re-pulls. Live per-node hot-reload — re-reading on
+    every scene entry so a browser edit applies instantly — is the next tick:
+    it needs an off-UI-thread worker (the shared worker registry) so the read
+    never stalls the window. Until then, refresh() or a relaunch re-pulls.
+    """
+
+    def __init__(self):
+        self._scenes: list[dict] | None = None
+        self.source = "unloaded"   # 'sheet' | 'bundled' once loaded
+
+    def _fetch_live(self) -> list[dict] | None:
+        # Deferred import: keeps quest.py free of network deps until first use,
+        # and lets the bundled fallback work even if utils/sheets is absent.
+        try:
+            from utils.sheets import SheetsClient, SheetsError
+        except Exception as e:
+            logger.warning(f"[ledger] sheets client unavailable: {e}")
+            return None
+        try:
+            rows = SheetsClient().read_sheet("Quest_Log")
+        except SheetsError as e:
+            logger.info(f"[ledger] live Quest_Log unavailable ({e}); using bundled scenes")
+            return None
+        except Exception as e:
+            logger.warning(f"[ledger] unexpected Quest_Log read error: {e}; using bundled scenes")
+            return None
+        scenes = _rows_to_scenes(rows)
+        if not scenes:
+            logger.info("[ledger] Quest_Log empty; using bundled scenes")
+            return None
+        logger.info(f"[ledger] loaded {len(scenes)} scene(s) from the live Quest_Log")
+        return scenes
+
+    def scenes(self) -> list[dict]:
+        if self._scenes is None:
+            live = self._fetch_live()
+            if live:
+                self._scenes, self.source = live, "sheet"
+            else:
+                self._scenes, self.source = list(QUEST), "bundled"
+        return self._scenes
+
+    def refresh(self) -> list[dict]:
+        self._scenes = None
+        return self.scenes()
+
+    def get(self, scene_id: str) -> dict | None:
+        for scene in self.scenes():
+            if scene["id"] == scene_id:
+                return scene
+        return None
+
+
+_ledger = _Ledger()
 
 
 def get_scene(scene_id: str) -> dict | None:
-    return _BY_ID.get(scene_id)
+    """A scene by id, from the live Ledger (sheet or bundled fallback)."""
+    return _ledger.get(scene_id)
+
+
+def all_scenes() -> list[dict]:
+    """Every scene, in order — the live Ledger view (sheet or bundled)."""
+    return _ledger.scenes()
+
+
+def first_scene_id() -> str:
+    """The id of the opening scene (the quest's natural start)."""
+    scenes = _ledger.scenes()
+    return scenes[0]["id"] if scenes else QUEST[0]["id"]
+
+
+def refresh_quest() -> list[dict]:
+    """Drop the cache and re-pull the live Quest_Log. Returns the scene list."""
+    return _ledger.refresh()

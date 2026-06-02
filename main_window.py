@@ -17,11 +17,19 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt, QThread, Signal, QPropertyAnimation, QEasingCurve, QRect, QTimer
 from PySide6.QtGui import QPixmap, QIcon
-from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QHBoxLayout, QWidget, QSystemTrayIcon
+from PySide6.QtWidgets import (
+    QMainWindow,
+    QVBoxLayout,
+    QHBoxLayout,
+    QStackedWidget,
+    QWidget,
+    QSystemTrayIcon,
+)
 
-from data.quest import QUEST, get_scene
+from data.quest import all_scenes, first_scene_id, get_scene
 from pretty_widgets.graphics.Theme import Theme as Fam
 from graphics.widgets import BottomToolbar, InteractionBar, NarrativePanel, SceneView, TitleBar
+from graphics.scene_map import SceneMap
 from utils.gemini import (
     GeminiAPIError,
     GeminiAuthError,
@@ -33,8 +41,10 @@ from utils.gemini import (
     save_selected_model,
     validate_key,
 )
-from utils.probe import probe_fastflowlm, probe_npu
+from utils.probe import probe_fastflowlm, probe_npu, raw_hardware_spec
 from utils.scene_cache import SceneCache
+from utils.sheets import SheetsClient, SheetsError
+from utils.text import build_text_backend
 from utils.logger import get_logger
 
 logger = get_logger("gentle")
@@ -101,6 +111,90 @@ class SceneRequestWorker(QThread):
             self.image_failed.emit(str(e), self.scene_id)
 
 
+class LedgerSyncWorker(QThread):
+    """Push Player_State to the Sheets proxy off the UI thread. Fire-and-forget:
+    the quest never waits on it, and a confirmed round-trip emits `synced` so the
+    UI can answer with a passive spectral-pulse tick."""
+
+    synced = Signal()
+    sync_failed = Signal(str)
+
+    def __init__(self, client: SheetsClient, updates: dict):
+        super().__init__()
+        self.client = client
+        self.updates = updates
+
+    def run(self):
+        try:
+            self.client.write_player_state(self.updates)
+            self.synced.emit()
+        except Exception as e:
+            self.sync_failed.emit(str(e))
+
+
+class TextWorker(QThread):
+    """Run a swappable-backend text completion off the UI thread. `tag` names the
+    caller (e.g. 'oracle') so one path can serve many features."""
+
+    text_ready = Signal(str, str)    # (text, tag)
+    text_failed = Signal(str, str)   # (error, tag)
+
+    def __init__(self, backend, messages, system=None, max_tokens=1024,
+                 temperature=None, tag=""):
+        super().__init__()
+        self.backend = backend
+        self.messages = messages
+        self.system = system
+        self.max_tokens = max_tokens
+        self.temperature = temperature
+        self.tag = tag
+
+    def run(self):
+        try:
+            out = self.backend.complete(
+                self.messages, system=self.system,
+                max_tokens=self.max_tokens, temperature=self.temperature)
+            self.text_ready.emit(out, self.tag)
+        except Exception as e:
+            self.text_failed.emit(str(e), self.tag)
+
+
+class WorkerRegistry:
+    """Tracks live QThreads so several run concurrently without the old single-
+    slot clobber — validation, scene render, ledger sync (and soon the Oracle,
+    stickers, sandbox) all coexist. Reaps each on finish; stop_all() drains them
+    on shutdown.
+
+    No quit/wait when superseding work: a blocking urllib call can't be
+    interrupted anyway, and the callers' scene-id guards already ignore a stale
+    result, so a superseded scene render simply lands and is dropped — without
+    the freeze the old quit()+wait() caused on the UI thread.
+    """
+
+    def __init__(self):
+        self._workers: list = []
+
+    def run(self, worker) -> None:
+        self._workers.append(worker)
+        worker.finished.connect(lambda: self._reap(worker))
+        worker.start()
+
+    def _reap(self, worker) -> None:
+        try:
+            self._workers.remove(worker)
+        except ValueError:
+            pass
+
+    def stop_all(self) -> None:
+        for w in list(self._workers):
+            try:
+                if w.isRunning():
+                    w.quit()
+                    w.wait(2000)
+            except RuntimeError:
+                pass  # already torn down
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Main window
 # ─────────────────────────────────────────────────────────────────────────────
@@ -127,8 +221,27 @@ class GentleAdventuresApp(QMainWindow):
         selected = load_selected_model(app_dir) or default_model
         self.image_client = GeminiImageClient(app_dir=app_dir, model=selected)
 
-        self.current_worker: QThread | None = None
+        self._workers = WorkerRegistry()   # all QThreads run here — no single-slot clobber
         self.current_scene: dict | None = None
+        self._visited: set[str] = set()   # scene ids reached — gates the map
+        self._oracle_summoned = False     # Hardware Oracle fires once per session
+        self._oracle_line = ""            # cached calibration line once it arrives
+        # Ledger write-back: push Player_State up as the captain plays. Built
+        # once; None (silently) when the proxy isn't configured — contextual
+        # absence, never an error banner. The sync runs off the UI thread.
+        try:
+            self.sheets: SheetsClient | None = SheetsClient()
+        except SheetsError as e:
+            self.sheets = None
+            logger.info(f"[sheets] ledger sync disabled — proxy not configured ({e})")
+        # Swappable text backend (Claude default, Gemini on demand) for the ship's
+        # voice — Oracle, vibe, ghost-repair, missions. Built once; None silently
+        # if misconfigured (contextual absence). Calls run via the worker registry.
+        try:
+            self.text_backend = build_text_backend(settings, app_dir)
+        except Exception as e:
+            self.text_backend = None
+            logger.info(f"[text] backend unavailable: {e}")
         self.available_models: list[str] = []
         self.phase: str = "quest"  # set properly in _start
         self._curtains_collapsed = False
@@ -186,6 +299,8 @@ class GentleAdventuresApp(QMainWindow):
             self.bottom_toolbar.restyle()
         if hasattr(self, "scene_view"):
             self.scene_view.restyle()
+        if hasattr(self, "scene_map"):
+            self.scene_map.restyle()
         if hasattr(self, "narrative"):
             self.narrative.restyle()
 
@@ -211,20 +326,33 @@ class GentleAdventuresApp(QMainWindow):
         body_layout.setSpacing(0)
 
         self.scene_view = SceneView()
+        # The scene navigator is a standalone, swappable module (graphics/
+        # scene_map.py). It shares the right pane with the scene image via a
+        # QStackedWidget — the window flips between them; neither knows about
+        # the other. Plug-and-play: delete the module + this wiring and it's gone.
+        self.scene_map = SceneMap()
+        # Populated lazily when the map is first opened (_toggle_map), so window
+        # construction never blocks on a live Quest_Log fetch.
+        self.scene_map.scene_picked.connect(self._on_map_pick)
+        self._right_stack = QStackedWidget()
+        self._right_stack.addWidget(self.scene_view)   # index 0 — the painted scene
+        self._right_stack.addWidget(self.scene_map)    # index 1 — the jump map
+
         self.narrative = NarrativePanel()
         self.interaction = InteractionBar()
         self.interaction.choice_made.connect(self._on_choice)
         self.bottom_toolbar = BottomToolbar()
+        self.bottom_toolbar.feature_clicked.connect(self._on_feature)
 
-        # Visual-novel split: narrative column on the left, framed scene image
-        # on the right. Choices/parser and the bottom toolbar span full width
-        # beneath it. The 1:1 stretch is a one-number taste knob.
+        # Visual-novel split: narrative column on the left, the right pane (scene
+        # image OR jump map, via the stack) on the right. Choices/parser and the
+        # bottom toolbar span full width beneath it. 1:1 stretch is a taste knob.
         split = QWidget()
         split_row = QHBoxLayout(split)
         split_row.setContentsMargins(0, 0, 0, 0)
         split_row.setSpacing(0)
         split_row.addWidget(self.narrative, stretch=1)
-        split_row.addWidget(self.scene_view, stretch=1)
+        split_row.addWidget(self._right_stack, stretch=1)
 
         body_layout.addWidget(split, stretch=1)
         body_layout.addWidget(self.interaction)
@@ -467,14 +595,10 @@ class GentleAdventuresApp(QMainWindow):
         self.interaction.set_parser_mode("hidden")
 
     def _run_validation(self, api_key: str):
-        if isinstance(self.current_worker, QThread) and self.current_worker.isRunning():
-            self.current_worker.quit()
-            self.current_worker.wait()
         worker = KeyValidationWorker(api_key)
         worker.succeeded.connect(self._on_validation_success)
         worker.failed.connect(self._on_validation_failure)
-        worker.start()
-        self.current_worker = worker
+        self._workers.run(worker)
         self._pending_key = api_key
 
     def _on_validation_success(self, models: list):
@@ -534,9 +658,9 @@ class GentleAdventuresApp(QMainWindow):
 
     def _enter_quest(self):
         self.phase = "quest"
-        start_id = self.settings.get("game", {}).get("last_scene") or QUEST[0]["id"]
+        start_id = self.settings.get("game", {}).get("last_scene") or first_scene_id()
         if get_scene(start_id) is None:
-            start_id = QUEST[0]["id"]
+            start_id = first_scene_id()
         self._load_scene(start_id)
 
     def _load_scene(self, scene_id: str):
@@ -544,6 +668,11 @@ class GentleAdventuresApp(QMainWindow):
         if scene is None:
             logger.error(f"Unknown scene id: {scene_id}")
             return
+
+        # Any scene load returns the right pane to the painted view (e.g. after
+        # picking from the jump map).
+        self._right_stack.setCurrentWidget(self.scene_view)
+        self._visited.add(scene_id)   # unlocks this scene in the map
 
         logger.info(f"Loading scene: {scene_id}")
         # The scene we're leaving — its cached image seeds the next render so
@@ -566,7 +695,18 @@ class GentleAdventuresApp(QMainWindow):
         # When a scene checks the NPU, the ship names the engine it found on the
         # bottom strip — the game teaching you your actual silicon, by name.
         if npu_engine:
-            self.bottom_toolbar.set_info(f"✦ engine detected: {npu_engine} ✦")
+            if self._oracle_line:
+                self.bottom_toolbar.set_info(self._oracle_line)
+            else:
+                self.bottom_toolbar.set_info(f"✦ engine detected: {npu_engine} ✦")
+                self._summon_oracle(npu_engine)
+
+        # Heartbeat: push our position up to the Ledger (Player_State). The
+        # round-trip confirmation arrives as a passive gold spectral pulse.
+        updates = {"current_scene": scene_id}
+        if verify_kind == "npu":
+            updates["npu_active"] = 1 if verified else 0
+        self._sync_player_state(updates)
 
         if self.scene_cache.has(scene_id):
             # Baked art — reload it, never re-commission the painter.
@@ -579,14 +719,10 @@ class GentleAdventuresApp(QMainWindow):
             self._request_image(scene["id"], scene["image_prompt"], ref)
 
     def _request_image(self, scene_id: str, prompt: str, reference_path: Path | None = None):
-        if isinstance(self.current_worker, QThread) and self.current_worker.isRunning():
-            self.current_worker.quit()
-            self.current_worker.wait()
         worker = SceneRequestWorker(self.image_client, prompt, scene_id, reference_path)
         worker.image_ready.connect(self._on_image_ready)
         worker.image_failed.connect(self._on_image_failed)
-        worker.start()
-        self.current_worker = worker
+        self._workers.run(worker)
 
     def _on_image_ready(self, data: bytes, scene_id: str):
         cache_path = self.scene_cache.store(scene_id, data)
@@ -596,6 +732,88 @@ class GentleAdventuresApp(QMainWindow):
     def _on_image_failed(self, error: str, scene_id: str):
         if self.current_scene is not None and self.current_scene["id"] == scene_id:
             self.scene_view.show_error(error)
+
+    # ───── ledger write-back (Player_State heartbeat) ─────
+
+    def _sync_player_state(self, updates: dict) -> None:
+        """Push state to Player_State off the UI thread (fire-and-forget). On a
+        confirmed round-trip, a passive gold spectral pulse ticks the bottom
+        strip — the ether answered. Silent no-op if the proxy isn't configured."""
+        if not self.sheets:
+            return
+        worker = LedgerSyncWorker(self.sheets, updates)
+        worker.synced.connect(self._on_ledger_synced)
+        worker.sync_failed.connect(self._on_ledger_sync_failed)
+        self._workers.run(worker)
+
+    def _on_ledger_synced(self) -> None:
+        # The heartbeat reached the stars and came back — passive gold tick.
+        self.bottom_toolbar.spectral_pulse()
+
+    def _on_ledger_sync_failed(self, error: str) -> None:
+        # Kept quiet by design — a missed heartbeat must never spill a log or a
+        # banner into the gentle UI. The data layer notes it; the captain sails on.
+        logger.info(f"[sheets] player-state sync didn't return: {error}")
+
+    # ───── text generation (swappable Claude/Gemini backend) ─────
+
+    def _request_text(self, messages, *, system=None, max_tokens=1024,
+                      temperature=None, tag="", on_ready=None, on_failed=None) -> bool:
+        """Fire a text completion off the UI thread via the worker registry.
+        on_ready(text, tag) / on_failed(error, tag) are connected if given.
+        Returns False (no-op) when no text backend is configured — callers treat
+        a missing backend as silent absence, never an error in the UI."""
+        if not self.text_backend:
+            if on_failed:
+                on_failed("no text backend configured", tag)
+            return False
+        worker = TextWorker(self.text_backend, messages, system=system,
+                            max_tokens=max_tokens, temperature=temperature, tag=tag)
+        if on_ready:
+            worker.text_ready.connect(on_ready)
+        if on_failed:
+            worker.text_failed.connect(on_failed)
+        self._workers.run(worker)
+        return True
+
+    # ───── Hardware Oracle (Sentient Settings) ─────
+
+    def _summon_oracle(self, engine_name: str) -> None:
+        """Once per session: ask the ship's-computer voice to name the silicon in
+        one short, warm calibration line, given the RAW hardware spec. Async and
+        cosmetic — never blocks the quest; on failure the plain engine line stays."""
+        if self._oracle_summoned:
+            return
+        self._oracle_summoned = True
+        spec = raw_hardware_spec()
+        spec_text = "\n".join(f"{k}: {v}" for k, v in spec.items()) or f"npu: {engine_name}"
+        system = (
+            "You are the gentle ship's computer in a cozy chibi space adventure that "
+            "teaches a captain about their laptop's NPU. Given the ship's real hardware, "
+            "reply with ONE short, warm, in-character line (max ~20 words) that names the "
+            "NPU's silicon family and offers to calibrate it. No preamble, no lists, no "
+            "surrounding quotes — just the line itself. Tone example: 'Ah — fifty TOPS of "
+            "XDNA 2 stirring awake. Let me tune the plasma injectors for you.'"
+        )
+        user = (f"The ship's engine reads as: {engine_name}.\n\n"
+                f"Real hardware:\n{spec_text}\n\n"
+                "Name it and offer to calibrate, in one gentle line.")
+        self._request_text(
+            [{"role": "user", "content": user}],
+            system=system, tag="oracle",
+            on_ready=self._on_oracle_text, on_failed=self._on_oracle_failed,
+        )
+
+    def _on_oracle_text(self, text: str, tag: str) -> None:
+        line = " ".join(text.strip().split())   # collapse stray newlines/spaces
+        if not line:
+            return
+        self._oracle_line = f"✦ {line} ✦"
+        self.bottom_toolbar.set_info(self._oracle_line)
+
+    def _on_oracle_failed(self, error: str, tag: str) -> None:
+        # Cosmetic — keep the plain engine line, never surface the error in the UI.
+        logger.info(f"[oracle] calibration line unavailable: {error}")
 
     # ───── shutdown ─────
 
@@ -607,6 +825,7 @@ class GentleAdventuresApp(QMainWindow):
         actually leave. pycache is swept BEFORE the spawn so the child's own
         startup purge owns a clean tree (no race)."""
         self._save_window_state()
+        self._workers.stop_all()   # drain in-flight threads cleanly before relaunch
         try:
             from utils.housekeeping import clean_pycache
             n = clean_pycache(self.app_dir)
@@ -672,6 +891,42 @@ class GentleAdventuresApp(QMainWindow):
             logger.info("[restart] spawned a fresh session — back in a blink ✨")
         except Exception as e:
             logger.warning(f"[restart] spawn failed (closing without relaunch): {e}")
+
+    # ───── map (scene navigator) ─────
+
+    def _scene_index(self):
+        """The (scene_id, title) pairs backing the map, from the live Ledger
+        (the Quest_Log sheet, or the bundled scenes when it's empty/offline)."""
+        return [(s["id"], s.get("title", s["id"])) for s in all_scenes()]
+
+    def _on_feature(self, name: str):
+        """Bottom-toolbar feature buttons. 'map' is wired (scene navigator);
+        the others still whisper 'not wired up yet' until they land."""
+        if name == "map":
+            self._toggle_map()
+            return
+        self.bottom_toolbar.set_info(f"✦ {name} — not wired up yet ✦")
+
+    def _toggle_map(self):
+        """Flip the right pane between the painted scene and the jump map — a
+        quest-time navigator so we can leap anywhere while building. The map is
+        its own module; the window just switches which widget the stack shows.
+        Before the log begins there are no scenes to jump to."""
+        if self.phase != "quest":
+            self.bottom_toolbar.set_info("✦ the map opens once the log begins ✦")
+            return
+        if self._right_stack.currentWidget() is self.scene_map:
+            self._right_stack.setCurrentWidget(self.scene_view)
+            self.bottom_toolbar.set_info("")
+        else:
+            self.scene_map.set_scenes(self._scene_index(), self._visited)
+            self._right_stack.setCurrentWidget(self.scene_map)
+            self.bottom_toolbar.set_info("✦ map — choose a scene ✦")
+
+    def _on_map_pick(self, scene_id: str):
+        # The map announces the picked id; loading it flips the stack back to
+        # the painted scene (see _load_scene), so the map closes itself.
+        self._load_scene(scene_id)
 
     # ───── input dispatch ─────
 

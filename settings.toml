@@ -15,6 +15,16 @@ height = 1080
 # (~6s, ~1.4MB crisp PNG). The "-preview" alias 404s now — use the bare name.
 model = "gemini-2.5-flash-image"
 
+[llm]
+# Swappable text backend for the ship's voice (Hardware Oracle, vibe weather,
+# ghost-repair, sandbox missions). Claude leads for its reasoning; flip
+# text_backend to "gemini" to swap on demand. This is SEPARATE from the image
+# model above. Keys resolve from the environment (SingleSharedBraincell_ApiKey
+# for Claude; the Gemini key as noted) — never written here.
+text_backend = "claude"
+claude_model = "claude-opus-4-8"
+gemini_model = "gemini-3.5-flash"
+
 [paths]
 scenes_dir = "scenes"
 

@@ -10,8 +10,8 @@ from __future__ import annotations
 
 import random
 
-from PySide6.QtCore import Qt, Signal, QTimer, QSize
-from PySide6.QtGui import QFont, QPixmap, QIcon
+from PySide6.QtCore import Qt, Signal, QTimer, QSize, QVariantAnimation
+from PySide6.QtGui import QFont, QPixmap, QIcon, QColor
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
@@ -564,7 +564,8 @@ class BottomToolbar(QWidget):
     Intricate's bottom bar — no splitter, no InfoBar routing, just chrome.
     """
 
-    strip_clicked = Signal()    # emitted on collapse/expand toggle
+    strip_clicked = Signal()       # emitted on collapse/expand toggle
+    feature_clicked = Signal(str)  # a placeholder feature button was clicked (by name)
 
     _STRIP_H = max(Fam.handleHeightTop, 28)
     # A touch larger than the titlebar's 9px whisper — the bottom strip is
@@ -573,6 +574,12 @@ class BottomToolbar(QWidget):
     # Feature placeholders to wire up during dev — clicking whispers a status
     # into the strip until the real feature lands.
     _PLACEHOLDERS = ("inventory", "map", "journal", "codex")
+    # Spectral pulse — a passive gold "the ether answered" tick (Intricate's
+    # meov colour-pulse mechanism, but one-shot and gold): a brief flash on the
+    # infobar confirming a full cloud round-trip, no system logs in the UI.
+    _PULSE_GOLD = "#e8c46a"     # warm XDNA-2 gold — the heartbeat reached the stars
+    _PULSE_MS = 900             # one textPrimary → gold → textPrimary flash
+    _PULSE_HOLD_MS = 1600       # sparkle dwell before the prior whisper returns
 
     def __init__(self):
         super().__init__()
@@ -612,7 +619,7 @@ class BottomToolbar(QWidget):
             btn.setCursor(Qt.PointingHandCursor)
             btn.setMinimumWidth(96)
             btn.setStyleSheet(self._placeholder_qss())
-            btn.clicked.connect(lambda _c=False, n=name: self.set_info(f"✦ {n} — not wired up yet ✦"))
+            btn.clicked.connect(lambda _c=False, n=name: self.feature_clicked.emit(n))
             row.addWidget(btn)
             self._buttons.append(btn)
         row.addStretch(1)
@@ -632,6 +639,30 @@ class BottomToolbar(QWidget):
     def set_info(self, text: str):
         """Whisper a line into the bottom infobar strip."""
         self._info.setText(text)
+
+    def spectral_pulse(self, message: str = "✦ ✧ ✦"):
+        """A passive 'the ether answered' tick: flash the infobar gold and show
+        a brief sparkle, then quietly restore the prior whisper. Confirms a full
+        cloud round-trip (the Sheets ping-pong) without spilling system logs into
+        the UI — Intricate's meov colour-pulse, one-shot and in gold."""
+        prior = self._info.text()
+        self._info.setText(message)
+
+        anim = QVariantAnimation(self)
+        anim.setStartValue(QColor(Fam.textPrimary))
+        anim.setKeyValueAt(0.5, QColor(self._PULSE_GOLD))
+        anim.setEndValue(QColor(Fam.textPrimary))
+        anim.setDuration(self._PULSE_MS)
+        anim.valueChanged.connect(
+            lambda c: self._info.setStyleSheet(f"color: {c.name()};"))
+        anim.start()
+        self._pulse_anim = anim   # keep a ref so it isn't GC'd mid-flash
+
+        def _restore():
+            self._info.setStyleSheet(f"color: {Fam.textPrimary};")
+            if self._info.text() == message:   # only if nothing newer arrived
+                self._info.setText(prior)
+        QTimer.singleShot(self._PULSE_HOLD_MS, _restore)
 
     def toggle_collapse(self):
         """Slide the buttons away (collapse to the strip) or bring them back."""
