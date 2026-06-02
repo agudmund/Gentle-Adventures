@@ -15,7 +15,7 @@ import sys
 import webbrowser
 from pathlib import Path
 
-from PySide6.QtCore import Qt, QThread, Signal, QPropertyAnimation, QEasingCurve, QRect, QTimer
+from PySide6.QtCore import Qt, QThread, Signal, QPropertyAnimation, QEasingCurve, QRect, QTimer, QEvent
 from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtWidgets import (
     QMainWindow,
@@ -31,6 +31,7 @@ from pretty_widgets.graphics.Theme import Theme as Fam
 from graphics.widgets import BottomToolbar, InteractionBar, NarrativePanel, SceneView, TitleBar
 from graphics.scene_map import SceneMap
 from graphics.sidebar import Sidebar
+from graphics.weather import WeatherOverlay
 from utils.gemini import (
     GeminiAPIError,
     GeminiAuthError,
@@ -393,6 +394,26 @@ class GentleAdventuresApp(QMainWindow):
         layout.addWidget(self._body, stretch=1)
 
         self.setCentralWidget(central)
+
+        # ── Psychological Weather (System 2) ─────────────────────────────────
+        # A click-through ambient overlay riding over the narrative+scene row.
+        # Its one public knob is set_intensity(0..1); Phase 1 drives it via the
+        # free-text 'rain'/'storm'/'clear'/'weather N' words, Phase 2 from the
+        # Gemini-read vibe vector. A standalone citizen (graphics/weather.py) —
+        # delete the module + this wiring and the weather is simply gone.
+        self._weather = WeatherOverlay(self._split)
+        self._weather.setGeometry(self._split.rect())
+        self._weather.raise_()
+        self._weather.show()
+        self._split.installEventFilter(self)  # keep it sized to the row
+
+    def eventFilter(self, obj, event):
+        # Keep the weather overlay covering the narrative+scene row as it resizes.
+        if obj is getattr(self, "_split", None) and event.type() == QEvent.Resize:
+            if hasattr(self, "_weather"):
+                self._weather.setGeometry(self._split.rect())
+                self._weather.raise_()
+        return super().eventFilter(obj, event)
 
     # ───── curtains ─────
 
@@ -1085,7 +1106,13 @@ class GentleAdventuresApp(QMainWindow):
                     self._light_command(["flm", "validate"], "checking the ship")
                     return
                 logger.info(f"Parser input: {free_text!r}")
-                # Future hop: vibe weather / route to the local llama for a reply
+                # System 2 (Psychological Weather) — Phase 1 manual dial, so the
+                # overlay can be seen and tuned before the vibe vector (Phase 2)
+                # drives it from the Gemini-read mood. A recognised weather word
+                # sets the rain; anything else falls through untouched.
+                if self._weather_command(cmd):
+                    return
+                # Future hop: read the vibe → set intensity + palette → llama reply
                 return
             return
 
@@ -1117,6 +1144,33 @@ class GentleAdventuresApp(QMainWindow):
         nxt = choice.get("next")
         if nxt:
             self._load_scene(nxt)
+
+    def _weather_command(self, text: str) -> bool:
+        """Phase-1 manual weather dial (System 2). Returns True if the text was a
+        weather word (so the caller stops dispatching). 'weather 0.7' sets an
+        exact intensity; named moods map to gentle presets; 'clear'/'sun' rests
+        it. The intensity eases in — the overlay does the tide, not a snap."""
+        if not hasattr(self, "_weather"):
+            return False
+        presets = {
+            "clear": 0.0, "sun": 0.0, "sunny": 0.0, "calm": 0.0,
+            "drizzle": 0.3, "mist": 0.55, "rain": 0.6,
+            "storm": 0.9, "downpour": 1.0,
+        }
+        parts = text.split()
+        if parts and parts[0] == "weather":
+            try:
+                level = float(parts[1]) if len(parts) > 1 else 0.5
+            except ValueError:
+                level = 0.5
+            self._weather.set_intensity(level)
+            logger.info(f"Weather (manual): intensity -> {max(0.0, min(1.0, level)):.2f}")
+            return True
+        if text in presets:
+            self._weather.set_intensity(presets[text])
+            logger.info(f"Weather (manual): {text!r} -> {presets[text]:.2f}")
+            return True
+        return False
 
     # ───── verification ─────
 
