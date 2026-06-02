@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import random
+import re
 
 from PySide6.QtCore import Qt, Signal, QTimer, QSize, QVariantAnimation
 from PySide6.QtGui import QFont, QPixmap, QIcon, QColor
@@ -69,6 +70,11 @@ class TitleBar(QWidget):
     # Curtains brand: the colourful share-arrow sticker (Family-3), copied from
     # intricate/icons/Stickers — the bright version of the iconic.png fallback.
     _CURTAINS_ICON = "Stickers/Intricate.ico"
+    # Title display: announce, hold, then fade off (Majestic infobar timing).
+    _TITLE_HOLD_MS = 3500
+    _TITLE_FADE_MS = 700
+    # De-allcaps to Title Case but keep real acronyms uppercase.
+    _ACRONYMS = {"XDNA", "NPU", "CPU", "GPU", "AI", "FLM", "FIN", "OS", "LM"}
 
     def __init__(self):
         super().__init__()
@@ -99,6 +105,12 @@ class TitleBar(QWidget):
         self._label.setAttribute(Qt.WA_TransparentForMouseEvents, True)
         self._label.setFont(chandler42(size_px=self._INFO_FONT_PX))
         self._label.setStyleSheet(f"color: {Fam.textPrimary};")
+        # The title announces, holds, then fades off. Opacity rides a graphics
+        # effect so the fade never rebuilds the stylesheet.
+        self._label_fx = QGraphicsOpacityEffect(self._label)
+        self._label_fx.setOpacity(1.0)
+        self._label.setGraphicsEffect(self._label_fx)
+        self._fade_anim = None
 
         # ── right cluster: minimize / maximize / exid ──
         self._btn_min = self._control("–", self._on_minimize, icon_name=Fam.iconTray, tooltip="Minimize")
@@ -264,13 +276,34 @@ class TitleBar(QWidget):
 
     # ── InfoBar typewriter — the family's Chandler42 reveal ───────────────────
 
+    def _prettify_title(self, raw: str) -> str:
+        """Display form of a scene title: drop the chapter token (', 01.5 — ')
+        and de-allcaps to Title Case, keeping known acronyms uppercase.
+        'GENTLE ADVENTURES, 01.5 — LORE: XDNA' -> 'Gentle Adventures: Lore: XDNA'."""
+        t = re.sub(r",\s*\d+(?:\.\d+)?\s*[—–-]\s*", ": ", raw)
+        out = []
+        for w in t.split(" "):
+            bare = w.rstrip(":,")
+            tail = w[len(bare):]
+            if bare.upper() in self._ACRONYMS:
+                out.append(bare.upper() + tail)
+            elif bare:
+                out.append(bare[:1].upper() + bare[1:].lower() + tail)
+            else:
+                out.append(w)
+        return " ".join(out)
+
     def set_title(self, text: str):
-        """Type the title/message out char-by-char at the family's infobar pace
-        — 85% brisk keystrokes, 15% little pauses — for an organic reveal.
-        Replaces the old instant setText (Majestic / Intricate do the same)."""
+        """Prettify the scene title, type it out char-by-char at the family's
+        infobar pace (85% brisk keystrokes, 15% little pauses), then hold and
+        fade it off (Majestic's infobar timing)."""
         if self._tw_timer is not None:
             self._tw_timer.stop()
-        self._tw_full = text or ""
+        if self._fade_anim is not None:
+            self._fade_anim.stop()
+            self._fade_anim = None
+        self._label_fx.setOpacity(1.0)
+        self._tw_full = self._prettify_title(text or "")
         self._tw_index = 0
         self._label.setText("")
         self._tw_timer = QTimer(self)
@@ -289,6 +322,17 @@ class TitleBar(QWidget):
             self._tw_timer.start(delay)
         else:
             self._tw_timer = None
+            # Announced — hold a beat, then fade off.
+            QTimer.singleShot(self._TITLE_HOLD_MS, self._start_title_fade)
+
+    def _start_title_fade(self):
+        anim = QVariantAnimation(self)
+        anim.setStartValue(1.0)
+        anim.setEndValue(0.0)
+        anim.setDuration(self._TITLE_FADE_MS)
+        anim.valueChanged.connect(lambda v: self._label_fx.setOpacity(float(v)))
+        anim.start()
+        self._fade_anim = anim   # keep a ref so it isn't GC'd mid-fade
 
 
 # ─────────────────────────────────────────────────────────────────────────────
