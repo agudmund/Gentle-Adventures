@@ -1,33 +1,21 @@
 {
   "version": "1.0",
   "display_name": "Gentle Adventures",
-  "description": "Some scaffolding starting to take shape \u2014 a memory index, machine topology, two named laptops, and a couple of side notes",
+  "description": "Two quiet, untitled nodes side by side \u2014 still mostly blank, waiting for the first real mark",
   "description_signature": {
-    "n_nodes": 5,
-    "n_edges": 2,
-    "density": 0.4,
+    "n_nodes": 2,
+    "n_edges": 0,
+    "density": 0.0,
     "type_hist": {
-      "about": 0.8,
-      "warm": 0.2
+      "about": 0.5,
+      "warm": 0.5
     },
     "tag_bag": [
-      "machine",
-      "memory",
-      "index",
-      "topology",
-      "two",
-      "laptops",
-      "thebe",
-      "primary",
-      "sakura",
-      "thisg",
-      "paths",
-      "vary",
-      "infinite",
-      "wisdom",
       "note",
       "becoming",
-      "yours"
+      "yours",
+      "infinite",
+      "wisdom"
     ]
   },
   "nodes": [
@@ -122,12 +110,12 @@
   ],
   "viewport": {
     "camera_x": 752.951863149856,
-    "camera_y": 876.4492096590456,
+    "camera_y": 910.8247597183051,
     "camera_zoom": 0.7854419770288783
   },
   "ui_migrations": [
     "image_border_default_on_v1"
   ],
   "last_browse_dirs": {},
-  "checksum": "fd4a232de2553d4b"
+  "checksum": "04639d7f96050707"
 }
