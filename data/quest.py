@@ -409,7 +409,10 @@ class _Ledger:
         try:
             rows = SheetsClient().read_sheet("Quest_Log")
         except SheetsError as e:
-            logger.info(f"[ledger] live Quest_Log unavailable ({e}); using bundled scenes")
+            # File-only DEBUG: the startup [sheets] line already announced the
+            # proxy state clearly — this is the downstream detail, not a second
+            # shout (one clear signal, per "keep the channels pristine").
+            logger.debug(f"[ledger] live Quest_Log unavailable ({e}); using bundled scenes")
             return None
         except Exception as e:
             logger.warning(f"[ledger] unexpected Quest_Log read error: {e}; using bundled scenes")

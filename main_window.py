@@ -249,7 +249,16 @@ class GentleAdventuresApp(QMainWindow):
             self.sheets: SheetsClient | None = SheetsClient()
         except SheetsError as e:
             self.sheets = None
-            logger.info(f"[sheets] ledger sync disabled — proxy not configured ({e})")
+            # Clear, actionable, once at startup — this is a graceful fallback,
+            # NOT an error: the bundled quest carries the game. Spelled out so a
+            # glance at the log says exactly what's off and how to turn it on.
+            logger.info(
+                "[sheets] LEDGER OFF — live cloud sync + Player_State heartbeat are "
+                "disabled; running on the bundled quest (graceful fallback, not an "
+                "error). To enable: set env vars GA_WebApp (Apps Script web-app URL) "
+                "and GA_Ledger (shared token) — or add a .sheets_proxy.json — then "
+                f"relaunch GA. Full setup: Documents/Sheets Ledger Setup.md. [why: {e}]"
+            )
         # Swappable text backend (Claude default, Gemini on demand) for the ship's
         # voice — Oracle, vibe, ghost-repair, missions. Built once; None silently
         # if misconfigured (contextual absence). Calls run via the worker registry.
