@@ -256,7 +256,21 @@ class TitleBar(QWidget):
                 # Dragging a maximized window restores it, then follows the cursor.
                 w.restore_window()
             new_pos = event.globalPosition().toPoint()
-            w.move(w.pos() + (new_pos - self._drag_pos))
+            delta = new_pos - self._drag_pos
+            if getattr(w, "_curtains_collapsed", False):
+                # Rolled up → the window rides a vertical rail (x locked), so
+                # moving the family's apps feels like sliding faders rather than
+                # floating windows; free-float only when expanded. Clamp y so the
+                # strip can't leave the visible desktop (reserve auto-hide taskbar
+                # room — full−available height, min 48px). Mirrors Intricate.
+                screen = w.screen()
+                full, avail = screen.geometry(), screen.availableGeometry()
+                taskbar_h = max(full.height() - avail.height(), 48)
+                new_y = max(avail.top(), w.pos().y() + delta.y())
+                new_y = min(new_y, full.bottom() - w.height() - taskbar_h + 5)
+                w.move(w.pos().x(), new_y)
+            else:
+                w.move(w.pos() + delta)
             self._drag_pos = new_pos
             event.accept()
         else:
