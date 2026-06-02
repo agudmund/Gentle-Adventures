@@ -21,11 +21,19 @@ from pathlib import Path
 try:
     import intricate_log  # noqa: F401 — presence probe
     from shared_braincell.logger import setup_logger as _family_setup
+    from shared_braincell.logger import init_app as _family_init_app
     _HAVE_FAMILY = True
 except Exception:
     intricate_log = None  # type: ignore
     _family_setup = None
+    _family_init_app = None
     _HAVE_FAMILY = False
+
+# Set once, before the first family logger is requested — names this process's
+# run `gentle_<timestamp>.log` so GA's logs are attributable beside their
+# siblings (Intricate, Majestic…) in the shared log dir, rather than all sharing
+# the legacy `intricate_` prefix. Falls back silently on an older spine.
+_APP_INITED = False
 
 
 def get_logger(name: str = "gentle"):
@@ -36,6 +44,14 @@ def get_logger(name: str = "gentle"):
     get_logger("gentle") shares one logger object.
     """
     if _HAVE_FAMILY and _family_setup is not None:
+        global _APP_INITED
+        if not _APP_INITED:
+            _APP_INITED = True
+            if _family_init_app is not None:
+                try:
+                    _family_init_app("gentle")   # → gentle_<timestamp>.log
+                except Exception:
+                    pass   # older spine without init_app — logs as intricate_*
         return _family_setup(name)
     return _stdlib_logger(name)
 
