@@ -30,6 +30,7 @@ from data.quest import all_scenes, first_scene_id, get_scene
 from pretty_widgets.graphics.Theme import Theme as Fam
 from graphics.widgets import BottomToolbar, InteractionBar, NarrativePanel, SceneView, TitleBar
 from graphics.scene_map import SceneMap
+from graphics.sidebar import Sidebar
 from utils.gemini import (
     GeminiAPIError,
     GeminiAuthError,
@@ -173,19 +174,27 @@ class WorkerRegistry:
     the freeze the old quit()+wait() caused on the UI thread.
     """
 
-    def __init__(self):
+    def __init__(self, on_busy_changed=None):
         self._workers: list = []
+        # Called with True when the first worker starts, False when the last
+        # finishes — drives the sidebar's 'working' meter.
+        self.on_busy_changed = on_busy_changed
 
     def run(self, worker) -> None:
+        was_idle = not self._workers
         self._workers.append(worker)
         worker.finished.connect(lambda: self._reap(worker))
         worker.start()
+        if was_idle and self.on_busy_changed:
+            self.on_busy_changed(True)
 
     def _reap(self, worker) -> None:
         try:
             self._workers.remove(worker)
         except ValueError:
             pass
+        if not self._workers and self.on_busy_changed:
+            self.on_busy_changed(False)
 
     def stop_all(self) -> None:
         for w in list(self._workers):
@@ -223,7 +232,7 @@ class GentleAdventuresApp(QMainWindow):
         selected = load_selected_model(app_dir) or default_model
         self.image_client = GeminiImageClient(app_dir=app_dir, model=selected)
 
-        self._workers = WorkerRegistry()   # all QThreads run here — no single-slot clobber
+        self._workers = WorkerRegistry(on_busy_changed=self._on_workers_busy_changed)
         self.current_scene: dict | None = None
         self._visited: set[str] = set()   # scene ids reached — gates the map
         self._oracle_summoned = False     # Hardware Oracle fires once per session
@@ -306,8 +315,16 @@ class GentleAdventuresApp(QMainWindow):
             self.scene_view.restyle()
         if hasattr(self, "scene_map"):
             self.scene_map.restyle()
+        if hasattr(self, "sidebar"):
+            self.sidebar.restyle()
         if hasattr(self, "narrative"):
             self.narrative.restyle()
+
+    def _on_workers_busy_changed(self, busy: bool) -> None:
+        """Worker registry crossed idle<->busy: fade the sidebar 'working' meter
+        in and breathe while anything runs, out when all's quiet."""
+        if hasattr(self, "sidebar"):
+            self.sidebar.set_working(busy)
 
     # ───── layout ─────
 
@@ -348,6 +365,7 @@ class GentleAdventuresApp(QMainWindow):
         self.interaction.choice_made.connect(self._on_choice)
         self.bottom_toolbar = BottomToolbar()
         self.bottom_toolbar.feature_clicked.connect(self._on_feature)
+        self.sidebar = Sidebar()   # left rail — hosts the lower-corner control grid
 
         # Visual-novel split: narrative column on the left, the right pane (scene
         # image OR jump map, via the stack) on the right. Choices/parser and the
@@ -356,6 +374,7 @@ class GentleAdventuresApp(QMainWindow):
         split_row = QHBoxLayout(self._split)
         split_row.setContentsMargins(0, 0, 0, 0)
         split_row.setSpacing(0)
+        split_row.addWidget(self.sidebar)                  # left rail (fixed width)
         split_row.addWidget(self.narrative, stretch=1)
         split_row.addWidget(self._right_stack, stretch=1)
 
