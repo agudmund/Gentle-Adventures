@@ -13,6 +13,7 @@ import random
 from PySide6.QtCore import Qt, Signal, QTimer, QSize, QVariantAnimation
 from PySide6.QtGui import QFont, QPixmap, QIcon, QColor
 from PySide6.QtWidgets import (
+    QGraphicsOpacityEffect,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -121,7 +122,8 @@ class TitleBar(QWidget):
                  close: bool = False, accent: bool = False, tooltip: str = "") -> QPushButton:
         btn = QPushButton()
         btn.setFixedSize(self._BTN_W, self._BAR_H)
-        btn.setCursor(Qt.PointingHandCursor)
+        # Default arrow cursor on the titlebar controls — the tactile feel of
+        # gently touching them; no hand-pointer swap on hover.
         btn.setFocusPolicy(Qt.NoFocus)
         if icon_name:
             # Family icons resolve via Theme.icon() → app icons/ then the asset
@@ -364,6 +366,36 @@ class SceneView(QWidget):
             f"(check your GEMINI_API_KEY and try again)"
         )
         self._fit()
+
+    def flash_sticker(self, path: str):
+        """Celebration: a reward sticker blooms over the scene, holds, and fades.
+        A transient overlay child — it never disturbs the framed image beneath,
+        and deletes itself when the bloom finishes."""
+        pm = QPixmap(path)
+        if pm.isNull():
+            return
+        box = max(120, int(min(self.width(), self.height()) * 0.5))
+        lbl = QLabel(self)
+        lbl.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        lbl.setStyleSheet("background: transparent;")
+        lbl.setPixmap(pm.scaled(box, box, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        lbl.adjustSize()
+        lbl.move((self.width() - lbl.width()) // 2, (self.height() - lbl.height()) // 2)
+        lbl.show()
+        lbl.raise_()
+
+        eff = QGraphicsOpacityEffect(lbl)
+        lbl.setGraphicsEffect(eff)
+        anim = QVariantAnimation(self)
+        anim.setStartValue(0.0)
+        anim.setKeyValueAt(0.18, 1.0)   # bloom in
+        anim.setKeyValueAt(0.72, 1.0)   # hold
+        anim.setEndValue(0.0)           # fade out
+        anim.setDuration(1900)
+        anim.valueChanged.connect(lambda v: eff.setOpacity(float(v)))
+        anim.finished.connect(lbl.deleteLater)
+        anim.start()
+        self._sticker_anim = anim   # keep a ref so it isn't GC'd mid-bloom
 
     def resizeEvent(self, event):  # noqa: N802 — Qt naming
         super().resizeEvent(event)

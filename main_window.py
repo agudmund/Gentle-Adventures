@@ -45,6 +45,7 @@ from utils.probe import probe_fastflowlm, probe_npu, raw_hardware_spec
 from utils.scene_cache import SceneCache
 from utils.sheets import SheetsClient, SheetsError
 from utils.text import build_text_backend
+from utils.sticker_loot import award_for_scene
 from utils.logger import get_logger
 
 logger = get_logger("gentle")
@@ -226,6 +227,9 @@ class GentleAdventuresApp(QMainWindow):
         self._visited: set[str] = set()   # scene ids reached — gates the map
         self._oracle_summoned = False     # Hardware Oracle fires once per session
         self._oracle_line = ""            # cached calibration line once it arrives
+        self._npu_probed = False          # NPU probe is cached (it can't change mid-session)
+        self._npu_engine: str | None = None
+        self._earned_stickers: set[str] = set()   # scene ids already rewarded (session dedupe)
         # Ledger write-back: push Player_State up as the captain plays. Built
         # once; None (silently) when the proxy isn't configured — contextual
         # absence, never an error banner. The sync runs off the UI thread.
@@ -347,16 +351,25 @@ class GentleAdventuresApp(QMainWindow):
         # Visual-novel split: narrative column on the left, the right pane (scene
         # image OR jump map, via the stack) on the right. Choices/parser and the
         # bottom toolbar span full width beneath it. 1:1 stretch is a taste knob.
-        split = QWidget()
-        split_row = QHBoxLayout(split)
+        self._split = QWidget()
+        split_row = QHBoxLayout(self._split)
         split_row.setContentsMargins(0, 0, 0, 0)
         split_row.setSpacing(0)
         split_row.addWidget(self.narrative, stretch=1)
         split_row.addWidget(self._right_stack, stretch=1)
 
-        body_layout.addWidget(split, stretch=1)
+        body_layout.addWidget(self._split, stretch=1)
         body_layout.addWidget(self.interaction)
         body_layout.addWidget(self.bottom_toolbar)
+        # Hair-thin blank strip pinned to the very bottom — the curtain's hem
+        # weight. On roll-up everything above hides at once (top→bottom); this
+        # sliver is the only thing left to drop, so its slightly-late motion is
+        # what the retina reads as weight — without the busy parser/buttons/
+        # toolbar lingering through the curl.
+        self._curtain_weight = QWidget()
+        self._curtain_weight.setFixedHeight(3)
+        self._curtain_weight.setStyleSheet(f"background-color: {Fam.windowBg};")
+        body_layout.addWidget(self._curtain_weight)
         layout.addWidget(self._body, stretch=1)
 
         self.setCentralWidget(central)
@@ -385,21 +398,38 @@ class GentleAdventuresApp(QMainWindow):
         )
 
         if collapsing:
-            # Delay-hide the body so it stays visible for the first ~2/3 of the
-            # roll — the window reads as physically pulling its thickness up
-            # into the strip (bottom toolbar and all), not just shrinking. That
-            # stagger is the "oompf". Mirrors Intricate main_window.py:1187.
+            # Hide ALL body content immediately, in top→bottom order (so the
+            # paint pipeline drops them in visual order — micro-timing that the
+            # eye reads as a clean, deterministic curl). Nothing busy lingers:
+            # narrative, scene pane, parser, choices, map buttons, toolbar — gone
+            # at once. Only the hair-thin blank hem strip rides on, delay-hidden
+            # with the body at 2/3 — its slightly-late drop is the whole "weight"
+            # the retina needs (a seamstress's bottom-weight, simulated in 3px).
+            self._split.hide()
+            self.interaction.hide()
+            self.bottom_toolbar.hide()
             hide_delay = max(1, int(duration * 2 / 3))
             QTimer.singleShot(hide_delay, self._body.hide)
         else:
-            # Show the body up front so it grows back into view as we expand.
+            # Grow the blank hem back in first, then reveal the content LAST
+            # (after the roll settles) so everything lays out / scales once, at
+            # final size — not on every frame of the way out.
             self._body.show()
+            QTimer.singleShot(duration, self._reveal_body_content)
 
         anim.start()
         self._curtain_anim = anim          # keep a ref so it isn't GC'd mid-roll
         self._curtains_collapsed = collapsing
         self._is_maxed = not collapsing    # the expanded strip fills the work area
         self.title_bar.reflect_maximized(self._is_maxed)
+
+    def _reveal_body_content(self) -> None:
+        """Re-show the body's content widgets after an expand settles (or on a
+        maximize). Guarded so it's safe to call before _build_layout finishes."""
+        for w in (getattr(self, "_split", None), getattr(self, "interaction", None),
+                  getattr(self, "bottom_toolbar", None)):
+            if w is not None:
+                w.show()
 
     # ───── maximize (taskbar-aware work area, family-consistent) ─────
 
@@ -424,6 +454,7 @@ class GentleAdventuresApp(QMainWindow):
         # the window would expand to a blank strip.
         if self._curtains_collapsed and hasattr(self, "_body"):
             self._body.show()
+            self._reveal_body_content()   # never leave content hidden from a prior roll
             self._curtains_collapsed = False
         self.setGeometry(self.work_area())
         self._is_maxed = True
@@ -683,7 +714,7 @@ class GentleAdventuresApp(QMainWindow):
         self.title_bar.set_title(scene["title"])
 
         verify_kind = scene.get("verify")
-        npu_engine = probe_npu() if verify_kind == "npu" else None
+        npu_engine = self._npu_descriptor() if verify_kind == "npu" else None
         if verify_kind == "npu":
             verified = npu_engine is not None
         else:
@@ -707,6 +738,10 @@ class GentleAdventuresApp(QMainWindow):
         if verify_kind == "npu":
             updates["npu_active"] = 1 if verified else 0
         self._sync_player_state(updates)
+
+        # Reward: a verified beat earns a sticker from the iconic library (once).
+        if verified:
+            self._maybe_award_sticker(scene_id)
 
         if self.scene_cache.has(scene_id):
             # Baked art — reload it, never re-commission the painter.
@@ -814,6 +849,22 @@ class GentleAdventuresApp(QMainWindow):
     def _on_oracle_failed(self, error: str, tag: str) -> None:
         # Cosmetic — keep the plain engine line, never surface the error in the UI.
         logger.info(f"[oracle] calibration line unavailable: {error}")
+
+    # ───── sticker loot (awarded from the iconic library) ─────
+
+    def _maybe_award_sticker(self, scene_id: str) -> None:
+        """Once per session per scene: a verified beat blooms a reward sticker
+        (a real iconic-library asset) over the scene + whispers the achievement.
+        Silent no-op if the scene has no reward or the asset is missing."""
+        if scene_id in self._earned_stickers:
+            return
+        award = award_for_scene(scene_id, self.app_dir)
+        if not award:
+            return
+        path, name = award
+        self._earned_stickers.add(scene_id)
+        self.scene_view.flash_sticker(str(path))
+        self.bottom_toolbar.set_info(f"✦ sticker earned — {name} ✦")
 
     # ───── shutdown ─────
 
@@ -970,6 +1021,16 @@ class GentleAdventuresApp(QMainWindow):
             self._load_scene(nxt)
 
     # ───── verification ─────
+
+    def _npu_descriptor(self) -> str | None:
+        """Cached NPU probe. The engine can't change within a session, so we
+        shell PowerShell ONCE (on the first NPU scene) and reuse the result —
+        instead of paying that ~1-2s subprocess on every NPU-scene navigation,
+        which was the scene-nav lag."""
+        if not self._npu_probed:
+            self._npu_engine = probe_npu()
+            self._npu_probed = True
+        return self._npu_engine
 
     def _verify(self, kind: str | None):
         if kind is None:
