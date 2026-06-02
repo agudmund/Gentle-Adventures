@@ -54,8 +54,13 @@ class TitleBar(QWidget):
 
     curtains_clicked = Signal()    # roll up into the strip / expand back out
 
-    # Family-consistent proportions from the shared Theme.
-    _BAR_H = max(Fam.handleHeightTop, Fam.titleFontSize + 8)
+    # Titlebar height = the shared suite value (Theme.handleHeightTop), the exact
+    # number Intricate / The Majestic use — so GA's bar matches the family rather
+    # than standing taller. The old max(handleHeightTop, titleFontSize+8) silently
+    # won at 30px over the suite's 25 (the "feels thicker" the board flagged), and
+    # everything keyed off _BAR_H — button width, the 9px-at-25px info-font ratio —
+    # was misaligned as a result. One shared source now; the dependents realign.
+    _BAR_H = Fam.handleHeightTop
     _BTN_W = _BAR_H
     _GAP   = Fam.toolbarBtnGap
     # Fixed pixel offset from the left for the combo (the family's toolbarTitleX
