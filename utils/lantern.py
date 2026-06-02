@@ -125,7 +125,7 @@ class LanternWatch(QThread):
     command and listens; it owns the watching, classifying, and lighting."""
 
     line = Signal(str)
-    settled = Signal(int, str, object)   # (exit_code, gentle_message, classification|None)
+    settled = Signal(int, str, object, str)   # (exit_code, gentle_message, classification, raw_tail)
 
     def __init__(self, cmd, label: str = ""):
         super().__init__()
@@ -137,5 +137,5 @@ class LanternWatch(QThread):
         code, raw, classification = watch_command(self.cmd, on_line=self.line.emit)
         if code != 0:
             _log.warning(f"[lantern] {' '.join(self.cmd)} exited {code}:\n{raw}")
-        self.settled.emit(code, gentle_message(classification), classification)
+        self.settled.emit(code, gentle_message(classification), classification, raw)
 

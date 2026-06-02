@@ -878,12 +878,34 @@ class GentleAdventuresApp(QMainWindow):
         self._workers.run(worker)
         self.bottom_toolbar.set_info(f"✦ {label}… ✦")
 
-    def _on_lantern_settled(self, code: int, gentle: str, classification) -> None:
+    def _on_lantern_settled(self, code: int, gentle: str, classification, raw: str) -> None:
         if code == 0:
             self.bottom_toolbar.set_info("✦ all lit and well — your ship checks out ✦")
-        else:
-            # Raw trace already logged by LanternWatch; the captain sees only light.
-            self.bottom_toolbar.set_info(gentle or "✦ a small tangle — handled ✦")
+            return
+        # A snag. Show the offline gentle line IMMEDIATELY (instant, works with no
+        # key), then ask the text backend for a richer in-character repair that
+        # replaces the whisper if it returns. The raw trace went to the log only;
+        # we send just a trimmed tail to the model (benign for flm — scrub if The
+        # Lantern ever watches riskier tools).
+        self.bottom_toolbar.set_info(gentle or "✦ a small tangle — handled ✦")
+        if not self.text_backend:
+            return
+        system = (
+            "You are The Lantern — a gentle companion in a cozy chibi space "
+            "adventure. A tool just stumbled. Given its raw output, reply with ONE "
+            "or two warm sentences that name the snag plainly and offer the single "
+            "concrete next step, in a calm 'let me light this for you' voice. No "
+            "preamble, no lists, no surrounding quotes — just the line."
+        )
+        kind = classification.get("kind") if classification else "unknown"
+        user = f"Stumble kind: {kind}.\nLast output:\n{raw[-800:]}"
+        self._request_text([{"role": "user", "content": user}], system=system,
+                           tag="lantern", on_ready=self._on_lantern_rewrite)
+
+    def _on_lantern_rewrite(self, text: str, tag: str) -> None:
+        line = " ".join(text.strip().split())   # collapse to one whisper line
+        if line:
+            self.bottom_toolbar.set_info(f"🔦 {line}")
 
     # ───── shutdown ─────
 
