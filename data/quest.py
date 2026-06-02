@@ -41,7 +41,21 @@ def _prompt(specific: str) -> str:
 #   narrative   : the story panel text
 #   choices     : list of buttons. Each has label + next (scene id) or action.
 #   verify      : optional — "npu" | "fastflowlm" | None — system probe to confirm
+#   narrative_absent / choices_absent : optional — shown INSTEAD when verify=="npu"
+#                 fails (no NPU aboard). Lets the story itself become the gentle
+#                 guide. A verify=="npu" scene without its own narrative_absent
+#                 simply gets NO_NPU_NOTE appended, so the tour reads as a lovely
+#                 'someday' rather than a broken step.
 # ─────────────────────────────────────────────────────────────────────────────
+
+# Appended to any NPU-gated scene's narrative when no neural engine is found and
+# the scene carries no richer narrative_absent of its own. Contextual absence,
+# voiced in-world — never a grey "not detected".
+NO_NPU_NOTE = (
+    "(No neural engine aboard this ship yet, so this errand stays a story for "
+    "now — lovely to imagine, and waiting patiently for the day you bring an "
+    "XDNA-hearted vessel home.)"
+)
 
 QUEST: list[dict] = [
     {
@@ -108,6 +122,30 @@ QUEST: list[dict] = [
             {"label": "Ask how to wake it", "next": "wake_lore"},
         ],
         "verify": "npu",
+        # Shown instead when there's no NPU aboard (e.g. opened on Sakura). The
+        # missing third meter becomes the story's gentlest teaching moment.
+        "narrative_absent": (
+            "The diagnostic spirits respond to your call.\n"
+            "A panel materializes — three meters, three names.\n\n"
+            "CPU dances with everyday work. GPU naps quietly.\n"
+            "But where the third meter should be, there is only a soft, kind space.\n\n"
+            "\"There's no neural engine aboard this ship, captain,\" the computer says,\n"
+            "gentle as ever. \"The fancy things — the little local oracles, the\n"
+            "quiet dreaming — they need one to call home.\"\n\n"
+            "A kind guide told me the very same, once. \"If you'd like to play with\n"
+            "the wondrous things,\" they said, \"you'll want a vessel with a neural\n"
+            "engine in its heart — an AMD XDNA 2, or one of its cousins.\"\n\n"
+            "So I visited a merchant — bright shelves, patient eyes — and traded\n"
+            "honest riches and a pocketful of simulated gold tokens for one. (I did\n"
+            "try to pay in hugs and kind praises first. Sweet currency, the merchant\n"
+            "smiled — but not yet legal tender in this timeline.)\n\n"
+            "The offer stands whenever you're ready, captain. Until then, the ship\n"
+            "sails just fine on the gentler winds."
+        ),
+        "choices_absent": [
+            {"label": "Ask what XDNA means", "next": "lore_xdna"},
+            {"label": "Sail on, gentle and unhurried", "next": "blur"},
+        ],
     },
     {
         "id": "wake_lore",

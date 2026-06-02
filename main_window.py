@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
     QSystemTrayIcon,
 )
 
-from data.quest import all_scenes, first_scene_id, get_scene
+from data.quest import all_scenes, first_scene_id, get_scene, NO_NPU_NOTE
 from pretty_widgets.graphics.Theme import Theme as Fam
 from graphics.widgets import BottomToolbar, InteractionBar, NarrativePanel, SceneView, TitleBar
 from graphics.scene_map import SceneMap
@@ -760,8 +760,19 @@ class GentleAdventuresApp(QMainWindow):
             verified = npu_engine is not None
         else:
             verified = self._verify(verify_kind)
-        self.narrative.set_text(scene["narrative"], verified=verified)
-        self.interaction.set_choices(scene["choices"])
+
+        # No NPU aboard: let the story BE the gentle guide instead of a dead
+        # "not detected". A scene may carry its own narrative_absent (the rich
+        # first-contact guide on 'discovery'); any other NPU-gated scene simply
+        # gets NO_NPU_NOTE appended so the tour reads as a lovely 'someday'.
+        if verify_kind == "npu" and not verified:
+            narrative = scene.get("narrative_absent") or (scene["narrative"] + "\n\n" + NO_NPU_NOTE)
+            choices = scene.get("choices_absent") or scene["choices"]
+        else:
+            narrative = scene["narrative"]
+            choices = scene["choices"]
+        self.narrative.set_text(narrative, verified=verified)
+        self.interaction.set_choices(choices)
         self.interaction.set_parser_mode("free")
 
         # When a scene checks the NPU, the ship names the engine it found on the
