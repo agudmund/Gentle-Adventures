@@ -46,6 +46,7 @@ from utils.scene_cache import SceneCache
 from utils.sheets import SheetsClient, SheetsError
 from utils.text import build_text_backend
 from utils.sticker_loot import award_for_scene
+from utils.lantern import LanternWatch
 from utils.logger import get_logger
 
 logger = get_logger("gentle")
@@ -866,6 +867,24 @@ class GentleAdventuresApp(QMainWindow):
         self.scene_view.flash_sticker(str(path))
         self.bottom_toolbar.set_info(f"✦ sticker earned — {name} ✦")
 
+    # ───── The Lantern (gentle real-tool runner) ─────
+
+    def _light_command(self, cmd, label: str = "checking") -> None:
+        """Run a real command (e.g. flm) off the UI thread through The Lantern,
+        via the worker registry. A snag returns as a gentle lit line in the
+        bottom strip — never a wall of red; the raw trace goes to the log only."""
+        worker = LanternWatch(cmd, label)
+        worker.settled.connect(self._on_lantern_settled)
+        self._workers.run(worker)
+        self.bottom_toolbar.set_info(f"✦ {label}… ✦")
+
+    def _on_lantern_settled(self, code: int, gentle: str, classification) -> None:
+        if code == 0:
+            self.bottom_toolbar.set_info("✦ all lit and well — your ship checks out ✦")
+        else:
+            # Raw trace already logged by LanternWatch; the captain sees only light.
+            self.bottom_toolbar.set_info(gentle or "✦ a small tangle — handled ✦")
+
     # ───── shutdown ─────
 
     def closeEvent(self, event):
@@ -989,8 +1008,13 @@ class GentleAdventuresApp(QMainWindow):
                 self._run_validation(free_text)
                 return
             if self.phase == "quest":
+                cmd = free_text.strip().lower()
+                if cmd in ("validate", "validate ship", "light"):
+                    # The Lantern runs the real `flm validate` and lights any snag.
+                    self._light_command(["flm", "validate"], "checking the ship")
+                    return
                 logger.info(f"Parser input: {free_text!r}")
-                # Future hop: route to Claude or the local llama for in-character reply
+                # Future hop: vibe weather / route to the local llama for a reply
                 return
             return
 
