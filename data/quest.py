@@ -172,6 +172,7 @@ QUEST: list[dict] = [
             "    > flm run llama3.2:3b"
         ),
         "choices": [
+            {"label": "Validate the ship first", "action": "validate_ship"},
             {"label": "I have cast the rite", "next": "arrival"},
             {"label": "Ask what models do", "next": "model_lore"},
         ],

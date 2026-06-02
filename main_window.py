@@ -871,23 +871,17 @@ class GentleAdventuresApp(QMainWindow):
 
     def _light_command(self, cmd, label: str = "checking") -> None:
         """Run a real command (e.g. flm) off the UI thread through The Lantern,
-        via the worker registry. A snag returns as a gentle lit line in the
-        bottom strip — never a wall of red; the raw trace goes to the log only."""
+        via the worker registry; the result lands in the bottom strip (the
+        free-text 'validate' command). Snag -> gentle lit line; raw -> log only."""
         worker = LanternWatch(cmd, label)
         worker.settled.connect(self._on_lantern_settled)
         self._workers.run(worker)
         self.bottom_toolbar.set_info(f"✦ {label}… ✦")
 
-    def _on_lantern_settled(self, code: int, gentle: str, classification, raw: str) -> None:
-        if code == 0:
-            self.bottom_toolbar.set_info("✦ all lit and well — your ship checks out ✦")
-            return
-        # A snag. Show the offline gentle line IMMEDIATELY (instant, works with no
-        # key), then ask the text backend for a richer in-character repair that
-        # replaces the whisper if it returns. The raw trace went to the log only;
-        # we send just a trimmed tail to the model (benign for flm — scrub if The
-        # Lantern ever watches riskier tools).
-        self.bottom_toolbar.set_info(gentle or "✦ a small tangle — handled ✦")
+    def _lantern_rewrite_request(self, classification, raw: str, on_ready) -> None:
+        """Ask the text backend for a richer in-character repair line. No-op when
+        there's no backend — the offline classifier copy already stands. Raw goes
+        to the log only; only a trimmed tail reaches the model (benign for flm)."""
         if not self.text_backend:
             return
         system = (
@@ -900,12 +894,48 @@ class GentleAdventuresApp(QMainWindow):
         kind = classification.get("kind") if classification else "unknown"
         user = f"Stumble kind: {kind}.\nLast output:\n{raw[-800:]}"
         self._request_text([{"role": "user", "content": user}], system=system,
-                           tag="lantern", on_ready=self._on_lantern_rewrite)
+                           tag="lantern", on_ready=on_ready)
+
+    def _on_lantern_settled(self, code: int, gentle: str, classification, raw: str) -> None:
+        # Bottom-strip target (the free-text 'validate' command).
+        if code == 0:
+            self.bottom_toolbar.set_info("✦ all lit and well — your ship checks out ✦")
+            return
+        self.bottom_toolbar.set_info(gentle or "✦ a small tangle — handled ✦")
+        self._lantern_rewrite_request(classification, raw, self._on_lantern_rewrite)
 
     def _on_lantern_rewrite(self, text: str, tag: str) -> None:
-        line = " ".join(text.strip().split())   # collapse to one whisper line
+        line = " ".join(text.strip().split())
         if line:
             self.bottom_toolbar.set_info(f"🔦 {line}")
+
+    # ── Quest beat: "validate your ship" — The Lantern reports into the narrative ──
+
+    def _validate_ship(self) -> None:
+        """Quest-beat action: run the real `flm validate` and report into the
+        NarrativePanel — a clean bill of health, or a gentle repair if the ship's
+        NPU/runtime needs a nudge. Never blocks; raw trace -> log only."""
+        self.narrative.set_text("✦ The Lantern lifts its light and checks your ship…",
+                                verified=None)
+        worker = LanternWatch(["flm", "validate"], "validating the ship")
+        worker.settled.connect(self._on_validate_settled)
+        self._workers.run(worker)
+
+    def _on_validate_settled(self, code: int, gentle: str, classification, raw: str) -> None:
+        if code == 0:
+            found = [ln for ln in raw.splitlines() if ln.strip()][:4]
+            body = ("Your ship is sound. The Lantern found:\n\n"
+                    + "\n".join(found)
+                    + "\n\nAll lit and well — your NPU is ready. ✦")
+            self.narrative.set_text(body, verified=True)
+            return
+        self.narrative.set_text(f"🔦 {gentle}", verified=False)
+        self._lantern_rewrite_request(classification, raw, self._on_validate_rewrite)
+
+    def _on_validate_rewrite(self, text: str, tag: str) -> None:
+        line = " ".join(text.strip().split())
+        if line:
+            self.narrative.set_text(f"🔦 {line}", verified=False)
 
     # ───── shutdown ─────
 
@@ -1060,6 +1090,9 @@ class GentleAdventuresApp(QMainWindow):
             return
         if action == "quit":
             self.close()
+            return
+        if action == "validate_ship":
+            self._validate_ship()
             return
 
         nxt = choice.get("next")
