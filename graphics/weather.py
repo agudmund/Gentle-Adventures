@@ -42,6 +42,7 @@ _DROP_MAX_ALPHA = 120     # ceiling alpha for a near droplet (parallax scales it
 _WIND_MAX = 2.6           # px/tick horizontal drift at depth 1 (the slant amount)
 _LEVEL_LERP = 0.045       # how fast intensity eases toward its target (the tide)
 _WIND_LERP = 0.02         # how fast wind eases toward its new target (slower still)
+_TINT_LERP = 0.05         # how fast the palette morphs toward its target tint
 
 # A soft pastel default — lavender-blue, the "reflective morning" tint. The vibe
 # layer overrides this via set_palette (sun-pastel for high gusto, etc.).
@@ -84,6 +85,7 @@ class WeatherOverlay(QWidget):
         self.setFocusPolicy(Qt.NoFocus)
 
         self._tint = QColor(_DEFAULT_TINT)
+        self._tint_target = QColor(self._tint)   # palette eases toward this
         self._level = 0.0          # current eased intensity
         self._target = 0.0         # where intensity is heading
         self._drops: list[_Drop] = []
@@ -109,10 +111,28 @@ class WeatherOverlay(QWidget):
 
     def set_palette(self, color: QColor) -> None:
         """Tint the droplets/fog to match the current vibe (sun-pastel for high
-        gusto, deep lavender for quiet reflection). Eased shifts are the window's
-        job; here we just adopt the colour."""
+        gusto, deep lavender for quiet reflection). The shift EASES in — the tint
+        morphs toward this target over the next frames, never a hard flash."""
         if color is not None and color.isValid():
-            self._tint = QColor(color)
+            self._tint_target = QColor(color)
+            if self._level > 0.0 and not self._timer.isActive():
+                self._timer.start()   # wake to animate the morph if at rest
+
+    def set_vibe(self, energy: float, calm: float) -> None:
+        """Drive the weather from a read vibe vector (System 2 Phase 2). High
+        energy → bright, clear, warm-pastel skies; quiet/reflective → gentle
+        lavender rain. Intensity AND palette ease in, so a mood shift arrives
+        like weather rolling through, not a switch flip."""
+        e = max(0.0, min(1.0, float(energy)))
+        c = max(0.0, min(1.0, float(calm)))
+        # reflective/calm brings the rain in; high gusto clears it to near-zero
+        intensity = max(0.0, min(0.85, 0.12 + c * 0.62 - e * 0.18))
+        # palette eases from cool lavender (reflective) → warm sun-pastel (lively)
+        cool = (188, 200, 238)
+        warm = (245, 222, 196)
+        tint = QColor(*[int(cool[i] + (warm[i] - cool[i]) * e) for i in range(3)])
+        self.set_palette(tint)
+        self.set_intensity(intensity)
 
     def start(self) -> None:
         if not self._timer.isActive():
@@ -127,6 +147,12 @@ class WeatherOverlay(QWidget):
         # WindChangeInterval (5..30s) → ticks. Re-rolled each time wind retargets.
         return int(random.uniform(5.0, 30.0) * _FPS)
 
+    @staticmethod
+    def _ease_channel(cur: int, goal: int) -> int:
+        # Lerp one 0-255 colour channel toward goal; snap when within 1 so integer
+        # rounding can't stall the morph just shy of the target.
+        return goal if abs(goal - cur) <= 1 else int(cur + (goal - cur) * _TINT_LERP)
+
     def _tick(self) -> None:
         self._ticks += 1
 
@@ -140,6 +166,14 @@ class WeatherOverlay(QWidget):
             self._wind_target = random.uniform(-_WIND_MAX, _WIND_MAX)
             self._next_wind_tick = self._ticks + self._roll_wind_interval()
         self._wind += (self._wind_target - self._wind) * _WIND_LERP
+
+        # ease the palette toward its target so a vibe shift morphs in gently
+        if self._tint != self._tint_target:
+            self._tint = QColor(
+                self._ease_channel(self._tint.red(),   self._tint_target.red()),
+                self._ease_channel(self._tint.green(), self._tint_target.green()),
+                self._ease_channel(self._tint.blue(),  self._tint_target.blue()),
+            )
 
         w = max(1, self.width())
         h = max(1, self.height())

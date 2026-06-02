@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import subprocess
 import sys
 import webbrowser
@@ -1123,7 +1124,10 @@ class GentleAdventuresApp(QMainWindow):
                 # sets the rain; anything else falls through untouched.
                 if self._weather_command(cmd):
                     return
-                # Future hop: read the vibe → set intensity + palette → llama reply
+                # System 2 Phase 2 — read the vibe vector from the free text and
+                # let the weather answer it (intensity + palette morph). Async and
+                # silent on absence: no backend → no vibe, the sky simply holds.
+                self._read_vibe(free_text)
                 return
             return
 
@@ -1182,6 +1186,70 @@ class GentleAdventuresApp(QMainWindow):
             logger.info(f"Weather (manual): {text!r} -> {presets[text]:.2f}")
             return True
         return False
+
+    # ───── Psychological Weather — the vibe vector (System 2 Phase 2) ─────
+
+    def _read_vibe(self, text: str) -> None:
+        """Ask the text backend to read the captain's message as a tiny vibe
+        vector (energy / calm), then let the weather answer it. Cosmetic and
+        async — never blocks the quest, never surfaces an error in the UI."""
+        if not hasattr(self, "_weather"):
+            return
+        snippet = (text or "").strip()[:400]
+        if not snippet:
+            return
+        system = (
+            "You are the quiet weather-sense of a cozy chibi space adventure. Read "
+            "the emotional vibe of the captain's message. Reply with ONLY a compact "
+            "JSON object and nothing else: {\"energy\": <0.0-1.0>, \"calm\": <0.0-1.0>, "
+            "\"mood\": \"<one or two gentle words>\"}. energy = how lively, excited, "
+            "triumphant, high-gusto it feels. calm = how quiet, reflective, restful, "
+            "slow-morning it feels. No prose, no markdown, no code fences."
+        )
+        self._request_text(
+            [{"role": "user", "content": snippet}],
+            system=system, tag="vibe",
+            on_ready=self._on_vibe_text, on_failed=self._on_vibe_failed,
+        )
+
+    def _on_vibe_text(self, text: str, tag: str) -> None:
+        energy, calm, mood = self._parse_vibe(text)
+        if energy is None:
+            logger.info(f"[vibe] unparseable reply, sky holds: {text!r}")
+            return
+        self._weather.set_vibe(energy, calm)
+        logger.info(f"[vibe] energy={energy:.2f} calm={calm:.2f} mood={mood!r}")
+
+    def _on_vibe_failed(self, error: str, tag: str) -> None:
+        # Silent by design — no backend / a hiccup just means the sky holds steady.
+        logger.info(f"[vibe] read unavailable: {error}")
+
+    @staticmethod
+    def _parse_vibe(text: str):
+        """Pull {energy, calm, mood} from the model's reply, tolerant of stray
+        prose or code fences. Returns (None, None, None) if unparseable."""
+        if not text:
+            return (None, None, None)
+        m = re.search(r"\{.*\}", text, re.DOTALL)
+        if not m:
+            return (None, None, None)
+        try:
+            obj = json.loads(m.group(0))
+        except (ValueError, TypeError):
+            return (None, None, None)
+
+        def _clamp(v):
+            try:
+                return max(0.0, min(1.0, float(v)))
+            except (TypeError, ValueError):
+                return None
+
+        energy = _clamp(obj.get("energy"))
+        calm = _clamp(obj.get("calm"))
+        if energy is None or calm is None:
+            return (None, None, None)
+        mood = str(obj.get("mood", "")).strip()[:40]
+        return (energy, calm, mood)
 
     # ───── verification ─────
 
