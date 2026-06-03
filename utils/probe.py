@@ -154,19 +154,20 @@ def raw_hardware_spec() -> dict:
         return {}
 
 
-def probe_fastflowlm() -> bool:
-    """True if FastFlowLM (the `flm` NPU runtime) is installed — detected via the
-    flm CLI on PATH, with known install locations as backup. This is the genuine
-    'oracle on the NPU' tool scene 04 summons.
+def resolve_flm() -> str | None:
+    """Full path to the `flm` executable — PATH first, then known install locations.
 
-    The backup search matters: the installer adds flm to the *Machine* PATH, but a
-    process launched from a shell that started before that update (e.g. just after
-    a fresh install / factory reset) won't see it on PATH — so shutil.which() can
-    miss a perfectly real install. We therefore also look on disk. Observed layout
-    is '<root>\\flm\\flm.exe' (C:\\Program Files\\flm); some builds use a
-    'FastFlowLM' folder, so we check both names under every common root."""
-    if shutil.which("flm"):
-        return True
+    Why a resolver and not just a name: the installer adds flm to the *Machine* PATH,
+    but a process launched from a shell that started before that update (a fresh
+    install / factory reset / a stale-env launcher) won't see flm on PATH. So
+    `shutil.which("flm")` can miss a real install AND a bare `["flm", ...]` subprocess
+    fails with 'not found' even though the runtime is right there. Returning the
+    resolved full path lets callers run flm directly, PATH or no PATH. Observed layout
+    is '<root>\\flm\\flm.exe' (C:\\Program Files\\flm); some builds use a 'FastFlowLM'
+    folder, so we check both names under every common root. None if not found anywhere."""
+    onpath = shutil.which("flm")
+    if onpath:
+        return onpath
     roots = [
         os.environ.get("ProgramFiles", r"C:\Program Files"),
         os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)"),
@@ -176,9 +177,16 @@ def probe_fastflowlm() -> bool:
         if not root:
             continue
         for folder in ("flm", "FastFlowLM"):
-            if (Path(root) / folder / "flm.exe").exists():
-                return True
-    return False
+            p = Path(root) / folder / "flm.exe"
+            if p.exists():
+                return str(p)
+    return None
+
+
+def probe_fastflowlm() -> bool:
+    """True if FastFlowLM (the `flm` NPU runtime) is installed anywhere we can find it
+    — see resolve_flm(). Location-robust, so a stale PATH can't hide a real install."""
+    return resolve_flm() is not None
 
 
 def probe_local_api(url: str = "http://localhost:1234/v1/models", timeout: float = 1.5) -> bool:

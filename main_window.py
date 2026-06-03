@@ -44,7 +44,7 @@ from utils.gemini import (
     save_selected_model,
     validate_key,
 )
-from utils.probe import probe_fastflowlm, probe_npu, raw_hardware_spec
+from utils.probe import probe_fastflowlm, probe_npu, raw_hardware_spec, resolve_flm
 from utils.scene_cache import SceneCache
 from utils.sheets import SheetsClient, SheetsError
 from utils.player_state import PlayerStateStore
@@ -1231,7 +1231,10 @@ class GentleAdventuresApp(QMainWindow):
         NPU/runtime needs a nudge. Never blocks; raw trace -> log only."""
         self.narrative.set_text("✦ The Lantern lifts its light and checks your ship…",
                                 verified=None)
-        worker = LanternWatch(["flm", "validate"], "validating the ship")
+        # Run flm by its RESOLVED full path, not by name — it may be installed but
+        # not on this process's PATH (the stale-env case). Falls back to bare "flm"
+        # only when truly not found, where the Lantern's "not installed" line is right.
+        worker = LanternWatch([resolve_flm() or "flm", "validate"], "validating the ship")
         worker.settled.connect(self._on_validate_settled)
         self._workers.run(worker)
 
@@ -1377,7 +1380,7 @@ class GentleAdventuresApp(QMainWindow):
                 cmd = free_text.strip().lower()
                 if cmd in ("validate", "validate ship", "light"):
                     # The Lantern runs the real `flm validate` and lights any snag.
-                    self._light_command(["flm", "validate"], "checking the ship")
+                    self._light_command([resolve_flm() or "flm", "validate"], "checking the ship")
                     return
                 logger.info(f"Parser input: {free_text!r}")
                 # System 2 (Psychological Weather) — Phase 1 manual dial, so the
