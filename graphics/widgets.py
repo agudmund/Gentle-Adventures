@@ -12,7 +12,7 @@ import random
 import re
 
 from PySide6.QtCore import Qt, Signal, QTimer, QSize, QVariantAnimation
-from PySide6.QtGui import QFont, QPixmap, QIcon, QColor
+from PySide6.QtGui import QFont, QPixmap, QIcon, QColor, QTextCursor, QTextCharFormat
 from PySide6.QtWidgets import (
     QGraphicsOpacityEffect,
     QHBoxLayout,
@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QPushButton,
     QSizePolicy,
+    QTextEdit,
     QVBoxLayout,
     QWidget,
 )
@@ -494,6 +495,26 @@ class SceneView(QWidget):
 
 
 class NarrativePanel(QWidget):
+    """The story column — text streams in like a typewriter rather than landing as
+    a finished block, so a scene reads as a thought arriving, not a notepad page.
+
+    Two borrowed mechanics, woven together:
+      • Pacing — from The Majestic's proofreader: a char batch + delay that scale
+        with how much text is left, so a long passage doesn't crawl (1 char/tick
+        with an 85/15 brisk-vs-human-pause jitter for short text, up to 8/tick for
+        long) — the gentle hand-typed cadence that's so smooth to read.
+      • Glow — from the legacy Notepad-Duplex-Turbo render preview: each freshly
+        revealed run flashes toward a bright accent, then settles to textPrimary a
+        few hundred ms later, leaving a soft leading-edge trail as the line lands.
+
+    A generation stamp guards the settle callbacks: when a scene swaps mid-reveal
+    (e.g. the NPU 'feeling for the engine' interstitial giving way to the resolved
+    narrative), the previous generation's pending settles are dropped, so stale
+    flashes can never repaint the new text — the re-trigger stays clean, not busy.
+    """
+
+    _GLOW_MS = 320   # how long a freshly-typed run holds its flash before settling
+
     def __init__(self):
         super().__init__()
         self.setMinimumWidth(280)
@@ -502,18 +523,23 @@ class NarrativePanel(QWidget):
         # focal element beside it (no competing panel block).
         self.setStyleSheet(f"background-color: {Fam.windowBg};")
 
-        self._text = QLabel()
-        self._text.setWordWrap(True)
-        self._text.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        # Selectable so the captain can lift a command (e.g. 'flm run llama3.2:3b')
-        # straight off the page — mouse drag or keyboard, with an I-beam to invite it.
-        self._text.setTextInteractionFlags(
-            Qt.TextSelectableByMouse | Qt.TextSelectableByKeyboard)
-        self._text.setCursor(Qt.IBeamCursor)
+        # A read-only QTextEdit (not a QLabel): per-run char formatting is what the
+        # glow needs, and it gives mouse/keyboard selection for free, so a command
+        # like 'flm run llama3.2:3b' lifts straight off the page.
+        self._text = QTextEdit()
+        self._text.setReadOnly(True)
+        self._text.setFrameShape(QTextEdit.NoFrame)
+        self._text.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._text.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._text.document().setDocumentMargin(0)   # the layout owns the inset
+        self._text.setStyleSheet(
+            f"QTextEdit {{ background: transparent; color: {Fam.textPrimary};"
+            f" border: none; }}"
+        )
         font = QFont()
         font.setPointSize(13)
         self._text.setFont(font)
-        self._text.setStyleSheet(f"color: {Fam.textPrimary};")
+        self._text.viewport().setCursor(Qt.IBeamCursor)
 
         self._verified = QLabel()
         self._verified.setAlignment(Qt.AlignRight)
@@ -522,21 +548,41 @@ class NarrativePanel(QWidget):
         vfont.setBold(True)
         self._verified.setFont(vfont)
 
-        # Story at the top of the column, verification line pinned to the bottom.
+        # Story fills the column; verification line pinned to the bottom.
         layout = QVBoxLayout(self)
         layout.setContentsMargins(40, 32, 28, 20)
         layout.setSpacing(6)
-        layout.addWidget(self._text)
-        layout.addStretch(1)
+        layout.addWidget(self._text, 1)
         layout.addWidget(self._verified)
+
+        # ── typewriter state ─────────────────────────────────────────────────
+        self._tw_timer = QTimer(self)
+        self._tw_timer.setSingleShot(True)
+        self._tw_timer.timeout.connect(self._tw_tick)
+        self._tw_buffer = ""        # text still to reveal
+        self._generation = 0        # bumped per set_text; guards stale settles
+        self._glow_color = QColor(Fam.titleColor)    # the flash …
+        self._base_color = QColor(Fam.textPrimary)   # … settling to this
 
     def restyle(self):
         """Re-tint from the live family palette (settings watcher → reload)."""
         self.setStyleSheet(f"background-color: {Fam.windowBg};")
-        self._text.setStyleSheet(f"color: {Fam.textPrimary};")
+        self._text.setStyleSheet(
+            f"QTextEdit {{ background: transparent; color: {Fam.textPrimary};"
+            f" border: none; }}"
+        )
+        self._glow_color = QColor(Fam.titleColor)
+        self._base_color = QColor(Fam.textPrimary)
 
     def set_text(self, body: str, verified: bool | None = None):
-        self._text.setText(body)
+        # Bump the generation FIRST: any settle callbacks still pending from the
+        # previous scene now belong to an old generation and will no-op, so they
+        # can't repaint this fresh text.
+        self._generation += 1
+        self._tw_timer.stop()
+        self._text.clear()
+        self._tw_buffer = body or ""
+
         if verified is True:
             self._verified.setText("★ system confirmed")
             self._verified.setStyleSheet(f"color: {Fam.healthColorCalm};")
@@ -545,6 +591,62 @@ class NarrativePanel(QWidget):
             self._verified.setStyleSheet(f"color: {Fam.primaryBorder};")
         else:
             self._verified.setText("")
+
+        if self._tw_buffer:
+            self._tw_timer.start(10)   # first character lands almost at once
+
+    def _tw_tick(self):
+        if not self._tw_buffer:
+            return
+        rem = len(self._tw_buffer)
+        # Batch + delay scale with what's left (The Majestic's pacing curve).
+        if rem > 500:
+            n, delay = 8, random.randint(18, 35)
+        elif rem > 200:
+            n, delay = 4, random.randint(25, 50)
+        elif rem > 80:
+            n, delay = 2, random.randint(30, 60)
+        else:
+            n = 1
+            # 85% brisk, 15% a human breath — the cadence that reads as thinking.
+            delay = random.choices(
+                [random.randint(25, 65), random.randint(80, 160)],
+                weights=[85, 15],
+            )[0]
+
+        chunk = self._tw_buffer[:n]
+        self._tw_buffer = self._tw_buffer[n:]
+
+        # Insert the new run in the glow colour, then schedule its settle. Each
+        # run carries the current generation; a scene swap invalidates it.
+        cur = QTextCursor(self._text.document())
+        cur.movePosition(QTextCursor.MoveOperation.End)
+        start = cur.position()
+        fmt = QTextCharFormat()
+        fmt.setForeground(self._glow_color)
+        cur.insertText(chunk, fmt)
+        end = cur.position()
+
+        gen = self._generation
+        QTimer.singleShot(self._GLOW_MS,
+                          lambda s=start, e=end, g=gen: self._settle(s, e, g))
+
+        if self._tw_buffer:
+            self._tw_timer.start(delay)
+
+    def _settle(self, start: int, end: int, gen: int):
+        """Fade a just-revealed run from the glow colour down to textPrimary —
+        unless a newer scene has taken over (generation moved on)."""
+        if gen != self._generation:
+            return
+        doc = self._text.document()
+        last = max(0, doc.characterCount() - 1)   # valid cursor positions: 0..last
+        cur = QTextCursor(doc)
+        cur.setPosition(min(start, last))
+        cur.setPosition(min(end, last), QTextCursor.MoveMode.KeepAnchor)
+        fmt = QTextCharFormat()
+        fmt.setForeground(self._base_color)
+        cur.mergeCharFormat(fmt)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
