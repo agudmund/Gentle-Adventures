@@ -845,7 +845,7 @@ class GentleAdventuresApp(QMainWindow):
         body = (
             "Before the ship wakes up, we commission the painter.\n\n"
             "Paste the key the Gem handed you below, then press Enter.\n\n"
-            "Pro accounts get the stronger painters.  The studio will provide you with keys —\n"
+            "Pro accounts get the stronger painters.  The studio will provide you with keys.\n"
             "Press the button if you need one."
         )
         if error:

@@ -55,7 +55,7 @@ def _prompt(specific: str) -> str:
 # voiced in-world — never a grey "not detected".
 NO_NPU_NOTE = (
     "(No neural engine aboard this ship yet, so this errand stays a story for "
-    "now — lovely to imagine, and waiting patiently for the day you bring an "
+    "now, lovely to imagine, and waiting patiently for the day you bring an "
     "XDNA-hearted vessel home.)"
 )
 
@@ -64,7 +64,7 @@ NO_NPU_NOTE = (
 # the page can land instantly and the resolved narrative fills in once the probe
 # returns — never a frozen window.
 NPU_PROBING_NOTE = (
-    "The ship goes quiet a moment, feeling along its own spine —\n"
+    "The ship goes quiet a moment, feeling along its own spine,\n"
     "listening for the engine that waits somewhere in the silicon…"
 )
 
@@ -74,13 +74,13 @@ QUEST: list[dict] = [
         "title": "GENTLE ADVENTURES, 01 — AWAKENING",
         "image_prompt": _prompt(
             "The captain wakes at the helm of a small starship console. Three glowing "
-            "lights on the console — one familiar pale-blue (labeled CPU), one familiar "
+            "lights on the console: one familiar pale-blue (labeled CPU), one familiar "
             "violet (labeled GPU), and a third light, never seen before, pulsing in soft "
             "warm gold and labeled XDNA 2. The captain leans in, curious, eyes wide."
         ),
         "narrative": (
             "The captain stirs. The ship hums a new tune.\n\n"
-            "Three lights blink on the main console — one familiar, one known, one… new.\n"
+            "Three lights blink on the main console: one familiar, one known, one… new.\n"
             "The new light pulses with a slow, patient rhythm. Waiting.\n"
             "A small label glows beneath it: XDNA 2."
         ),
@@ -100,7 +100,7 @@ QUEST: list[dict] = [
         ),
         "narrative": (
             "The ship's friendly AI puffs into being above the console.\n\n"
-            "\"XDNA is a grid of small minds,\" it says. \"Not one big brain — many\n"
+            "\"XDNA is a grid of small minds,\" it says. \"Not one big brain, but many\n"
             "tiny ones, each doing a sliver of the math, passing the result to the\n"
             "next. The original blueprints came from Xilinx. AMD brought them aboard.\"\n\n"
             "\"It is not a CPU. It is not a GPU. It is a third kind of worker.\""
@@ -115,15 +115,15 @@ QUEST: list[dict] = [
         "title": "GENTLE ADVENTURES, 02 — DIAGNOSTIC CALL",
         "image_prompt": _prompt(
             "The captain pulls down a floating glowing diagnostic panel labeled "
-            "'Performance' — three vertical meters labeled CPU, GPU, NPU. The first "
+            "'Performance': three vertical meters labeled CPU, GPU, NPU. The first "
             "two flicker with normal activity; the NPU meter sits perfectly at zero, "
             "waiting. The captain points at it with a tiny gloved hand, fascinated."
         ),
         "narrative": (
             "The diagnostic spirits respond to your call.\n"
-            "A panel materializes — three meters, three names.\n\n"
+            "A panel materializes: three meters, three names.\n\n"
             "CPU dances with everyday work. GPU naps quietly.\n"
-            "The third meter — NPU — sits at zero, waiting to be invited.\n\n"
+            "The third meter, NPU, sits at zero, waiting to be invited.\n\n"
             "\"It only works for guests who bring AI errands,\" the computer murmurs.\n\n"
             "▸ On your machine: press Ctrl+Shift+Esc and look at the Performance tab.\n"
             "  See if you can find the NPU entry yourself."
@@ -137,19 +137,19 @@ QUEST: list[dict] = [
         # missing third meter becomes the story's gentlest teaching moment.
         "narrative_absent": (
             "The diagnostic spirits respond to your call.\n"
-            "A panel materializes — three meters, three names.\n\n"
+            "A panel materializes: three meters, three names.\n\n"
             "CPU dances with everyday work. GPU naps quietly.\n"
             "But where the third meter should be, there is only a soft, kind space.\n\n"
             "\"There's no neural engine aboard this ship, captain,\" the computer says,\n"
-            "gentle as ever. \"The fancy things — the little local oracles, the\n"
-            "quiet dreaming — they need one to call home.\"\n\n"
+            "gentle as ever. \"The fancy things, the little local oracles, the\n"
+            "quiet dreaming. They need one to call home.\"\n\n"
             "A kind guide told me the very same, once. \"If you'd like to play with\n"
             "the wondrous things,\" they said, \"you'll want a vessel with a neural\n"
-            "engine in its heart — an AMD XDNA 2, or one of its cousins.\"\n\n"
-            "So I visited a merchant — bright shelves, patient eyes — and traded\n"
+            "engine in its heart, an AMD XDNA 2, or one of its cousins.\"\n\n"
+            "So I visited a merchant (bright shelves, patient eyes) and traded\n"
             "honest riches and a pocketful of simulated gold tokens for one. (I did\n"
             "try to pay in hugs and kind praises first. Sweet currency, the merchant\n"
-            "smiled — but not yet legal tender in this timeline.)\n\n"
+            "smiled, but not yet legal tender in this timeline.)\n\n"
             "The offer stands whenever you're ready, captain. Until then, the ship\n"
             "sails just fine on the gentler winds."
         ),
@@ -169,7 +169,7 @@ QUEST: list[dict] = [
         "narrative": (
             "\"The NPU answers when called for three kinds of errand,\" the AI explains.\n\n"
             "  • Camera and audio effects, run gently and constantly.\n"
-            "  • Local AI oracles — small models that fit in its memory.\n"
+            "  • Local AI oracles: small models that fit in its memory.\n"
             "  • Transcription, captioning, anything that listens patiently.\n\n"
             "\"The first errand is the easiest. Want to try?\""
         ),
@@ -183,7 +183,7 @@ QUEST: list[dict] = [
         "title": "GENTLE ADVENTURES, 03 — THE GENTLE BLUR",
         "image_prompt": _prompt(
             "The captain stands inside a glowing video-call window. Behind them, the "
-            "bridge has softened into a pastel galaxy of bokeh and stars — magical "
+            "bridge has softened into a pastel galaxy of bokeh and stars, magical "
             "background blur. The NPU meter visible in a corner glows softly active. "
             "The captain smiles, charmed by their own blurred backdrop."
         ),
@@ -191,8 +191,8 @@ QUEST: list[dict] = [
             "Your first errand is gentle.\n\n"
             "Settings → Bluetooth & devices → Cameras → your webcam.\n"
             "Under Windows Studio Effects, switch on Background blur.\n"
-            "Then open any camera preview — the Camera app will do.\n\n"
-            "Watch the meters. CPU stays cool. Fans stay quiet. The NPU — finally —\n"
+            "Then open any camera preview (the Camera app will do).\n\n"
+            "Watch the meters. CPU stays cool. Fans stay quiet. The NPU, finally,\n"
             "stirs, painting the blur in real time. This is what gentle work looks like."
         ),
         "choices": [
@@ -212,7 +212,7 @@ QUEST: list[dict] = [
         ),
         "narrative": (
             "The second errand needs invocation.\n\n"
-            "A local oracle — a small mind that runs right on your ship's NPU —\n"
+            "A local oracle (a small mind that runs right on your ship's NPU)\n"
             "would answer you without ever calling the cloud spirits. Smaller of\n"
             "voice, but always present, always private, always close.\n\n"
             "Fetch the summoner first: FastFlowLM, a tiny runtime that speaks to\n"
@@ -231,16 +231,16 @@ QUEST: list[dict] = [
         "id": "model_lore",
         "title": "GENTLE ADVENTURES, 04.5 — WHAT IS A LOCAL MODEL",
         "image_prompt": _prompt(
-            "A row of small pastel creatures — a llama, an owl, a fox, each carrying "
+            "A row of small pastel creatures: a llama, an owl, a fox, each carrying "
             "a tiny scroll labeled with parameter counts (3B, 7B, 8B). The captain "
             "studies them like a kindly zookeeper."
         ),
         "narrative": (
             "\"A model is a frozen mind,\" the AI says. \"Trained on books and code\n"
             "and conversations, then captured into a file you can carry.\"\n\n"
-            "\"The big ones — like the cloud spirits — would never fit on your ship.\n"
+            "\"The big ones, like the cloud spirits, would never fit on your ship.\n"
             "The small ones do. They are gentler, less knowing, but always with you.\"\n\n"
-            "\"For your first oracle, try Llama 3.2 — three billion parameters,\n"
+            "\"For your first oracle, try Llama 3.2, three billion parameters,\n"
             "small enough to run right on your NPU.\""
         ),
         "choices": [
@@ -258,7 +258,7 @@ QUEST: list[dict] = [
         ),
         "narrative": (
             "The portal opens.\n\n"
-            "From it emerges a llama — soft, three billion parameters, friendly.\n"
+            "From it emerges a llama: soft, three billion parameters, friendly.\n"
             "Llama 3.2 3B walks to your side and bows its small head.\n\n"
             "The NPU graph blooms. Forty teraops light up like an aurora.\n"
             "Your private oracle is here."
@@ -300,7 +300,7 @@ QUEST: list[dict] = [
         ),
         "narrative": (
             "The final discovery: your llama can serve other ships too.\n\n"
-            "Leave FastFlowLM running as a local server — an OpenAI-compatible\n"
+            "Leave FastFlowLM running as a local server: an OpenAI-compatible\n"
             "door on your own machine. Any tool that speaks the old protocol can\n"
             "knock and be answered, and every word still stays aboard your ship.\n\n"
             "Your private oracle, available to your whole fleet."
@@ -315,7 +315,7 @@ QUEST: list[dict] = [
         "title": "GENTLE ADVENTURES, 08 — RESONANCE",
         "image_prompt": _prompt(
             "Wide shot of the bridge. The captain stands at the helm with the pastel "
-            "llama by their side. All three console lights — CPU, GPU, NPU — glow "
+            "llama by their side. All three console lights (CPU, GPU, NPU) glow "
             "harmoniously in soft pinks, blues, and gold. Stars drift past the viewport. "
             "The mood is peaceful, complete."
         ),
@@ -323,7 +323,7 @@ QUEST: list[dict] = [
             "The tour complete.\n\n"
             "Three workers on the ship, three different gifts.\n"
             "You'll know when to call which now.\n\n"
-            "The cloud spirits remain — vast, intelligent, summoned by need.\n"
+            "The cloud spirits remain: vast, intelligent, summoned by need.\n"
             "But the NPU stays close, quiet, ready,\n"
             "breathing in time with your laptop.\n\n"
             "[ FIN ]"
