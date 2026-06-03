@@ -446,6 +446,19 @@ class _Ledger:
         self._scenes = None
         return self.scenes()
 
+    def reload(self) -> bool:
+        """Re-pull Quest_Log and atomically swap it in — no None window, so a
+        concurrent get_scene() on the UI thread never trips a blocking re-fetch.
+        Keeps the existing cache on an empty/failed pull (a transient outage never
+        blanks the quest). Returns True if fresh live scenes were loaded. This is
+        the realtime loop's fetch: a worker calls it every heartbeat so external
+        Sheet edits flow into the running game while it's being played."""
+        live = self._fetch_live()
+        if live:
+            self._scenes, self.source = live, "sheet"
+            return True
+        return False
+
     def get(self, scene_id: str) -> dict | None:
         for scene in self.scenes():
             if scene["id"] == scene_id:
@@ -475,3 +488,10 @@ def first_scene_id() -> str:
 def refresh_quest() -> list[dict]:
     """Drop the cache and re-pull the live Quest_Log. Returns the scene list."""
     return _ledger.refresh()
+
+
+def reload_quest() -> bool:
+    """Re-pull the live Quest_Log into the cache via an atomic swap (no None
+    window). True if fresh scenes were loaded. Safe to call from a worker thread —
+    the realtime loop's heartbeat fetch."""
+    return _ledger.reload()

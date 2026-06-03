@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
     QSystemTrayIcon,
 )
 
-from data.quest import all_scenes, first_scene_id, get_scene, NO_NPU_NOTE, NPU_PROBING_NOTE
+from data.quest import all_scenes, first_scene_id, get_scene, reload_quest, NO_NPU_NOTE, NPU_PROBING_NOTE
 from pretty_widgets.graphics.Theme import Theme as Fam
 from graphics.widgets import BottomToolbar, InteractionBar, NarrativePanel, SceneView, TitleBar
 from graphics.scene_map import SceneMap
@@ -192,6 +192,26 @@ class NpuProbeWorker(QThread):
         self.probed.emit(engine, spec)
 
 
+_LEDGER_PULSE_MS = 10000   # realtime loop heartbeat: re-pull the live Quest_Log (ms)
+
+
+class LedgerRefreshWorker(QThread):
+    """Re-pull the live Quest_Log off the UI thread — the realtime loop's heartbeat
+    fetch. A Sheet edit made mid-session (by the captain in a browser, or one day by
+    an external daemon evolving the story) flows into the running game. Emits
+    refreshed(True) when fresh scenes were swapped into the Ledger cache."""
+
+    refreshed = Signal(bool)
+
+    def run(self):
+        try:
+            ok = reload_quest()
+        except Exception as e:
+            logger.info(f"[ledger] refresh worker error: {e}")
+            ok = False
+        self.refreshed.emit(bool(ok))
+
+
 class WorkerRegistry:
     """Tracks live QThreads so several run concurrently without the old single-
     slot clobber — validation, scene render, ledger sync (and soon the Oracle,
@@ -206,16 +226,25 @@ class WorkerRegistry:
 
     def __init__(self, on_busy_changed=None):
         self._workers: list = []
-        # Called with True when the first worker starts, False when the last
+        self._quiet: set = set()   # workers that don't drive the 'working' meter
+        # Called with True when the first LOUD worker starts, False when the last
         # finishes — drives the sidebar's 'working' meter.
         self.on_busy_changed = on_busy_changed
 
-    def run(self, worker) -> None:
-        was_idle = not self._workers
+    def _loud(self) -> int:
+        return sum(1 for w in self._workers if w not in self._quiet)
+
+    def run(self, worker, quiet: bool = False) -> None:
+        # quiet=True: tracked + drained on shutdown like any worker, but doesn't
+        # flash the 'working' meter — for background pulses (the realtime Ledger
+        # heartbeat) rather than a painter at work.
+        was_busy = self._loud() > 0
         self._workers.append(worker)
+        if quiet:
+            self._quiet.add(worker)
         worker.finished.connect(lambda: self._reap(worker))
         worker.start()
-        if was_idle and self.on_busy_changed:
+        if not quiet and not was_busy and self.on_busy_changed:
             self.on_busy_changed(True)
 
     def _reap(self, worker) -> None:
@@ -223,7 +252,8 @@ class WorkerRegistry:
             self._workers.remove(worker)
         except ValueError:
             pass
-        if not self._workers and self.on_busy_changed:
+        self._quiet.discard(worker)
+        if self._loud() == 0 and self.on_busy_changed:
             self.on_busy_changed(False)
 
     def stop_all(self) -> None:
@@ -459,6 +489,19 @@ class GentleAdventuresApp(QMainWindow):
         else:
             self._set_ledger_indicator("off")
 
+        # ── Realtime state loop ──────────────────────────────────────────────
+        # The Sheet is the live source of truth, so poll it on a gentle heartbeat:
+        # every _LEDGER_PULSE_MS we re-pull Quest_Log off the UI thread and, if the
+        # scene the captain is standing in changed under them, re-stream it in
+        # place. This is what makes the quest dynamically editable WHILE it's played
+        # — the groundwork for a story with no fixed ending, where an external
+        # client can reshape the sheet and the running game answers. Sheet-only.
+        self._ledger_refreshing = False
+        if self.sheets:
+            self._ledger_pulse = QTimer(self)
+            self._ledger_pulse.timeout.connect(self._tick_ledger)
+            self._ledger_pulse.start(_LEDGER_PULSE_MS)
+
     def eventFilter(self, obj, event):
         # Keep the weather overlay covering the narrative+scene row as it resizes.
         if obj is getattr(self, "_split", None) and event.type() == QEvent.Resize:
@@ -466,6 +509,54 @@ class GentleAdventuresApp(QMainWindow):
                 self._weather.setGeometry(self._split.rect())
                 self._weather.raise_()
         return super().eventFilter(obj, event)
+
+    # ───── realtime state loop (the Sheet is canon, so the game watches it) ─────
+
+    def _tick_ledger(self):
+        """Heartbeat: re-pull the live Quest_Log off the UI thread, unless a pull is
+        already in flight (never stack network calls). Runs as a QUIET worker so it
+        never flashes the 'working' meter — a background pulse, not a painter."""
+        if self._ledger_refreshing or not self.sheets:
+            return
+        self._ledger_refreshing = True
+        worker = LedgerRefreshWorker()
+        worker.refreshed.connect(self._on_ledger_refreshed)
+        self._workers.run(worker, quiet=True)
+
+    def _on_ledger_refreshed(self, ok: bool):
+        self._ledger_refreshing = False
+        if not ok or self.current_scene is None:
+            return
+        fresh = get_scene(self.current_scene["id"])
+        if fresh is None:
+            return
+        cur = self.current_scene
+        if (fresh.get("narrative") != cur.get("narrative")
+                or fresh.get("choices") != cur.get("choices")
+                or fresh.get("title") != cur.get("title")):
+            logger.info(f"[ledger] live edit to scene '{fresh['id']}' — re-streaming in place")
+            self._relive_scene(fresh)
+
+    def _relive_scene(self, fresh: dict):
+        """A scene's Sheet content changed under us (the live state machine moved):
+        re-apply its title / narrative / choices in place. The narrative re-streams,
+        so the edit arrives like weather; the art and the Ledger heartbeat writes are
+        left untouched — only the words and the options shifted."""
+        self.current_scene = fresh
+        self.title_bar.set_title(fresh["title"])
+        verify_kind = fresh.get("verify")
+        if verify_kind == "npu":
+            verified = self._npu_engine is not None
+        else:
+            verified = self._verify(verify_kind)
+        if verify_kind == "npu" and not verified:
+            narrative = fresh.get("narrative_absent") or (fresh["narrative"] + "\n\n" + NO_NPU_NOTE)
+            choices = fresh.get("choices_absent") or fresh["choices"]
+        else:
+            narrative = fresh["narrative"]
+            choices = fresh["choices"]
+        self.narrative.set_text(narrative, verified=verified)
+        self.interaction.set_choices(choices)
 
     # ───── curtains ─────
 
