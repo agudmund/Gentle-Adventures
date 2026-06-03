@@ -156,15 +156,29 @@ def raw_hardware_spec() -> dict:
 
 def probe_fastflowlm() -> bool:
     """True if FastFlowLM (the `flm` NPU runtime) is installed — detected via the
-    flm CLI on PATH, with a couple of known install locations as backup. This is
-    the genuine 'oracle on the NPU' tool scene 04 summons."""
+    flm CLI on PATH, with known install locations as backup. This is the genuine
+    'oracle on the NPU' tool scene 04 summons.
+
+    The backup search matters: the installer adds flm to the *Machine* PATH, but a
+    process launched from a shell that started before that update (e.g. just after
+    a fresh install / factory reset) won't see it on PATH — so shutil.which() can
+    miss a perfectly real install. We therefore also look on disk. Observed layout
+    is '<root>\\flm\\flm.exe' (C:\\Program Files\\flm); some builds use a
+    'FastFlowLM' folder, so we check both names under every common root."""
     if shutil.which("flm"):
         return True
-    candidates = [
-        Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "FastFlowLM" / "flm.exe",
-        Path(os.environ.get("ProgramFiles", "")) / "FastFlowLM" / "flm.exe",
+    roots = [
+        os.environ.get("ProgramFiles", r"C:\Program Files"),
+        os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)"),
+        os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs"),
     ]
-    return any(p.exists() for p in candidates if str(p))
+    for root in roots:
+        if not root:
+            continue
+        for folder in ("flm", "FastFlowLM"):
+            if (Path(root) / folder / "flm.exe").exists():
+                return True
+    return False
 
 
 def probe_local_api(url: str = "http://localhost:1234/v1/models", timeout: float = 1.5) -> bool:

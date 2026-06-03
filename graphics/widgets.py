@@ -505,6 +505,11 @@ class NarrativePanel(QWidget):
         self._text = QLabel()
         self._text.setWordWrap(True)
         self._text.setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        # Selectable so the captain can lift a command (e.g. 'flm run llama3.2:3b')
+        # straight off the page — mouse drag or keyboard, with an I-beam to invite it.
+        self._text.setTextInteractionFlags(
+            Qt.TextSelectableByMouse | Qt.TextSelectableByKeyboard)
+        self._text.setCursor(Qt.IBeamCursor)
         font = QFont()
         font.setPointSize(13)
         self._text.setFont(font)
