@@ -15,6 +15,7 @@ import subprocess
 from PySide6.QtCore import QThread, Signal
 
 from utils.logger import get_logger
+from utils.proc import CREATE_NO_WINDOW
 
 _log = get_logger("gentle")
 
@@ -94,6 +95,7 @@ def watch_command(cmd, on_line=None) -> tuple[int, str, dict | None]:
         proc = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             text=True, bufsize=1, encoding="utf-8", errors="replace",
+            creationflags=CREATE_NO_WINDOW,
         )
     except FileNotFoundError:
         return -1, f"{cmd[0]} not found on PATH", {"kind": "missing"}

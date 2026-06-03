@@ -12,6 +12,8 @@ import logging
 import os
 import shutil
 import subprocess
+
+from utils.proc import CREATE_NO_WINDOW
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -58,6 +60,7 @@ def probe_npu() -> str | None:
             capture_output=True,
             text=True,
             timeout=8,
+            creationflags=CREATE_NO_WINDOW,
         )
         out = result.stdout.strip()
         if not out:
@@ -105,6 +108,7 @@ def probe_gpu() -> str | None:
         result = subprocess.run(
             ["powershell", "-NoProfile", "-Command", script],
             capture_output=True, text=True, timeout=8,
+            creationflags=CREATE_NO_WINDOW,
         )
         out = result.stdout.strip()
         return out or None
@@ -141,6 +145,7 @@ def raw_hardware_spec() -> dict:
         result = subprocess.run(
             ["powershell", "-NoProfile", "-Command", script],
             capture_output=True, text=True, timeout=10,
+            creationflags=CREATE_NO_WINDOW,
         )
         spec: dict = {}
         for line in result.stdout.splitlines():

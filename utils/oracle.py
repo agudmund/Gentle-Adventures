@@ -19,6 +19,7 @@ from pathlib import Path
 
 from utils.logger import get_logger
 from utils.probe import resolve_flm
+from utils.proc import CREATE_NO_WINDOW
 
 logger = get_logger("gentle")
 
@@ -59,7 +60,8 @@ class Oracle:
         if self._port is None:
             try:
                 out = subprocess.run([self._flm(), "port"], capture_output=True,
-                                     text=True, timeout=8).stdout
+                                     text=True, timeout=8,
+                                     creationflags=CREATE_NO_WINDOW).stdout
                 m = re.search(r"\d{2,5}", out or "")
                 self._port = int(m.group()) if m else 11434
             except OracleError:
@@ -92,6 +94,7 @@ class Oracle:
                 [flm, "serve", self.model, "--quiet"],
                 stdout=(self._serve_log or subprocess.DEVNULL),
                 stderr=subprocess.STDOUT,
+                creationflags=CREATE_NO_WINDOW,
             )
             if log_path:
                 logger.info(f"[oracle] flm serve output → {log_path}")
