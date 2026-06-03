@@ -889,7 +889,7 @@ class GentleAdventuresApp(QMainWindow):
         selected = load_selected_model(self.app_dir)
         if selected and selected in models:
             self.image_client.set_model(selected)
-            self._enter_quest()
+            self._after_painter()
             return
 
         # Otherwise auto-pick the strongest and offer override
@@ -931,6 +931,49 @@ class GentleAdventuresApp(QMainWindow):
                 choices.append({"label": f"Use {m}", "action": "pick_model", "model": m})
         self.interaction.set_choices(choices)
         self.interaction.set_parser_mode("hidden")
+
+    # ───── setup: the Ledger (optional Sheets sync, scene 0.5) ─────
+
+    def _after_painter(self):
+        """Painter (Gemini) is ready. Offer the optional Ledger / Sheets setup ONCE if
+        it isn't configured yet; otherwise go straight to the quest."""
+        if getattr(self, "_sheets_offered", False):
+            self._enter_quest()
+            return
+        try:
+            from utils.sheets import load_proxy_config
+            load_proxy_config(self.app_dir)   # raises if neither env nor file configures it
+            configured = True
+        except Exception:
+            configured = False
+        if configured:
+            self._enter_quest()
+        else:
+            self._enter_setup_sheets()
+
+    def _enter_setup_sheets(self):
+        """Scene 0.5: an in-app shortcut to set the Sheets-proxy creds as PERSISTENT
+        env vars. Two steps (URL, then a masked token); the token lives only in the
+        environment, never on disk. Skippable: the ship keeps a local log without it."""
+        self._sheets_offered = True
+        self.phase = "setup_sheets"
+        self._sheets_step = "url"
+        self._sheets_url = ""
+        self.title_bar.set_title("GENTLE ADVENTURES, 00.5 — OPENING THE LEDGER")
+        body = (
+            "Before we set sail, we can open the ship's Ledger: a cloud logbook that\n"
+            "remembers your journey and lets the story grow between visits.\n\n"
+            "Paste the Ledger's web-app URL below, then press Enter.\n\n"
+            "No Ledger yet?  You can sail without it; the ship keeps its own local log."
+        )
+        self.narrative.set_text(body, verified=None)
+        if self.scene_cache.has("ledger"):
+            self.scene_view.show_image(QPixmap(str(self.scene_cache.path("ledger"))))
+        else:
+            self.scene_view.show_placeholder("✦ opening the ledger ✦")
+        self.interaction.set_choices([{"label": "Sail without the Ledger", "action": "skip_sheets"}])
+        self.interaction.set_parser_mode("free")
+        self.interaction.set_parser_placeholder("✦ paste the Ledger web-app URL ✦")
 
     # ───── quest ─────
 
@@ -1416,6 +1459,24 @@ class GentleAdventuresApp(QMainWindow):
                 self._enter_setup_loading("Whispering to the Gemini Council…")
                 self._run_validation(free_text)
                 return
+            if self.phase == "setup_sheets":
+                if self._sheets_step == "url":
+                    self._sheets_url = free_text
+                    self._sheets_step = "token"
+                    self.narrative.set_text(
+                        "Good.  Now paste the Ledger token (it stays hidden as you type),\n"
+                        "then press Enter.", verified=None)
+                    self.interaction.set_parser_mode("key")   # masked echo, like the key field
+                    self.interaction.set_parser_placeholder("✦ paste the Ledger token (hidden) ✦")
+                    self.interaction.clear_parser()
+                else:
+                    from shared_braincell.winenv import set_user_env
+                    set_user_env("GA_WebApp", self._sheets_url)
+                    set_user_env("GA_Ledger", free_text)
+                    logger.info("[sheets] Ledger creds saved to the environment + this session")
+                    self.interaction.clear_parser()
+                    self._enter_quest()
+                return
             if self.phase == "quest":
                 cmd = free_text.strip().lower()
                 if cmd in ("validate", "validate ship", "light"):
@@ -1446,6 +1507,9 @@ class GentleAdventuresApp(QMainWindow):
             webbrowser.open(STUDIO_URL)
             return
         if action == "begin_quest":
+            self._after_painter()
+            return
+        if action == "skip_sheets":
             self._enter_quest()
             return
         if action == "pick_model":
@@ -1453,7 +1517,7 @@ class GentleAdventuresApp(QMainWindow):
             if model:
                 self.image_client.set_model(model)
                 save_selected_model(self.app_dir, model)
-                self._enter_quest()
+                self._after_painter()
             return
         if action == "quit":
             self.close()
