@@ -975,6 +975,29 @@ class GentleAdventuresApp(QMainWindow):
         self.interaction.set_parser_mode("free")
         self.interaction.set_parser_placeholder("✦ paste the Ledger web-app URL ✦")
 
+    def _bring_ledger_online(self) -> bool:
+        """Scene 0.5 just set the Sheets creds, but self.sheets was None since launch
+        (unconfigured then), so the heartbeat + hydrate were gated off. Re-create the
+        client, re-point the logbook, and start them now, so the Ledger goes live THIS
+        session instead of waiting for a relaunch. Best-effort: a bad URL/token just
+        fails the first read and the game keeps its local log."""
+        try:
+            from utils.sheets import SheetsClient
+            self.sheets = SheetsClient()
+        except Exception as e:
+            logger.info(f"[sheets] Ledger still offline after setup: {e}")
+            return False
+        self.player_state._sheets = self.sheets
+        if not hasattr(self, "_ledger_pulse"):
+            self._ledger_pulse = QTimer(self)
+            self._ledger_pulse.timeout.connect(self._tick_ledger)
+        self._ledger_pulse.start(_LEDGER_PULSE_MS)
+        self._set_ledger_indicator("pending")
+        hydr = PlayerStateSyncWorker(self.player_state, hydrate=True)
+        hydr.synced.connect(self._on_state_hydrated)
+        self._workers.run(hydr)
+        return True
+
     # ───── quest ─────
 
     def _enter_quest(self):
@@ -1474,8 +1497,17 @@ class GentleAdventuresApp(QMainWindow):
                     set_user_env("GA_WebApp", self._sheets_url)
                     set_user_env("GA_Ledger", free_text)
                     logger.info("[sheets] Ledger creds saved to the environment + this session")
+                    online = self._bring_ledger_online()
+                    # A read-only confirmation beat; the captain sets sail when ready.
+                    self.phase = "setup_sheets_done"
                     self.interaction.clear_parser()
-                    self._enter_quest()
+                    self.interaction.set_parser_mode("hidden")
+                    self.narrative.set_text(
+                        "The Ledger is open.  Your journey will be remembered."
+                        if online else
+                        "Saved.  The Ledger opens on your next voyage.",
+                        verified=True)
+                    self.interaction.set_choices([{"label": "Set sail ✦", "action": "begin_quest"}])
                 return
             if self.phase == "quest":
                 cmd = free_text.strip().lower()
