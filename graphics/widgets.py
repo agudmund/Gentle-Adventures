@@ -61,12 +61,16 @@ class TitleBar(QWidget):
     # everything keyed off _BAR_H — button width, the 9px-at-25px info-font ratio —
     # was misaligned as a result. One shared source now; the dependents realign.
     _BAR_H = Fam.handleHeightTop
-    _BTN_W = _BAR_H
+    # Titlebar controls = the suite's shared toolbarBtnSize (19px square), the same
+    # as Intricate / The Majestic — NOT the full bar height. Icons already use
+    # Fam.toolbarBtnIconSize (15); _reposition centres the 19px button in the bar.
+    _BTN_W = Fam.toolbarBtnSize
     _GAP   = Fam.toolbarBtnGap
-    # Fixed pixel offset from the left for the combo (the family's toolbarTitleX
-    # trick — deterministic, no auto-centering). Tuned for GA's 960px default;
-    # nudge this one number to slide the combo + curtains cluster left/right.
-    _COMBO_X = 360
+    # Combo + curtains sit at the suite's shared fixed-from-left positions
+    # (Theme.toolbarTitleX / toolbarCurtainsX) — the family's deterministic,
+    # no-auto-centering technique — so GA's titlebar elements line up with
+    # Intricate / The Majestic instead of drifting ~110px left.
+    _COMBO_X = Fam.toolbarTitleX
     _COMBO_W = 172
     # Titlebar InfoBar font — 9px at a 25px handle, the family reference ratio
     # (Intricate main_window.py:456). Gentle white (textPrimary), never the teal
@@ -138,7 +142,7 @@ class TitleBar(QWidget):
     def _control(self, glyph: str = "", slot=None, icon_name: str | None = None,
                  close: bool = False, accent: bool = False, tooltip: str = "") -> QPushButton:
         btn = QPushButton()
-        btn.setFixedSize(self._BTN_W, self._BAR_H)
+        btn.setFixedSize(self._BTN_W, self._BTN_W)   # square, suite-consistent (19px)
         # Default arrow cursor on the titlebar controls — the tactile feel of
         # gently touching them; no hand-pointer swap on hover.
         btn.setFocusPolicy(Qt.NoFocus)
@@ -189,7 +193,7 @@ class TitleBar(QWidget):
         # Combo at a fixed offset from the left; curtains immediately right of it.
         self._combo.move(self._COMBO_X, (h - self._combo.height()) // 2)
         self._combo.raise_()
-        cur_x = self._COMBO_X + self._combo.width() + gap * 3
+        cur_x = Fam.toolbarCurtainsX   # suite-shared curtains X (matches Intricate)
         self._btn_curtains.move(cur_x, (h - self._btn_curtains.height()) // 2)
         self._btn_curtains.raise_()
 
