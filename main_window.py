@@ -45,6 +45,7 @@ from utils.gemini import (
     validate_key,
 )
 from utils.probe import probe_fastflowlm, probe_npu, raw_hardware_spec, resolve_flm
+from utils.oracle import Oracle
 from utils.scene_cache import SceneCache
 from utils.sheets import SheetsClient, SheetsError
 from utils.player_state import PlayerStateStore
@@ -213,6 +214,28 @@ class LedgerRefreshWorker(QThread):
         self.refreshed.emit(result)
 
 
+class OracleWorker(QThread):
+    """Put one question to the local NPU oracle (flm's llama) off the UI thread. The
+    first ask wakes the server (model load onto the NPU, a few seconds) — that's the
+    'oracle stirs awake' beat; later asks are quick. Emits answered(text) or
+    failed(reason); never blocks the quest."""
+
+    answered = Signal(str)
+    failed = Signal(str)
+
+    def __init__(self, oracle, question: str, system: str = ""):
+        super().__init__()
+        self.oracle = oracle
+        self.question = question
+        self.system = system
+
+    def run(self):
+        try:
+            self.answered.emit(self.oracle.ask(self.question, system=self.system))
+        except Exception as e:
+            self.failed.emit(str(e))
+
+
 class WorkerRegistry:
     """Tracks live QThreads so several run concurrently without the old single-
     slot clobber — validation, scene render, ledger sync (and soon the Oracle,
@@ -322,6 +345,9 @@ class GentleAdventuresApp(QMainWindow):
         # truth. Every state write lands here instantly (progress is never lost to
         # a disconnect); flush/hydrate sync against the cloud off the UI thread.
         self.player_state = PlayerStateStore(self.sheets, app_dir)
+        # The on-device oracle (flm's local llama) for "ask the ship" — built lazily;
+        # nothing starts until the first question wakes the server. See utils/oracle.py.
+        self.oracle = Oracle()
         # Swappable text backend (Claude default, Gemini on demand) for the ship's
         # voice — Oracle, vibe, ghost-repair, missions. Built once; None silently
         # if misconfigured (contextual absence). Calls run via the worker registry.
@@ -1265,6 +1291,7 @@ class GentleAdventuresApp(QMainWindow):
         startup purge owns a clean tree (no race)."""
         self._save_window_state()
         self._workers.stop_all()   # drain in-flight threads cleanly before relaunch
+        self.oracle.shutdown()     # stop our local oracle server (only if we started one)
         try:
             from utils.housekeeping import clean_pycache
             n = clean_pycache(self.app_dir)
@@ -1392,7 +1419,8 @@ class GentleAdventuresApp(QMainWindow):
                 # System 2 Phase 2 — read the vibe vector from the free text and
                 # let the weather answer it (intensity + palette morph). Async and
                 # silent on absence: no backend → no vibe, the sky simply holds.
-                self._read_vibe(free_text)
+                self._read_vibe(free_text)      # ambient: the world reads the mood
+                self._ask_oracle(free_text)     # primary: the local NPU oracle answers
                 return
             return
 
@@ -1451,6 +1479,45 @@ class GentleAdventuresApp(QMainWindow):
             logger.info(f"Weather (manual): {text!r} -> {presets[text]:.2f}")
             return True
         return False
+
+    # ───── the local oracle — "ask the ship" answers on-device (flm) ─────
+
+    def _ask_oracle(self, question: str) -> None:
+        """Put the captain's question to the LOCAL NPU oracle (flm's llama) and stream
+        the answer into the narrative — no call leaves the ship. If flm isn't aboard,
+        gently point back to the summoning. Off the UI thread; the model load on the
+        first ask is the 'stirs awake' beat. Never blocks the quest."""
+        if not resolve_flm():
+            self.narrative.set_text(
+                "✦ The oracle isn't aboard yet — summon it first: fetch FastFlowLM, "
+                "then run flm run llama3.2:3b. Once it's here, ask me anything. ✦",
+                verified=False)
+            return
+        self.narrative.set_text(
+            "✦ the oracle stirs, gathering a small private thought… ✦", verified=None)
+        system = (
+            "You are the on-device oracle — a small local llama running on the ship's "
+            "NPU in a cozy chibi space adventure. Answer the captain's question warmly "
+            "and plainly in 1-3 short sentences. You are smaller of voice than the cloud "
+            "spirits and won't always be right, but you are always present and private — "
+            "no call ever leaves the ship. No preamble, no lists, no quotes — just the "
+            "answer, gently."
+        )
+        worker = OracleWorker(self.oracle, question, system)
+        worker.answered.connect(self._on_oracle_answer)
+        worker.failed.connect(self._on_oracle_failed)
+        self._workers.run(worker)
+
+    def _on_oracle_answer(self, text: str) -> None:
+        line = (text or "").strip()
+        if line:
+            self.narrative.set_text(line, verified=None)
+
+    def _on_oracle_failed(self, error: str) -> None:
+        logger.info(f"[oracle] {error}")
+        self.narrative.set_text(
+            "✦ the oracle drew a quiet breath and couldn't quite answer — it's a small "
+            "mind, and sometimes it rests. Try once more in a moment. ✦", verified=False)
 
     # ───── Psychological Weather — the vibe vector (System 2 Phase 2) ─────
 
