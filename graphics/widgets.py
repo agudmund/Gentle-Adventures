@@ -875,6 +875,7 @@ class BottomToolbar(QWidget):
     _LEDGER_DIM   = "#4a4a4a"   # dim grey — the Ledger dot when there's no proxy
     _LEDGER_AMBER = "#d8a657"   # warm amber — saved on board, syncing to the cloud
     _LEDGER_GREEN = "#7ac47a"   # soft sage — live & synced; the family's green status-dot (cf. GitNode), calm "on" not alarm
+    _LEDGER_RED   = "#ff3030"   # bright alarm red — Ledger OFF; large + loud so it's impossible to miss
 
     def __init__(self):
         super().__init__()
@@ -893,12 +894,12 @@ class BottomToolbar(QWidget):
         strip_layout = QHBoxLayout(self._strip)
         strip_layout.setContentsMargins(0, 0, 0, 0)
         strip_layout.setSpacing(0)
-        # Ledger status dot (far left): gold when the cloud Ledger is live and
-        # syncing, dim when offline (progress saved locally, syncs on reconnect).
-        # Whisper-volume — a glanceable health light; hover gives the word.
+        # Ledger status dot (far left): green when the cloud Ledger is live, amber
+        # while syncing, and a big bright red when OFF (progress still saved on
+        # board). A glanceable health light; hover gives the word.
         self._ledger_state = "off"
         self._ledger_dot = QLabel("●", self._strip)
-        self._ledger_dot.setFixedWidth(16)
+        self._ledger_dot.setFixedWidth(24)   # wide enough for the larger OFF glyph
         self._ledger_dot.setAlignment(Qt.AlignCenter)
         self._ledger_dot.setCursor(Qt.ArrowCursor)
         install_tooltip(self._ledger_dot)   # family pill tooltip; reads toolTip() live on hover
@@ -909,7 +910,7 @@ class BottomToolbar(QWidget):
         self._info.setFont(chandler42(size_px=self._INFO_FONT_PX))
         self._info.setStyleSheet(f"color: {Fam.textPrimary};")
         strip_layout.addWidget(self._info, stretch=1)
-        strip_layout.addSpacing(16)   # mirror the dot so the whisper stays centred
+        strip_layout.addSpacing(24)   # mirror the dot so the whisper stays centred
         self.set_ledger_state("off")
         outer.addWidget(self._strip)
         self._strip.mousePressEvent = lambda e: self.toggle_collapse()
@@ -945,18 +946,23 @@ class BottomToolbar(QWidget):
 
     def set_ledger_state(self, state) -> None:
         """Light the Ledger status dot — three states:
-          'live'    gold  — synced to the cloud Ledger
+          'live'    green — synced to the cloud Ledger (calm 'on')
           'pending' amber — saved on board, syncing (or waiting for the line to clear)
-          'off'     dim   — no proxy configured (still saved safely on board)
+          'off'     RED   — no cloud connection; bright + large so it can't be missed
         A legacy bool is accepted (True -> live, False -> off) for safety."""
         if isinstance(state, bool):
             state = "live" if state else "off"
         self._ledger_state = state
         col = {"live": self._LEDGER_GREEN, "pending": self._LEDGER_AMBER,
-               "off": self._LEDGER_DIM}.get(state, self._LEDGER_DIM)
+               "off": self._LEDGER_RED}.get(state, self._LEDGER_RED)
         tip = {"live": "Ledger: live — synced to the cloud",
                "pending": "Ledger: saving on board, syncing when the line clears",
-               "off": "Ledger: offline — progress kept safe on board, syncs when enabled"}.get(state, "")
+               "off": "Ledger: OFF — no cloud connection (progress still safe on board)"}.get(state, "")
+        # OFF is loud: bright red AND considerably larger than the calm green, so a
+        # dropped connection catches the eye at a glance rather than hiding.
+        f = self._ledger_dot.font()
+        f.setPointSize(20 if state == "off" else 12)
+        self._ledger_dot.setFont(f)
         self._ledger_dot.setStyleSheet(f"color: {col}; background: transparent;")
         self._ledger_dot.setToolTip(tip)
 
