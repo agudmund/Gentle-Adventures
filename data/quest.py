@@ -57,6 +57,15 @@ NO_NPU_NOTE = (
     "XDNA-hearted vessel home.)"
 )
 
+# Shown for a breath while the ship feels for its silicon off the UI thread (the
+# first NPU scene shells PowerShell, ~1-2s). A gentle, clearly-transient line so
+# the page can land instantly and the resolved narrative fills in once the probe
+# returns — never a frozen window.
+NPU_PROBING_NOTE = (
+    "The ship goes quiet a moment, feeling along its own spine —\n"
+    "listening for the engine that waits somewhere in the silicon…"
+)
+
 QUEST: list[dict] = [
     {
         "id": "awakening",

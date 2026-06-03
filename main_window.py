@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
     QSystemTrayIcon,
 )
 
-from data.quest import all_scenes, first_scene_id, get_scene, NO_NPU_NOTE
+from data.quest import all_scenes, first_scene_id, get_scene, NO_NPU_NOTE, NPU_PROBING_NOTE
 from pretty_widgets.graphics.Theme import Theme as Fam
 from graphics.widgets import BottomToolbar, InteractionBar, NarrativePanel, SceneView, TitleBar
 from graphics.scene_map import SceneMap
@@ -164,6 +164,32 @@ class TextWorker(QThread):
             self.text_ready.emit(out, self.tag)
         except Exception as e:
             self.text_failed.emit(str(e), self.tag)
+
+
+class NpuProbeWorker(QThread):
+    """Feel for the ship's silicon OFF the UI thread. Both probe_npu() (the
+    friendly engine descriptor) and raw_hardware_spec() (for the Oracle's
+    calibration line) are PowerShell subprocess calls with a ~1-2s cold start —
+    run on the UI thread they froze the first NPU scene's swap solid. This runs
+    them once, off-thread, and hands back (engine | None, spec_dict). The spec is
+    only fetched when there's actually an NPU to talk about."""
+
+    probed = Signal(object, object)   # (engine: str | None, spec: dict)
+
+    def run(self):
+        try:
+            engine = probe_npu()
+        except Exception as e:
+            logger.info(f"[npu] probe worker error: {e}")
+            engine = None
+        spec: dict = {}
+        if engine:
+            try:
+                spec = raw_hardware_spec()
+            except Exception as e:
+                logger.info(f"[npu] hardware-spec worker error: {e}")
+                spec = {}
+        self.probed.emit(engine, spec)
 
 
 class WorkerRegistry:
@@ -796,9 +822,48 @@ class GentleAdventuresApp(QMainWindow):
         self.current_scene = scene
 
         self.title_bar.set_title(scene["title"])
+        self.interaction.set_parser_mode("free")
 
+        # Kick the painting first — it never depended on the NPU probe and it's
+        # the long pole anyway.
+        self._begin_scene_art(scene, prev_scene_id)
+
+        # The first NPU scene shells PowerShell twice (engine probe + hardware
+        # spec, ~1-2s each cold). Doing that on the UI thread froze the swap into
+        # scene 2 — and because the freeze held the event loop, the working meter
+        # couldn't even start until it was over. So: probe OFF the UI thread. Show
+        # a gentle "feeling for the engine" line, let the meter run, and fill in
+        # the resolved narrative/choices/engine-line when the probe lands. Once
+        # cached (or for any non-NPU scene) it resolves instantly, in-line.
         verify_kind = scene.get("verify")
-        npu_engine = self._npu_descriptor() if verify_kind == "npu" else None
+        if verify_kind == "npu" and not self._npu_probed:
+            self.narrative.set_text(NPU_PROBING_NOTE, verified=False)
+            self.interaction.set_choices([])   # which path is known only after the probe
+            worker = NpuProbeWorker()
+            worker.probed.connect(
+                lambda engine, spec, s=scene: self._on_npu_probed(s, engine, spec))
+            self._workers.run(worker)
+        else:
+            npu_engine = self._npu_descriptor() if verify_kind == "npu" else None
+            self._resolve_scene(scene, npu_engine, spec=None)
+
+    def _on_npu_probed(self, scene: dict, engine, spec: dict) -> None:
+        """The off-thread probe landed: cache it (the engine can't change within a
+        session), then resolve the scene — unless the captain already navigated
+        elsewhere while we probed, in which case we only keep the cached result."""
+        self._npu_engine = engine
+        self._npu_probed = True
+        if self.current_scene is scene:
+            self._resolve_scene(scene, engine, spec=spec)
+
+    def _resolve_scene(self, scene: dict, npu_engine, spec: dict | None) -> None:
+        """Apply the verification-dependent half of a scene: which narrative and
+        choices to show, the engine line, the Ledger heartbeat, the reward sticker.
+        Split from _apply_scene so the first NPU scene can fill these in from the
+        probe worker while the page itself has already painted. `spec` is the raw
+        hardware dict the probe gathered (for the Oracle); None on the in-line path."""
+        scene_id = scene["id"]
+        verify_kind = scene.get("verify")
         if verify_kind == "npu":
             verified = npu_engine is not None
         else:
@@ -816,7 +881,6 @@ class GentleAdventuresApp(QMainWindow):
             choices = scene["choices"]
         self.narrative.set_text(narrative, verified=verified)
         self.interaction.set_choices(choices)
-        self.interaction.set_parser_mode("free")
 
         # When a scene checks the NPU, the ship names the engine it found on the
         # bottom strip — the game teaching you your actual silicon, by name.
@@ -825,7 +889,7 @@ class GentleAdventuresApp(QMainWindow):
                 self.bottom_toolbar.set_info(self._oracle_line)
             else:
                 self.bottom_toolbar.set_info(f"✦ engine detected: {npu_engine} ✦")
-                self._summon_oracle(npu_engine)
+                self._summon_oracle(npu_engine, spec or {})
 
         # Heartbeat: push our position up to the Ledger (Player_State). The
         # round-trip confirmation arrives as a passive gold spectral pulse.
@@ -838,6 +902,8 @@ class GentleAdventuresApp(QMainWindow):
         if verified:
             self._maybe_award_sticker(scene_id)
 
+    def _begin_scene_art(self, scene: dict, prev_scene_id: str | None) -> None:
+        scene_id = scene["id"]
         if self.scene_cache.has(scene_id):
             # Baked art — reload it, never re-commission the painter.
             self.scene_view.show_image(QPixmap(str(self.scene_cache.path(scene_id))))
@@ -846,7 +912,7 @@ class GentleAdventuresApp(QMainWindow):
             # Seed from the previous scene's image when we have one cached.
             ref = (self.scene_cache.path(prev_scene_id)
                    if prev_scene_id and self.scene_cache.has(prev_scene_id) else None)
-            self._request_image(scene["id"], scene["image_prompt"], ref)
+            self._request_image(scene_id, scene["image_prompt"], ref)
 
     def _request_image(self, scene_id: str, prompt: str, reference_path: Path | None = None):
         worker = SceneRequestWorker(self.image_client, prompt, scene_id, reference_path)
@@ -931,14 +997,18 @@ class GentleAdventuresApp(QMainWindow):
 
     # ───── Hardware Oracle (Sentient Settings) ─────
 
-    def _summon_oracle(self, engine_name: str) -> None:
+    def _summon_oracle(self, engine_name: str, spec: dict | None = None) -> None:
         """Once per session: ask the ship's-computer voice to name the silicon in
         one short, warm calibration line, given the RAW hardware spec. Async and
-        cosmetic — never blocks the quest; on failure the plain engine line stays."""
+        cosmetic — never blocks the quest; on failure the plain engine line stays.
+
+        `spec` is gathered off the UI thread by NpuProbeWorker and handed in — the
+        old synchronous raw_hardware_spec() call here was a second ~1-2s PowerShell
+        freeze on the first NPU scene. Falls back to just the engine name if absent."""
         if self._oracle_summoned:
             return
         self._oracle_summoned = True
-        spec = raw_hardware_spec()
+        spec = spec or {}
         spec_text = "\n".join(f"{k}: {v}" for k, v in spec.items()) or f"npu: {engine_name}"
         system = (
             "You are the gentle ship's computer in a cozy chibi space adventure that "
