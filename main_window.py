@@ -335,11 +335,11 @@ class GentleAdventuresApp(QMainWindow):
             # NOT an error: the bundled quest carries the game. Spelled out so a
             # glance at the log says exactly what's off and how to turn it on.
             logger.info(
-                "[sheets] LEDGER OFF — live cloud sync + Player_State heartbeat are "
+                "[sheets] LEDGER OFF: live cloud sync + Player_State heartbeat are "
                 "disabled; running on the bundled quest (graceful fallback, not an "
-                "error). To enable: set env vars GA_WebApp (Apps Script web-app URL) "
-                "and GA_Ledger (shared token) — or add a .sheets_proxy.json — then "
-                f"relaunch GA. Full setup: Documents/Sheets Ledger Setup.md. [why: {e}]"
+                "error). To enable, the in-app 'Opening the Ledger' setup handles it at "
+                "launch (paste the web-app URL + token, no relaunch needed), or set "
+                f"GA_WebApp + GA_Ledger in the environment. Setup: Documents/Sheets Ledger Setup.md. [why: {e}]"
             )
         # Player_State logbook: local-first cache with the Sheet as the source of
         # truth. Every state write lands here instantly (progress is never lost to

@@ -14,10 +14,11 @@ This note explains how to tell whether the Ledger is on, and how to turn it on.
 At launch, GA logs **one clear line**. If the Ledger is off you'll see:
 
 ```
-[sheets] LEDGER OFF — live cloud sync + Player_State heartbeat are disabled;
-running on the bundled quest (graceful fallback, not an error). To enable: set
-env vars GA_WebApp ... and GA_Ledger ... — or add a .sheets_proxy.json — then
-relaunch GA. Full setup: Documents/Sheets Ledger Setup.md. [why: ...]
+[sheets] LEDGER OFF: live cloud sync + Player_State heartbeat are disabled;
+running on the bundled quest (graceful fallback, not an error). To enable, the
+in-app 'Opening the Ledger' setup handles it at launch (paste the web-app URL +
+token, no relaunch needed), or set GA_WebApp + GA_Ledger in the environment.
+Setup: Documents/Sheets Ledger Setup.md. [why: ...]
 ```
 
 When it's **on**, you'll instead see (roughly):
@@ -45,11 +46,19 @@ Sheet — no Google SDK, raw HTTPS, token-gated). GA needs two values:
 | **`GA_WebApp`** | the Apps Script **web-app URL** (`…/exec`), deployed with access = **Anyone** |
 | **`GA_Ledger`** | the **shared token** the proxy checks on every request |
 
-### Option A — environment variables (preferred; secrets stay off disk)
+### Option A — the in-app setup (easiest; no relaunch)
+
+When the Ledger isn't configured, GA shows the **"Opening the Ledger"** screen
+(scene 0.5) right after the painter is confirmed. Paste the web-app URL, then the
+token (masked as you type); GA persists both as **user** environment variables AND
+brings the Ledger online in the same session, so it lights up immediately. "Sail
+without the Ledger" skips it, and it re-offers on the next launch while it stays
+unconfigured.
+
+### Option B — set the environment variables yourself (secrets stay off disk)
 
 Set them as **user** environment variables, then **relaunch GA** (a running
-process won't see env vars set after it started — this is the usual reason it
-"won't turn on"):
+process won't see env vars set after it started; Option A avoids this entirely):
 
 ```powershell
 [Environment]::SetEnvironmentVariable('GA_WebApp', 'https://script.google.com/macros/s/XXXX/exec', 'User')
@@ -60,7 +69,7 @@ process won't see env vars set after it started — this is the usual reason it
 > environment is inherited. The keys are read from the environment first,
 > precisely so they never have to live in a file.
 
-### Option B — `.sheets_proxy.json` fallback (if you prefer a file)
+### Option C — `.sheets_proxy.json` fallback (if you prefer a file)
 
 Drop a file named `.sheets_proxy.json` in the GA app directory:
 
