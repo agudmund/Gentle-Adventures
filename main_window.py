@@ -770,6 +770,23 @@ class GentleAdventuresApp(QMainWindow):
         # Any scene load returns the right pane to the painted view (e.g. after
         # picking from the jump map).
         self._right_stack.setCurrentWidget(self.scene_view)
+
+        # Lead with the loading feedback. If this scene needs a fresh painting,
+        # raise the working meter + "the painter is painting" placeholder NOW and
+        # let them paint, THEN swap the new scene in on the next event-loop tick.
+        # Otherwise the meter only fades in once a worker starts — i.e. *after*
+        # the new text is already on screen, so it reads as trailing the scene
+        # change instead of leading it (the snag the captain caught on 'discovery').
+        # Cached scenes have their art in hand: apply at once, no meter, no wait.
+        if self.scene_cache.has(scene_id):
+            self._apply_scene(scene)
+        else:
+            self.scene_view.show_loading()
+            self.sidebar.set_working(True)
+            QTimer.singleShot(0, lambda: self._apply_scene(scene))
+
+    def _apply_scene(self, scene: dict):
+        scene_id = scene["id"]
         self._visited.add(scene_id)   # unlocks this scene in the map
 
         logger.info(f"Loading scene: {scene_id}")
