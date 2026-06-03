@@ -512,6 +512,28 @@ class GentleAdventuresApp(QMainWindow):
 
     # ───── realtime state loop (the Sheet is canon, so the game watches it) ─────
 
+    def changeEvent(self, event):
+        # Pause/resume the realtime heartbeat with focus + window state, so a long
+        # idle (or sleeping) session doesn't quietly burn Apps Script quota.
+        if event.type() in (QEvent.ActivationChange, QEvent.WindowStateChange):
+            self._update_ledger_pulse()
+        super().changeEvent(event)
+
+    def _update_ledger_pulse(self):
+        """Run the heartbeat only while the window is active, un-minimised, and the
+        curtains are open. On waking, pull once immediately so a re-focus shows the
+        latest at once, then resume the steady pulse."""
+        if not hasattr(self, "_ledger_pulse"):
+            return
+        awake = (self.isActiveWindow() and not self.isMinimized()
+                 and not self._curtains_collapsed)
+        if awake:
+            if not self._ledger_pulse.isActive():
+                self._tick_ledger()                       # pull fresh on wake
+                self._ledger_pulse.start(_LEDGER_PULSE_MS)
+        else:
+            self._ledger_pulse.stop()
+
     def _tick_ledger(self):
         """Heartbeat: re-pull the live Quest_Log off the UI thread, unless a pull is
         already in flight (never stack network calls). Runs as a QUIET worker so it
@@ -606,6 +628,7 @@ class GentleAdventuresApp(QMainWindow):
         self._curtains_collapsed = collapsing
         self._is_maxed = not collapsing    # the expanded strip fills the work area
         self.title_bar.reflect_maximized(self._is_maxed)
+        self._update_ledger_pulse()        # curtains down -> pause the heartbeat
 
     def _reveal_body_content(self) -> None:
         """Re-show the body's content widgets after an expand settles (or on a
