@@ -211,7 +211,7 @@ QUEST: list[dict] = [
         ),
         "choices": [
             {"label": "Validate the ship first", "action": "validate_ship"},
-            {"label": "I have cast the rite", "next": "arrival"},
+            {"label": "The oracle is awake", "next": "arrival"},
             {"label": "Ask what models do", "next": "model_lore"},
         ],
         "verify": "fastflowlm",
