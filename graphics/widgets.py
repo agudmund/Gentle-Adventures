@@ -685,6 +685,7 @@ class BottomToolbar(QWidget):
     _PULSE_HOLD_MS = 1600       # sparkle dwell before the prior whisper returns
     _LEDGER_DIM   = "#4a4a4a"   # dim grey — the Ledger dot when there's no proxy
     _LEDGER_AMBER = "#d8a657"   # warm amber — saved on board, syncing to the cloud
+    _LEDGER_GREEN = "#7ac47a"   # soft sage — live & synced; the family's green status-dot (cf. GitNode), calm "on" not alarm
 
     def __init__(self):
         super().__init__()
@@ -711,6 +712,7 @@ class BottomToolbar(QWidget):
         self._ledger_dot.setFixedWidth(16)
         self._ledger_dot.setAlignment(Qt.AlignCenter)
         self._ledger_dot.setCursor(Qt.ArrowCursor)
+        install_tooltip(self._ledger_dot)   # family pill tooltip; reads toolTip() live on hover
         strip_layout.addWidget(self._ledger_dot)
         self._info = QLabel("", self._strip)
         self._info.setAlignment(Qt.AlignCenter)
@@ -761,7 +763,7 @@ class BottomToolbar(QWidget):
         if isinstance(state, bool):
             state = "live" if state else "off"
         self._ledger_state = state
-        col = {"live": self._PULSE_GOLD, "pending": self._LEDGER_AMBER,
+        col = {"live": self._LEDGER_GREEN, "pending": self._LEDGER_AMBER,
                "off": self._LEDGER_DIM}.get(state, self._LEDGER_DIM)
         tip = {"live": "Ledger: live — synced to the cloud",
                "pending": "Ledger: saving on board, syncing when the line clears",
