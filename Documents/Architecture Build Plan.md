@@ -11,6 +11,57 @@
 
 ---
 
+## Status — 2026-06-03 (what shipped, and how the plan evolved)
+
+Most of this plan is now built — and several pieces landed *differently* (better) than
+the original map imagined. This section is the current reality; everything below it is
+preserved as the original build record.
+
+**Shipped ✅**
+- **Worker registry** — `WorkerRegistry` in `main_window.py`, now with a `quiet=True`
+  mode for background pulses. The single-slot collision bug (finding #3) is gone.
+- **Section I — Sheets state machine (the SPINE)** — built, then **rebuilt as State Sync
+  v2** (see `State Sync v2.md`). It diverged from the plan in two good ways: **(a)** the
+  transport is an **Apps Script web-app proxy** (`utils/sheets.py`, raw urllib over one
+  deployed URL + a shared token) — NOT a raw Sheets-v4 client — which *sidesteps* the
+  OAuth/service-account auth blocker entirely (Captain Blocker #1 resolved by avoiding
+  it). **(b)** `data/quest.py`'s `_Ledger` is content-down with last-good-never-cleared,
+  content-hash change-detection, a local snapshot floor, and version arbitration;
+  `PlayerStateStore` is the local-first progress-up pipe. Plus the **realtime heartbeat
+  loop** (idle/curtains-paused) and `utils/sanitize_sheets.py` (ledger lint + canon re-mint).
+- **Hardware Oracle** — `probe_npu` / `raw_hardware_spec` + the `_summon_oracle`
+  calibration line on the bottom strip (display-only, per Blocker #6).
+- **Text path** — built broader than planned: a **swappable text backend** (Claude
+  default, Gemini on demand) through the registry, not Gemini-only.
+- **System 2 — Psychological Weather** — `weather.py` (rain engine + vibe vector) +
+  `_read_vibe`; in-process palette morph only (never writes the shared TOML, per Blocker #4).
+- **System 3 — Ghost in the Machine** — `utils/lantern.py` (The Lantern): offline
+  classifier + gentle copy, off-UI `LanternWatch`, optional text-backend rewrite.
+- **System 4 — Sticker loot** — `_maybe_award_sticker` off the verify-probe, dedup'd.
+- **The local-model bridge** — shipped as **`utils/oracle.py`** (the "ask the ship"
+  oracle): `flm serve llama3.2:3b` + a localhost OpenAI-compatible POST, transcripts
+  saved by default. This *is* the `local_model.py` the plan scoped for System 5 — built
+  early as the tour's payoff. See `Local Oracle — Ask the Ship.md`.
+- **Narrative & shell** — streaming typewriter + travelling-white sparkle, play-sticker
+  paragraph dividers, instant scene-swap cut; headless launcher (`Gentle Adventures.vbs`),
+  loud-red OFF ledger dot, flm-by-resolved-full-path.
+
+**Remaining ⏳**
+- **System 5 — Beyond the Rim side quests** — the local-model bridge exists (oracle.py),
+  but the sandbox beat + mission validation + the side-quest loop are not built. The
+  `_signals` **intercom** socket is reserved for the daemon path (see State Sync v2.md).
+- **Section III — The Flex (fluid backdrop)** — not started (own phase).
+- **State Sync v2 follow-ups** — a `_meta` version tab (activates the revert guard) +
+  an Apps Script `onEdit` trigger to auto-bump it; the Drive-`revisionId` scale path.
+- **Polish** — the per-letter sparkle option (noted); the `_signals` daemon consumer.
+
+**Captain Blockers — status:** #1 (Sheets auth) **sidestepped** by the Apps Script
+proxy (shared-token, no OAuth). #4 (palette scope) — in-process morph only. #6 (Oracle
+scope) — display-only calibration shipped; the separate "ask the ship" oracle answers
+via the local model. The remaining blockers attach to the unbuilt System 5 / Section III.
+
+---
+
 ## TL;DR — the three findings that reshape everything
 
 1. **Five systems all need the same thing: a Gemini *text* path.** `utils/gemini.py`
