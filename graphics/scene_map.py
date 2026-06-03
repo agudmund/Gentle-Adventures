@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from pretty_widgets.graphics.Theme import Theme as Fam
+from pretty_widgets.PrettyTooltip import install_tooltip
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -79,18 +80,26 @@ class SceneMap(QWidget):
             f" border-radius: {int(Fam.nodeRoundRadius)}px; }}"
         )
 
-    def _btn_qss(self) -> str:
-        # Visited scenes are navigable; unvisited ones render locked (disabled),
-        # so the map only sends you to places you've already reached — new areas
-        # must be earned back in the adventure itself.
+    def _btn_qss(self, locked: bool = False) -> str:
+        # Visited scenes are navigable; unvisited ones render locked — the same
+        # faded, dashed look as before. The catch: a locked button stays *enabled*
+        # rather than calling setEnabled(False), because a disabled QPushButton
+        # receives no hover events — and the family pill tooltip (like every Qt
+        # tooltip) needs the hover to fire. So "locked" is painted, not disabled:
+        # the click is simply never wired and the cursor stays an arrow, so it
+        # reads as unreachable while still surfacing the unlock-hint pill.
+        if locked:
+            return (
+                f"QPushButton {{ background: transparent; color: {Fam.primaryBorder};"
+                f" border: 1px dashed {Fam.primaryBorder}; border-radius: 12px;"
+                f" padding: 9px 16px; font-size: 12pt; text-align: left; }}"
+            )
         return (
             f"QPushButton {{ background-color: {Fam.buttonBg}; color: {Fam.textPrimary};"
             f" border: 1px solid {Fam.buttonBorder}; border-radius: 12px;"
             f" padding: 9px 16px; font-size: 12pt; text-align: left; }}"
             f"QPushButton:hover:enabled {{ background-color: {Fam.backDrop};"
             f" border: 1px solid {Fam.titleColor}; color: {Fam.buttonTextHover}; }}"
-            f"QPushButton:disabled {{ background: transparent; color: {Fam.primaryBorder};"
-            f" border: 1px dashed {Fam.primaryBorder}; }}"
         )
 
     def restyle(self):
@@ -146,15 +155,18 @@ class SceneMap(QWidget):
 
         for scene_id, title in self._scenes:
             btn = QPushButton(title or scene_id)
-            btn.setStyleSheet(self._btn_qss())
             visited = scene_id in self._visited
-            btn.setEnabled(visited)
+            btn.setStyleSheet(self._btn_qss(locked=not visited))
             if visited:
                 btn.setCursor(Qt.PointingHandCursor)
                 btn.clicked.connect(
                     lambda _checked=False, sid=scene_id: self.scene_picked.emit(sid))
             else:
+                # Locked: enabled (so the hover-driven pill fires) but never wired
+                # to a click, arrow cursor — unreachable, not dead.
+                btn.setCursor(Qt.ArrowCursor)
                 btn.setToolTip("✦ reach this in the adventure to unlock ✦")
+                install_tooltip(btn)
 
             # Indent sub-beats (01.5, 02.5 …) one notch under their parent.
             row = QHBoxLayout()
