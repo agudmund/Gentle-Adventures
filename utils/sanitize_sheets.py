@@ -132,6 +132,25 @@ def report() -> int:
     return 1
 
 
+def _bump_meta_version(client: SheetsClient) -> None:
+    """Best-effort: advance _meta!version after a content re-mint, so the game's
+    revert guard has a fresh monotonic number to arbitrate with. Silently skipped if
+    there's no _meta tab — the core last-good/hash/floor protections don't need it."""
+    try:
+        rows = client.read_sheet("_meta")
+        cur = 0
+        for row in rows or []:
+            cells = [str(c).strip() for c in row]
+            if len(cells) >= 2 and cells[0].lower() == "version":
+                cur = int(float(cells[1]))
+                break
+        client.replace_rows("_meta", [["version", str(cur + 1)]])
+        print(f"  ✓ _meta version bumped to {cur + 1}")
+    except Exception as e:
+        print(f"  (note: _meta version not bumped — {e}; add a _meta tab with a "
+              f"'version' row to enable the revert guard)")
+
+
 def push(apply: bool) -> int:
     client = SheetsClient()
     header, current, fresh = _quest_log_state(client)
@@ -154,6 +173,7 @@ def push(apply: bool) -> int:
         return 0
     client.replace_rows("Quest_Log", fresh)
     print("  ✓ Quest_Log re-minted from canon.")
+    _bump_meta_version(client)
     return 0
 
 

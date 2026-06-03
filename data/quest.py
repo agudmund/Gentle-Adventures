@@ -8,7 +8,9 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+from pathlib import Path
 
 from utils.logger import get_logger
 
@@ -393,20 +395,42 @@ def _rows_to_scenes(rows: list[list]) -> list[dict]:
     return scenes
 
 
-class _Ledger:
-    """Live Quest_Log with the bundled QUEST as a graceful fallback.
+# Last-good content snapshot for cold starts (an offline launch loads this rather
+# than a blank game); bundled QUEST is the floor beneath it. See State Sync v2.md.
+_SNAPSHOT = Path(__file__).resolve().parent.parent / "quest_cache.json"
 
-    v1 fetches the sheet ONCE and caches it for the process (fast, no per-node
-    UI freeze). refresh() re-pulls. Live per-node hot-reload — re-reading on
-    every scene entry so a browser edit applies instantly — is the next tick:
-    it needs an off-UI-thread worker (the shared worker registry) so the read
-    never stalls the window. Until then, refresh() or a relaunch re-pulls.
+
+def _scenes_hash(scenes) -> str:
+    """Stable, order-sensitive fingerprint of a scene set — the change-detect token
+    that stands in for the file-watch the local TOML sync gets for free."""
+    try:
+        blob = json.dumps(scenes, sort_keys=True, ensure_ascii=False)
+    except Exception:
+        blob = repr(scenes)
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()
+
+
+class _Ledger:
+    """The CONTENT authority pipe (sheet -> game). See Documents/State Sync v2.md.
+
+    The Sheet's Quest_Log is the sole thing the author writes; the game is a strict
+    reader. The live in-memory scene set is the only thing rendered, and it is NEVER
+    cleared by a bad read — a failed / empty / throttled / malformed pull keeps the
+    previous content fully live (last-good, principle 4). A local snapshot persists
+    the last-good set so a cold start with no network still launches a real game, and
+    bundled QUEST is the absolute floor under that (principle 5). reload() detects
+    change via a content hash (principle 8) and arbitrates reverts via an optional
+    _meta!version (principle 9): a pull whose version went BACKWARD is quarantined and
+    the last-good kept.
     """
 
     def __init__(self):
         self._scenes: list[dict] | None = None
-        self.source = "unloaded"   # 'sheet' | 'bundled' once loaded
+        self.source = "unloaded"           # 'sheet' | 'snapshot' | 'bundled'
+        self._hash = ""                    # fingerprint of the live set
+        self._version: int | None = None   # last accepted _meta!version
 
+    # ── fetch (worker-thread safe; never raises to the caller) ─────────────────
     def _fetch_live(self) -> list[dict] | None:
         # Deferred import: keeps quest.py free of network deps until first use,
         # and lets the bundled fallback work even if utils/sheets is absent.
@@ -418,46 +442,104 @@ class _Ledger:
         try:
             rows = SheetsClient().read_sheet("Quest_Log")
         except SheetsError as e:
-            # File-only DEBUG: the startup [sheets] line already announced the
-            # proxy state clearly — this is the downstream detail, not a second
-            # shout (one clear signal, per "keep the channels pristine").
-            logger.debug(f"[ledger] live Quest_Log unavailable ({e}); using bundled scenes")
+            logger.debug(f"[ledger] Quest_Log unavailable ({e}); keeping previous content")
             return None
         except Exception as e:
-            logger.warning(f"[ledger] unexpected Quest_Log read error: {e}; using bundled scenes")
+            logger.warning(f"[ledger] unexpected Quest_Log read error: {e}; keeping previous content")
             return None
         scenes = _rows_to_scenes(rows)
         if not scenes:
-            logger.info("[ledger] Quest_Log empty; using bundled scenes")
+            logger.info("[ledger] Quest_Log empty; keeping previous content")
             return None
-        logger.info(f"[ledger] loaded {len(scenes)} scene(s) from the live Quest_Log")
         return scenes
 
+    def _fetch_version(self) -> int | None:
+        """Optional monotonic _meta!version (the revert arbiter). None when absent —
+        then change-detection rests on the content hash alone (any edit still
+        propagates; only the explicit revert guard is unavailable)."""
+        try:
+            from utils.sheets import SheetsClient
+            rows = SheetsClient().read_sheet("_meta")
+            for row in rows or []:
+                cells = [str(c).strip() for c in row]
+                if len(cells) >= 2 and cells[0].lower() == "version":
+                    return int(float(cells[1]))
+        except Exception:
+            pass
+        return None
+
+    # ── snapshot (cold-start last-good) ────────────────────────────────────────
+    def _load_snapshot(self) -> list[dict] | None:
+        try:
+            if _SNAPSHOT.exists():
+                data = json.loads(_SNAPSHOT.read_text(encoding="utf-8"))
+                scenes = data.get("scenes")
+                if scenes:
+                    self._version = data.get("version")
+                    return scenes
+        except Exception as e:
+            logger.warning(f"[ledger] snapshot unreadable ({e})")
+        return None
+
+    def _save_snapshot(self) -> None:
+        try:
+            tmp = _SNAPSHOT.with_suffix(".tmp")
+            tmp.write_text(
+                json.dumps({"version": self._version, "scenes": self._scenes},
+                           ensure_ascii=False, indent=2), encoding="utf-8")
+            tmp.replace(_SNAPSHOT)   # atomic publish of the local last-good
+        except Exception as e:
+            logger.debug(f"[ledger] snapshot write skipped ({e})")
+
+    # ── cold load + reads ──────────────────────────────────────────────────────
     def scenes(self) -> list[dict]:
         if self._scenes is None:
             live = self._fetch_live()
             if live:
-                self._scenes, self.source = live, "sheet"
+                self._version = self._fetch_version()
+                self._scenes, self.source, self._hash = live, "sheet", _scenes_hash(live)
+                self._save_snapshot()
+                logger.info(f"[ledger] loaded {len(live)} scene(s) from the live Quest_Log (v{self._version})")
             else:
-                self._scenes, self.source = list(QUEST), "bundled"
+                snap = self._load_snapshot()
+                if snap:
+                    self._scenes, self.source, self._hash = snap, "snapshot", _scenes_hash(snap)
+                    logger.info(f"[ledger] offline — loaded {len(snap)} scene(s) from the local snapshot")
+                else:
+                    floor = list(QUEST)
+                    self._scenes, self.source, self._hash = floor, "bundled", _scenes_hash(floor)
+                    logger.info(f"[ledger] using {len(floor)} bundled scene(s) — the floor")
         return self._scenes
 
     def refresh(self) -> list[dict]:
         self._scenes = None
         return self.scenes()
 
-    def reload(self) -> bool:
-        """Re-pull Quest_Log and atomically swap it in — no None window, so a
-        concurrent get_scene() on the UI thread never trips a blocking re-fetch.
-        Keeps the existing cache on an empty/failed pull (a transient outage never
-        blanks the quest). Returns True if fresh live scenes were loaded. This is
-        the realtime loop's fetch: a worker calls it every heartbeat so external
-        Sheet edits flow into the running game while it's being played."""
+    def reload(self) -> dict:
+        """Heartbeat fetch (worker thread). Pull the live Quest_Log and swap it into
+        the live set ONLY on a clean, non-reverting pull. Returns:
+          {'changed': bool, 'quarantined': bool, 'source': str, 'version': int|None}
+        'changed' is True only when the content hash actually moved; 'quarantined' is
+        True when the pull's version went backward (a suspected revert) — the live
+        content is kept and the caller may surface a banner. Last-good is never cleared."""
+        self.scenes()   # ensure a baseline exists (cold-start on the first call)
         live = self._fetch_live()
-        if live:
-            self._scenes, self.source = live, "sheet"
-            return True
-        return False
+        if not live:
+            return {"changed": False, "quarantined": False, "source": self.source, "version": self._version}
+        new_hash = _scenes_hash(live)
+        if new_hash == self._hash:
+            return {"changed": False, "quarantined": False, "source": self.source, "version": self._version}
+        new_version = self._fetch_version()
+        if (new_version is not None and self._version is not None and new_version < self._version):
+            logger.warning(f"[ledger] QUARANTINED a backward content pull "
+                           f"(v{new_version} < live v{self._version}) — keeping last-good")
+            return {"changed": False, "quarantined": True, "source": self.source, "version": self._version}
+        self._scenes, self.source, self._hash = live, "sheet", new_hash
+        if new_version is not None:
+            self._version = new_version
+        self._save_snapshot()
+        logger.info(f"[ledger] live content updated ({len(live)} scenes, v{self._version}) — re-applying")
+        return {"changed": True, "quarantined": False, "source": "sheet", "version": self._version}
 
     def get(self, scene_id: str) -> dict | None:
         for scene in self.scenes():
@@ -490,8 +572,8 @@ def refresh_quest() -> list[dict]:
     return _ledger.refresh()
 
 
-def reload_quest() -> bool:
-    """Re-pull the live Quest_Log into the cache via an atomic swap (no None
-    window). True if fresh scenes were loaded. Safe to call from a worker thread —
-    the realtime loop's heartbeat fetch."""
+def reload_quest() -> dict:
+    """Heartbeat re-pull of the live Quest_Log (worker-thread safe). Returns the
+    reload result dict {'changed','quarantined','source','version'}; last-good is
+    never cleared on failure. See State Sync v2.md."""
     return _ledger.reload()

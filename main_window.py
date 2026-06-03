@@ -198,18 +198,19 @@ _LEDGER_PULSE_MS = 10000   # realtime loop heartbeat: re-pull the live Quest_Log
 class LedgerRefreshWorker(QThread):
     """Re-pull the live Quest_Log off the UI thread — the realtime loop's heartbeat
     fetch. A Sheet edit made mid-session (by the captain in a browser, or one day by
-    an external daemon evolving the story) flows into the running game. Emits
-    refreshed(True) when fresh scenes were swapped into the Ledger cache."""
+    an external daemon evolving the story) flows into the running game. Emits the
+    reload result dict {'changed','quarantined','source','version'} — last-good is
+    never cleared on a failed/empty/reverting pull. See State Sync v2.md."""
 
-    refreshed = Signal(bool)
+    refreshed = Signal(object)   # the reload result dict
 
     def run(self):
         try:
-            ok = reload_quest()
+            result = reload_quest()
         except Exception as e:
             logger.info(f"[ledger] refresh worker error: {e}")
-            ok = False
-        self.refreshed.emit(bool(ok))
+            result = {"changed": False, "quarantined": False}
+        self.refreshed.emit(result)
 
 
 class WorkerRegistry:
@@ -545,9 +546,15 @@ class GentleAdventuresApp(QMainWindow):
         worker.refreshed.connect(self._on_ledger_refreshed)
         self._workers.run(worker, quiet=True)
 
-    def _on_ledger_refreshed(self, ok: bool):
+    def _on_ledger_refreshed(self, result):
         self._ledger_refreshing = False
-        if not ok or self.current_scene is None:
+        if isinstance(result, dict) and result.get("quarantined"):
+            # A backward content edit was held back (the revert guard) — surface it
+            # and keep the good version. The performer's intercom, not a silent swap.
+            self.bottom_toolbar.set_info(
+                "✦ a backward edit to the tale was held back — keeping the good version ✦")
+            return
+        if not (isinstance(result, dict) and result.get("changed")) or self.current_scene is None:
             return
         fresh = get_scene(self.current_scene["id"])
         if fresh is None:

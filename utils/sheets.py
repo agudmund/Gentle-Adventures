@@ -162,3 +162,20 @@ class SheetsClient:
         """
         logger.info(f"[sheets] replacing {sheet} data rows ({len(rows)} row(s))")
         return self._post({"token": self._token, "sheet": sheet, "rows": rows})
+
+    # ── intercom (reserved back-channel) ─────────────────────────────────────
+
+    def write_signal(self, kind: str, detail: str = "") -> bool:
+        """INTERCOM (reserved socket). Post a critical signal UP to the content
+        author / daemon WITHOUT writing content — the performer's in-ear to the
+        operator, never a hand on the board (see Documents/State Sync v2.md).
+        Appends a row to the _signals tab. The proxy's append handler and a
+        consuming daemon are deferred, so this is best-effort: a failure is
+        swallowed (the game must never block on the intercom). True if accepted."""
+        try:
+            self._post({"token": self._token, "sheet": "_signals",
+                        "append": [kind, detail]})
+            return True
+        except SheetsError as e:
+            logger.debug(f"[intercom] signal not delivered ({e}); socket reserved, no consumer yet")
+            return False
