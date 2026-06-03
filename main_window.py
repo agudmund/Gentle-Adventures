@@ -417,6 +417,10 @@ class GentleAdventuresApp(QMainWindow):
         self._weather.show()
         self._split.installEventFilter(self)  # keep it sized to the row
 
+        # Initial Ledger indicator: optimistic when the proxy's configured (the
+        # first heartbeat confirms or corrects it), offline + a soft whisper if not.
+        self._set_ledger_indicator(self.sheets is not None)
+
     def eventFilter(self, obj, event):
         # Keep the weather overlay covering the narrative+scene row as it resizes.
         if obj is getattr(self, "_split", None) and event.type() == QEvent.Resize:
@@ -846,11 +850,25 @@ class GentleAdventuresApp(QMainWindow):
     def _on_ledger_synced(self) -> None:
         # The heartbeat reached the stars and came back — passive gold tick.
         self.bottom_toolbar.spectral_pulse()
+        self._set_ledger_indicator(True)
 
     def _on_ledger_sync_failed(self, error: str) -> None:
         # Kept quiet by design — a missed heartbeat must never spill a log or a
         # banner into the gentle UI. The data layer notes it; the captain sails on.
         logger.info(f"[sheets] player-state sync didn't return: {error}")
+        self._set_ledger_indicator(False)
+
+    def _set_ledger_indicator(self, live: bool) -> None:
+        """Reflect the Ledger's live/offline state on the bottom-strip dot, with a
+        single gentle whisper the first time it goes dark (never repeated). The dot
+        is the glanceable health light the log alone couldn't be."""
+        prev = getattr(self, "_ledger_live", None)
+        self._ledger_live = live
+        if hasattr(self, "bottom_toolbar"):
+            self.bottom_toolbar.set_ledger_state(live)
+        if not live and prev is not False:
+            # First-known offline, or a live→offline drop: one soft note, then quiet.
+            self.bottom_toolbar.set_info("✦ the ledger sleeps — sailing on the bundled quest ✦")
 
     # ───── text generation (swappable Claude/Gemini backend) ─────
 
