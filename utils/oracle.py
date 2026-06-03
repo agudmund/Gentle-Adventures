@@ -9,11 +9,13 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import time
 import urllib.error
 import urllib.request
+from pathlib import Path
 
 from utils.logger import get_logger
 from utils.probe import resolve_flm
@@ -43,6 +45,8 @@ class Oracle:
         self.host = host
         self._port: int | None = None
         self._proc: subprocess.Popen | None = None   # set only if WE started serve
+        self._serve_log = None                        # flm serve output handle (ours)
+        self._transcript_stamp: str | None = None     # per-session transcript filename stamp
 
     # ── server ───────────────────────────────────────────────────────────────
     def _flm(self) -> str:
@@ -82,10 +86,15 @@ class Oracle:
         flm = self._flm()
         logger.info(f"[oracle] waking the local oracle — flm serve {self.model}")
         try:
+            log_path = self._serve_log_path()
+            self._serve_log = open(log_path, "ab") if log_path else None
             self._proc = subprocess.Popen(
                 [flm, "serve", self.model, "--quiet"],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                stdout=(self._serve_log or subprocess.DEVNULL),
+                stderr=subprocess.STDOUT,
             )
+            if log_path:
+                logger.info(f"[oracle] flm serve output → {log_path}")
         except Exception as e:
             raise OracleError(f"could not start the oracle server: {e}") from e
         deadline = time.monotonic() + ready_timeout
@@ -120,9 +129,60 @@ class Oracle:
         except Exception as e:
             raise OracleError(f"the oracle's reply was unreadable: {e}") from e
         try:
-            return (data["choices"][0]["message"]["content"] or "").strip()
+            answer = (data["choices"][0]["message"]["content"] or "").strip()
         except Exception as e:
             raise OracleError(f"the oracle answered in a shape I couldn't read: {e}") from e
+        self._log_exchange(question, answer)
+        return answer
+
+    # ── transcripts (save every exchange for later fun) ───────────────────────
+    def _serve_log_path(self):
+        """File for flm serve's own session output — the 'Start-Transcript when
+        calling flm' capture, kept in the GA repo. None if the dir can't be made."""
+        try:
+            d = Path(__file__).resolve().parent.parent / "Documents" / "Data" / "Oracle"
+            d.mkdir(parents=True, exist_ok=True)
+            return d / f"flm_serve_{time.strftime('%Y%m%d-%H.%M.%S')}.log"
+        except Exception:
+            return None
+
+    def _transcript_dirs(self):
+        """Where oracle conversations are saved — the GA repo first, then a second
+        copy in OS Documents (and the family chat-history dir if set). 'Several
+        backups, just in case', mirroring The Majestic's chat persistence."""
+        dirs = []
+        try:
+            dirs.append(Path(__file__).resolve().parent.parent / "Documents" / "Data" / "Oracle")
+        except Exception:
+            pass
+        try:
+            dirs.append(Path.home() / "Documents" / "GentleAdventures" / "Oracle")
+        except Exception:
+            pass
+        env = os.environ.get("SingleSharedBraincell_ChatHistory")
+        if env:
+            dirs.append(Path(env) / "GentleAdventures-Oracle")
+        return dirs
+
+    def _log_exchange(self, question: str, answer: str) -> None:
+        """Append one Q&A to the session transcript(s) — saved by default so the
+        conversations are kept to replay later. Best-effort; never raises."""
+        if not self._transcript_stamp:
+            self._transcript_stamp = time.strftime("%Y%m%d-%H.%M.%S")
+        name = f"oracle_{self._transcript_stamp}.md"
+        header = ("# Gentle Adventures — Oracle transcript\n"
+                  f"# the on-device llama ({self.model}), session {self._transcript_stamp}\n")
+        block = f"\n## {time.strftime('%H:%M:%S')}  ·  Q: {question.strip()}\n\n{answer.strip()}\n"
+        for d in self._transcript_dirs():
+            try:
+                d.mkdir(parents=True, exist_ok=True)
+                f = d / name
+                if not f.exists():
+                    f.write_text(header, encoding="utf-8")
+                with f.open("a", encoding="utf-8") as fh:
+                    fh.write(block)
+            except Exception as e:
+                logger.debug(f"[oracle] transcript write skipped for {d} ({e})")
 
     def shutdown(self) -> None:
         """Stop the server, but only if WE started it (never kill one the captain ran)."""
@@ -132,3 +192,9 @@ class Oracle:
             except Exception:
                 pass
             self._proc = None
+        if self._serve_log is not None:
+            try:
+                self._serve_log.close()
+            except Exception:
+                pass
+            self._serve_log = None
