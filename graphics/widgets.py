@@ -71,7 +71,11 @@ class TitleBar(QWidget):
     # no-auto-centering technique — so GA's titlebar elements line up with
     # Intricate / The Majestic instead of drifting ~110px left.
     _COMBO_X = Fam.toolbarTitleX
-    _COMBO_W = 172
+    # Combo fills the span between the title anchor and the curtains button (minus a
+    # 4px gap) — the exact formula Intricate's _fit_project_selector uses — so it
+    # ends just shy of the curtains instead of stopping ~54px short. = 226 at the
+    # suite spacing, and tracks the shared vars if they ever change.
+    _COMBO_W = Fam.toolbarCurtainsX - Fam.toolbarTitleX - 4
     # Titlebar InfoBar font — 9px at a 25px handle, the family reference ratio
     # (Intricate main_window.py:456). Gentle white (textPrimary), never the teal
     # title accent: the infobar whispers, it doesn't shout.
