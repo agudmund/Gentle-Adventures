@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import random
 import re
+from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal, QTimer, QSize, QVariantAnimation
 from PySide6.QtGui import QFont, QPixmap, QIcon, QColor, QTextCursor, QTextCharFormat
@@ -557,12 +558,19 @@ class NarrativePanel(QWidget):
         layout.addWidget(self._text, 1)
         layout.addWidget(self._verified)
 
+        # Paragraph divider asset: GA's own play sticker (the app logo), with a
+        # 2px white rule out from its centre — the Majestic's "lines and stickers"
+        # treatment, dropped between paragraphs as the reveal crosses them.
+        _play = Path(__file__).resolve().parent.parent / "icons" / "playIconic.png"
+        self._play_url = _play.as_uri() if _play.exists() else ""
+
         # ── typewriter state ─────────────────────────────────────────────────
         self._tw_timer = QTimer(self)
         self._tw_timer.setSingleShot(True)
         self._tw_timer.timeout.connect(self._tw_tick)
-        self._tw_buffer = ""        # text still to reveal
-        self._generation = 0        # bumped per set_text; guards stale settles
+        self._tw_buffer = ""        # current paragraph's text still to reveal
+        self._segments: list = []   # upcoming ('text', str) / ('sep', None) segments
+        self._generation = 0        # bumped per set_text/cut; guards stale settles
         self._lit_from = 0          # doc position dividing settled text from the sparkle
         self._glow_color = QColor("#ffffff")         # a bright white sparkle …
         self._base_color = QColor(Fam.textPrimary)   # … settling to the cream body
@@ -577,6 +585,17 @@ class NarrativePanel(QWidget):
         self._glow_color = QColor("#ffffff")
         self._base_color = QColor(Fam.textPrimary)
 
+    def cut(self):
+        """Stop any in-progress reveal at once — the captain swapped scenes, so
+        we're 'done with this one'. Bumping the generation drops the old reveal's
+        pending settle/tail callbacks; the next set_text starts fresh. Crucially it
+        also frees the event loop — a running tick-timer was starving the deferred
+        scene-apply, so the new text used to wait for the old to finish printing."""
+        self._generation += 1
+        self._tw_timer.stop()
+        self._tw_buffer = ""
+        self._segments = []
+
     def set_text(self, body: str, verified: bool | None = None):
         # Bump the generation FIRST: any settle callbacks still pending from the
         # previous scene now belong to an old generation and will no-op, so they
@@ -584,8 +603,20 @@ class NarrativePanel(QWidget):
         self._generation += 1
         self._tw_timer.stop()
         self._text.clear()
-        self._tw_buffer = body or ""
+        self._tw_buffer = ""
         self._lit_from = 0
+
+        # Weave a divider between paragraphs: text, sep, text, sep, … (empty
+        # paragraphs are skipped so two dividers never stack).
+        self._segments = []
+        first = True
+        for para in (body or "").split("\n\n"):
+            if not para.strip():
+                continue
+            if not first:
+                self._segments.append(("sep", None))
+            self._segments.append(("text", para))
+            first = False
 
         if verified is True:
             self._verified.setText("★ system confirmed")
@@ -596,11 +627,22 @@ class NarrativePanel(QWidget):
         else:
             self._verified.setText("")
 
-        if self._tw_buffer:
+        if self._segments:
             self._tw_timer.start(10)   # first character lands almost at once
 
     def _tw_tick(self):
+        # Pull the next paragraph (inserting any dividers we cross) once the
+        # current one is spent.
+        while not self._tw_buffer and self._segments:
+            kind, payload = self._segments.pop(0)
+            if kind == "sep":
+                self._insert_separator()
+            elif payload:
+                self._tw_buffer = payload
         if not self._tw_buffer:
+            # All paragraphs revealed — let the final spark shine a beat, settle it.
+            gen = self._generation
+            QTimer.singleShot(self._GLOW_MS, lambda g=gen: self._settle_tail(g))
             return
         rem = len(self._tw_buffer)
         # Batch + delay scale with what's left (The Majestic's pacing curve).
@@ -637,12 +679,37 @@ class NarrativePanel(QWidget):
             self._recolor(self._lit_from, settle_to, self._base_color)
             self._lit_from = settle_to
 
-        if self._tw_buffer:
-            self._tw_timer.start(delay)
-        else:
-            # Line finished — let the final spark shine a beat, then settle it.
-            gen = self._generation
-            QTimer.singleShot(self._GLOW_MS, lambda g=gen: self._settle_tail(g))
+        # Keep the loop turning; the next tick pulls the following paragraph (and
+        # any divider) once this one is spent, or settles the final spark if done.
+        self._tw_timer.start(delay)
+
+    def _insert_separator(self):
+        """Drop GA's play-sticker divider between paragraphs. Settle any lingering
+        sparkle first, then advance _lit_from past the divider so the recolour pass
+        never reaches back across it."""
+        cur = QTextCursor(self._text.document())
+        cur.movePosition(QTextCursor.MoveOperation.End)
+        if self._lit_from < cur.position():
+            self._recolor(self._lit_from, cur.position(), self._base_color)
+        cur.insertHtml(self._separator_html())
+        cur.movePosition(QTextCursor.MoveOperation.End)
+        self._lit_from = cur.position()
+
+    def _separator_html(self) -> str:
+        # The Majestic idiom: a full-width table with the play sticker in a rowspan
+        # cell so the 2px white rule meets it at the sticker's vertical centre.
+        img = (f'<img src="{self._play_url}" width="18" height="18" />'
+               if self._play_url else "&nbsp;")
+        return (
+            '<table width="100%" cellspacing="0" cellpadding="0" border="0" '
+            'style="margin-top:16px; margin-bottom:12px;">'
+            '<tr>'
+            f'<td rowspan="2" width="26" valign="middle">{img}</td>'
+            '<td style="border-bottom:2px solid #ffffff;">&nbsp;</td>'
+            '</tr>'
+            '<tr><td>&nbsp;</td></tr>'
+            '</table>'
+        )
 
     def _settle_tail(self, gen: int):
         """Settle the trailing sparkle once the line has fully landed — unless a

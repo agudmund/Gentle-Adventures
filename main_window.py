@@ -797,6 +797,12 @@ class GentleAdventuresApp(QMainWindow):
         # picking from the jump map).
         self._right_stack.setCurrentWidget(self.scene_view)
 
+        # Swapping scenes signals "done with this one": stop the current reveal at
+        # once. Beyond the clean cut, this frees the event loop — a running reveal's
+        # tick-timer was starving the deferred _apply_scene below, so the new
+        # scene's text used to wait for the old one to finish printing.
+        self.narrative.cut()
+
         # Lead with the loading feedback. If this scene needs a fresh painting,
         # raise the working meter + "the painter is painting" placeholder NOW and
         # let them paint, THEN swap the new scene in on the next event-loop tick.
