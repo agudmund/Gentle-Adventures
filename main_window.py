@@ -929,8 +929,14 @@ class GentleAdventuresApp(QMainWindow):
 
     def _enter_quest(self):
         self.phase = "quest"
-        start_id = self.settings.get("game", {}).get("last_scene") or first_scene_id()
-        if get_scene(start_id) is None:
+        # Resume where the captain left off. PlayerStateStore tracks current_scene
+        # (local-first, synced to the Sheet), so it's the live last-position — the
+        # legacy [game].last_scene was read here but never written, so resume always
+        # fell through to the opening. Fall back: current_scene -> last_scene -> start.
+        start_id = (self.player_state.get("current_scene")
+                    or self.settings.get("game", {}).get("last_scene")
+                    or first_scene_id())
+        if get_scene(start_id) is None:   # saved id no longer in the quest -> open
             start_id = first_scene_id()
         self._load_scene(start_id)
 
