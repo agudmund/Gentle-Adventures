@@ -47,6 +47,7 @@ from utils.gemini import (
 from utils.probe import probe_fastflowlm, probe_npu, raw_hardware_spec
 from utils.scene_cache import SceneCache
 from utils.sheets import SheetsClient, SheetsError
+from utils.player_state import PlayerStateStore
 from utils.text import build_text_backend
 from utils.sticker_loot import award_for_scene
 from utils.lantern import LanternWatch
@@ -116,25 +117,26 @@ class SceneRequestWorker(QThread):
             self.image_failed.emit(str(e), self.scene_id)
 
 
-class LedgerSyncWorker(QThread):
-    """Push Player_State to the Sheets proxy off the UI thread. Fire-and-forget:
-    the quest never waits on it, and a confirmed round-trip emits `synced` so the
-    UI can answer with a passive spectral-pulse tick."""
+class PlayerStateSyncWorker(QThread):
+    """Flush (or hydrate) the local-first PlayerStateStore against the Sheet, off
+    the UI thread. `synced(reached)` reports whether the cloud round-trip
+    succeeded; the store keeps any unsynced changes safe on board regardless, so
+    the quest never waits and a disconnect never costs progress."""
 
-    synced = Signal()
-    sync_failed = Signal(str)
+    synced = Signal(bool)   # True if the Sheet was reached and pending cleared
 
-    def __init__(self, client: SheetsClient, updates: dict):
+    def __init__(self, store, hydrate: bool = False):
         super().__init__()
-        self.client = client
-        self.updates = updates
+        self.store = store
+        self.hydrate = hydrate
 
     def run(self):
         try:
-            self.client.write_player_state(self.updates)
-            self.synced.emit()
+            ok = self.store.hydrate() if self.hydrate else self.store.flush()
+            self.synced.emit(bool(ok))
         except Exception as e:
-            self.sync_failed.emit(str(e))
+            logger.info(f"[state] sync worker error: {e}")
+            self.synced.emit(False)
 
 
 class TextWorker(QThread):
@@ -259,6 +261,10 @@ class GentleAdventuresApp(QMainWindow):
                 "and GA_Ledger (shared token) — or add a .sheets_proxy.json — then "
                 f"relaunch GA. Full setup: Documents/Sheets Ledger Setup.md. [why: {e}]"
             )
+        # Player_State logbook: local-first cache with the Sheet as the source of
+        # truth. Every state write lands here instantly (progress is never lost to
+        # a disconnect); flush/hydrate sync against the cloud off the UI thread.
+        self.player_state = PlayerStateStore(self.sheets, app_dir)
         # Swappable text backend (Claude default, Gemini on demand) for the ship's
         # voice — Oracle, vibe, ghost-repair, missions. Built once; None silently
         # if misconfigured (contextual absence). Calls run via the worker registry.
@@ -417,9 +423,15 @@ class GentleAdventuresApp(QMainWindow):
         self._weather.show()
         self._split.installEventFilter(self)  # keep it sized to the row
 
-        # Initial Ledger indicator: optimistic when the proxy's configured (the
-        # first heartbeat confirms or corrects it), offline + a soft whisper if not.
-        self._set_ledger_indicator(self.sheets is not None)
+        # Hydrate the logbook from the Ledger at startup (Sheet = source of truth),
+        # off-thread; the dot rides the result. No proxy -> dim + a soft whisper.
+        if self.sheets:
+            self._set_ledger_indicator("pending")   # connecting...
+            hydr = PlayerStateSyncWorker(self.player_state, hydrate=True)
+            hydr.synced.connect(self._on_state_hydrated)
+            self._workers.run(hydr)
+        else:
+            self._set_ledger_indicator("off")
 
     def eventFilter(self, obj, event):
         # Keep the weather overlay covering the narrative+scene row as it resizes.
@@ -837,38 +849,47 @@ class GentleAdventuresApp(QMainWindow):
     # ───── ledger write-back (Player_State heartbeat) ─────
 
     def _sync_player_state(self, updates: dict) -> None:
-        """Push state to Player_State off the UI thread (fire-and-forget). On a
-        confirmed round-trip, a passive gold spectral pulse ticks the bottom
-        strip — the ether answered. Silent no-op if the proxy isn't configured."""
+        """Local-FIRST: persist to the on-board logbook instantly (a disconnect can
+        never cost progress), then attempt the cloud push off the UI thread. The dot
+        goes amber the moment there's unsynced data, gold once the Ledger confirms.
+        With no proxy it still saves locally — the dot just stays dim."""
+        self.player_state.set(updates)
         if not self.sheets:
+            self._set_ledger_indicator("off")
             return
-        worker = LedgerSyncWorker(self.sheets, updates)
-        worker.synced.connect(self._on_ledger_synced)
-        worker.sync_failed.connect(self._on_ledger_sync_failed)
+        self._set_ledger_indicator("pending")
+        worker = PlayerStateSyncWorker(self.player_state)
+        worker.synced.connect(self._on_state_synced)
         self._workers.run(worker)
 
-    def _on_ledger_synced(self) -> None:
-        # The heartbeat reached the stars and came back — passive gold tick.
-        self.bottom_toolbar.spectral_pulse()
-        self._set_ledger_indicator(True)
+    def _on_state_synced(self, reached: bool) -> None:
+        if reached:
+            # Reached the stars and came back — gold tick + dot to live (unless
+            # newer changes are already buffered behind it).
+            self.bottom_toolbar.spectral_pulse()
+            self._set_ledger_indicator("live" if not self.player_state.has_pending() else "pending")
+        else:
+            # Push deferred — changes are safe on board; we'll catch the cloud up.
+            self._set_ledger_indicator("pending")
 
-    def _on_ledger_sync_failed(self, error: str) -> None:
-        # Kept quiet by design — a missed heartbeat must never spill a log or a
-        # banner into the gentle UI. The data layer notes it; the captain sails on.
-        logger.info(f"[sheets] player-state sync didn't return: {error}")
-        self._set_ledger_indicator(False)
+    def _on_state_hydrated(self, reached: bool) -> None:
+        # Startup pull settled: live if the cloud answered and nothing's buffered;
+        # otherwise amber (offline, on the local logbook) or dim (no proxy).
+        if reached and not self.player_state.has_pending():
+            self._set_ledger_indicator("live")
+        else:
+            self._set_ledger_indicator("pending" if self.sheets else "off")
 
-    def _set_ledger_indicator(self, live: bool) -> None:
-        """Reflect the Ledger's live/offline state on the bottom-strip dot, with a
-        single gentle whisper the first time it goes dark (never repeated). The dot
-        is the glanceable health light the log alone couldn't be."""
-        prev = getattr(self, "_ledger_live", None)
-        self._ledger_live = live
+    def _set_ledger_indicator(self, state: str) -> None:
+        """Reflect the Ledger on the bottom-strip dot — 'live' (gold, synced) /
+        'pending' (amber, saved on board & syncing) / 'off' (dim, no proxy) — with
+        a single gentle whisper the first time it goes fully dark."""
+        prev = getattr(self, "_ledger_state", None)
+        self._ledger_state = state
         if hasattr(self, "bottom_toolbar"):
-            self.bottom_toolbar.set_ledger_state(live)
-        if not live and prev is not False:
-            # First-known offline, or a live→offline drop: one soft note, then quiet.
-            self.bottom_toolbar.set_info("✦ the ledger sleeps — sailing on the bundled quest ✦")
+            self.bottom_toolbar.set_ledger_state(state)
+        if state == "off" and prev != "off":
+            self.bottom_toolbar.set_info("✦ the ledger sleeps — your progress is kept safe on board ✦")
 
     # ───── text generation (swappable Claude/Gemini backend) ─────
 

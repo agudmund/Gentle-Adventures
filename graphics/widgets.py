@@ -683,7 +683,8 @@ class BottomToolbar(QWidget):
     _PULSE_GOLD = "#e8c46a"     # warm XDNA-2 gold — the heartbeat reached the stars
     _PULSE_MS = 900             # one textPrimary → gold → textPrimary flash
     _PULSE_HOLD_MS = 1600       # sparkle dwell before the prior whisper returns
-    _LEDGER_DIM  = "#4a4a4a"    # dim grey — the Ledger dot at rest when offline
+    _LEDGER_DIM   = "#4a4a4a"   # dim grey — the Ledger dot when there's no proxy
+    _LEDGER_AMBER = "#d8a657"   # warm amber — saved on board, syncing to the cloud
 
     def __init__(self):
         super().__init__()
@@ -705,7 +706,7 @@ class BottomToolbar(QWidget):
         # Ledger status dot (far left): gold when the cloud Ledger is live and
         # syncing, dim when offline (progress saved locally, syncs on reconnect).
         # Whisper-volume — a glanceable health light; hover gives the word.
-        self._ledger_live = False
+        self._ledger_state = "off"
         self._ledger_dot = QLabel("●", self._strip)
         self._ledger_dot.setFixedWidth(16)
         self._ledger_dot.setAlignment(Qt.AlignCenter)
@@ -718,7 +719,7 @@ class BottomToolbar(QWidget):
         self._info.setStyleSheet(f"color: {Fam.textPrimary};")
         strip_layout.addWidget(self._info, stretch=1)
         strip_layout.addSpacing(16)   # mirror the dot so the whisper stays centred
-        self.set_ledger_state(False)
+        self.set_ledger_state("off")
         outer.addWidget(self._strip)
         self._strip.mousePressEvent = lambda e: self.toggle_collapse()
 
@@ -751,15 +752,22 @@ class BottomToolbar(QWidget):
             f" color: {Fam.textPrimary}; }}"
         )
 
-    def set_ledger_state(self, live: bool) -> None:
-        """Light the Ledger status dot: gold = live cloud sync, dim grey = offline
-        (state held locally, syncs on reconnect)."""
-        self._ledger_live = bool(live)
-        col = self._PULSE_GOLD if live else self._LEDGER_DIM
+    def set_ledger_state(self, state) -> None:
+        """Light the Ledger status dot — three states:
+          'live'    gold  — synced to the cloud Ledger
+          'pending' amber — saved on board, syncing (or waiting for the line to clear)
+          'off'     dim   — no proxy configured (still saved safely on board)
+        A legacy bool is accepted (True -> live, False -> off) for safety."""
+        if isinstance(state, bool):
+            state = "live" if state else "off"
+        self._ledger_state = state
+        col = {"live": self._PULSE_GOLD, "pending": self._LEDGER_AMBER,
+               "off": self._LEDGER_DIM}.get(state, self._LEDGER_DIM)
+        tip = {"live": "Ledger: live — synced to the cloud",
+               "pending": "Ledger: saving on board, syncing when the line clears",
+               "off": "Ledger: offline — progress kept safe on board, syncs when enabled"}.get(state, "")
         self._ledger_dot.setStyleSheet(f"color: {col}; background: transparent;")
-        self._ledger_dot.setToolTip(
-            "Ledger: live — syncing to the cloud" if live
-            else "Ledger: offline — progress saved locally, syncs on reconnect")
+        self._ledger_dot.setToolTip(tip)
 
     def set_info(self, text: str):
         """Whisper a line into the bottom infobar strip."""
@@ -799,6 +807,6 @@ class BottomToolbar(QWidget):
         """Re-tint from the live family palette (settings watcher → reload)."""
         self.setStyleSheet(f"background-color: {Fam.windowBg};")
         self._info.setStyleSheet(f"color: {Fam.textPrimary};")
-        self.set_ledger_state(self._ledger_live)   # re-tint the dot for its state
+        self.set_ledger_state(self._ledger_state)   # re-tint the dot for its state
         for b in self._buttons:
             b.setStyleSheet(self._placeholder_qss())
