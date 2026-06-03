@@ -843,15 +843,22 @@ class GentleAdventuresApp(QMainWindow):
         self.phase = "setup_key"
         self.title_bar.set_title("GENTLE ADVENTURES, 00 — COMMISSIONING THE PAINTER")
         body = (
-            "Before the captain wakes, we commission the painter.\n\n"
-            "Paste the key the Gemini Council gave you below, then press Enter.\n\n"
-            "Pro accounts get the stronger painters. The studio gives keys away —\n"
-            "press the button if you need one."
+            "Before the ship wakes up, we commission the painter.\n\n"
+            "Paste the key the Gem handed you below, then press Enter.\n\n"
+            "Pro accounts get the stronger painters.  The studio will provide you with keys —\n"
+            "Press the button if you need one."
         )
         if error:
             body = f"{body}\n\n✦ painter says: {error}"
         self.narrative.set_text(body, verified=None)
-        self.scene_view.show_placeholder("✦ awaiting commission ✦")
+        # Scene 0 is the one frame the painter can't paint for itself — it shows
+        # BEFORE a key is connected, so it ships pre-rendered in scenes/. Show it
+        # when present; fall back to the placeholder if it's ever missing (e.g. a
+        # partial clone or a stripped build).
+        if self.scene_cache.has("commissioning"):
+            self.scene_view.show_image(QPixmap(str(self.scene_cache.path("commissioning"))))
+        else:
+            self.scene_view.show_placeholder("✦ awaiting commission ✦")
         self.interaction.set_choices([{"label": "Open the studio", "action": "open_studio"}])
         self.interaction.set_parser_mode("key")
 
