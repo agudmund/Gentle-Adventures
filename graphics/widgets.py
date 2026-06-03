@@ -503,9 +503,10 @@ class NarrativePanel(QWidget):
         with how much text is left, so a long passage doesn't crawl (1 char/tick
         with an 85/15 brisk-vs-human-pause jitter for short text, up to 8/tick for
         long) — the gentle hand-typed cadence that's so smooth to read.
-      • Glow — from the legacy Notepad-Duplex-Turbo render preview: each freshly
-        revealed run flashes toward a bright accent, then settles to textPrimary a
-        few hundred ms later, leaving a soft leading-edge trail as the line lands.
+      • Glow — from the legacy Notepad-Duplex-Turbo render preview: a tight bright
+        sparkle rides the print head (a few chars, pure white, brighter than the
+        cream body) and the text settles to textPrimary just behind it, so a spark
+        travels across the line as it lands rather than half the line staying lit.
 
     A generation stamp guards the settle callbacks: when a scene swaps mid-reveal
     (e.g. the NPU 'feeling for the engine' interstitial giving way to the resolved
@@ -513,7 +514,8 @@ class NarrativePanel(QWidget):
     flashes can never repaint the new text — the re-trigger stays clean, not busy.
     """
 
-    _GLOW_MS = 320   # how long a freshly-typed run holds its flash before settling
+    _GLOW_CHARS = 3   # width of the travelling sparkle (chars kept bright at the head)
+    _GLOW_MS = 150    # how long the final spark lingers once the line finishes
 
     def __init__(self):
         super().__init__()
@@ -561,8 +563,9 @@ class NarrativePanel(QWidget):
         self._tw_timer.timeout.connect(self._tw_tick)
         self._tw_buffer = ""        # text still to reveal
         self._generation = 0        # bumped per set_text; guards stale settles
-        self._glow_color = QColor(Fam.titleColor)    # the flash …
-        self._base_color = QColor(Fam.textPrimary)   # … settling to this
+        self._lit_from = 0          # doc position dividing settled text from the sparkle
+        self._glow_color = QColor("#ffffff")         # a bright white sparkle …
+        self._base_color = QColor(Fam.textPrimary)   # … settling to the cream body
 
     def restyle(self):
         """Re-tint from the live family palette (settings watcher → reload)."""
@@ -571,7 +574,7 @@ class NarrativePanel(QWidget):
             f"QTextEdit {{ background: transparent; color: {Fam.textPrimary};"
             f" border: none; }}"
         )
-        self._glow_color = QColor(Fam.titleColor)
+        self._glow_color = QColor("#ffffff")
         self._base_color = QColor(Fam.textPrimary)
 
     def set_text(self, body: str, verified: bool | None = None):
@@ -582,6 +585,7 @@ class NarrativePanel(QWidget):
         self._tw_timer.stop()
         self._text.clear()
         self._tw_buffer = body or ""
+        self._lit_from = 0
 
         if verified is True:
             self._verified.setText("★ system confirmed")
@@ -617,35 +621,46 @@ class NarrativePanel(QWidget):
         chunk = self._tw_buffer[:n]
         self._tw_buffer = self._tw_buffer[n:]
 
-        # Insert the new run in the glow colour, then schedule its settle. Each
-        # run carries the current generation; a scene swap invalidates it.
+        # Reveal the new run in the bright sparkle colour at the head.
         cur = QTextCursor(self._text.document())
         cur.movePosition(QTextCursor.MoveOperation.End)
-        start = cur.position()
         fmt = QTextCharFormat()
         fmt.setForeground(self._glow_color)
         cur.insertText(chunk, fmt)
         end = cur.position()
 
-        gen = self._generation
-        QTimer.singleShot(self._GLOW_MS,
-                          lambda s=start, e=end, g=gen: self._settle(s, e, g))
+        # Keep only the last _GLOW_CHARS bright; settle everything behind the
+        # sparkle to the cream body at once. The lit region stays a tight
+        # travelling dot, never a long tail — independent of batch speed.
+        settle_to = max(self._lit_from, end - self._GLOW_CHARS)
+        if settle_to > self._lit_from:
+            self._recolor(self._lit_from, settle_to, self._base_color)
+            self._lit_from = settle_to
 
         if self._tw_buffer:
             self._tw_timer.start(delay)
+        else:
+            # Line finished — let the final spark shine a beat, then settle it.
+            gen = self._generation
+            QTimer.singleShot(self._GLOW_MS, lambda g=gen: self._settle_tail(g))
 
-    def _settle(self, start: int, end: int, gen: int):
-        """Fade a just-revealed run from the glow colour down to textPrimary —
-        unless a newer scene has taken over (generation moved on)."""
+    def _settle_tail(self, gen: int):
+        """Settle the trailing sparkle once the line has fully landed — unless a
+        newer scene has taken over (generation moved on)."""
         if gen != self._generation:
             return
+        end = max(0, self._text.document().characterCount() - 1)
+        self._recolor(self._lit_from, end, self._base_color)
+        self._lit_from = end
+
+    def _recolor(self, start: int, end: int, color: QColor):
         doc = self._text.document()
         last = max(0, doc.characterCount() - 1)   # valid cursor positions: 0..last
         cur = QTextCursor(doc)
         cur.setPosition(min(start, last))
         cur.setPosition(min(end, last), QTextCursor.MoveMode.KeepAnchor)
         fmt = QTextCharFormat()
-        fmt.setForeground(self._base_color)
+        fmt.setForeground(color)
         cur.mergeCharFormat(fmt)
 
 
