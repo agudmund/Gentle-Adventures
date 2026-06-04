@@ -754,11 +754,109 @@
     },
     {
       "node_id": 0,
+      "node_type": "warm",
+      "title": "Unfold",
+      "uuid": "267cee95048e46a289dec3dacc0dd78f",
+      "x": 25627.917236743426,
+      "y": 3714.03460800083,
+      "width": 300.0,
+      "height": 206.0,
+      "z_value": -9.845000000000086,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "Nova soon discovered that the keyboard was more than just a collection of keys. It was a gateway to the laptop's operating system, a realm of endless possibilities. The NPU delved deeper, learning about the OS's architecture and its various components. It encountered the Command Prompt, a mysterious realm that seemed to hold the secrets of the laptop's inner workings."
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Evolve",
+      "uuid": "4807ffc9f48f4432a0a2a350734ae7ba",
+      "x": 26325.18756553118,
+      "y": 4023.8119398423205,
+      "width": 300.0,
+      "height": 206.0,
+      "z_value": -9.843000000000087,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "As Nova navigated the Command Prompt, it encountered a world of strange and wondrous creatures. There were the system administrators, who ruled over the laptop with an iron fist. The NPU watched in awe as they executed commands, their fingers flying across the keyboard with precision. The NPU even met the occasional hacker, who attempted to bypass the laptop's security measures."
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Pure Light",
+      "uuid": "cb2f97bce6a74cc696bcef91523f141c",
+      "x": 25051.75863176071,
+      "y": 3716.5701587155286,
+      "width": 300.0,
+      "height": 221.0,
+      "z_value": -9.846000000000085,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "As Nova descended onto the keyboard, it was greeted by a sea of keys, each one bearing a unique tale to tell. The NPU marveled at the tactile feel of the keys, the way they seemed to vibrate with life. It explored the F1-F12 keys, learning about the various functions they performed. The Shift key, with its dual roles, fascinated Nova, while the Ctrl and Alt keys, which controlled the laptop's various functions, left it in awe."
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Practical and pleasurable",
+      "uuid": "7f7c9c17c75644ee9f0c5f571089e010",
+      "x": 25882.36282944972,
+      "y": 4036.132773400284,
+      "width": 300.0,
+      "height": 101.0,
+      "z_value": -9.844000000000086,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "**Chapter 3: The Command Prompt**"
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Bright Tomorrow",
+      "uuid": "37bd02e7987f4eb2b5871c8ab6682032",
+      "x": 26830.37684720507,
+      "y": 3849.4725442577037,
+      "width": 300.0,
+      "height": 101.0,
+      "z_value": -9.840000000000089,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "**Chapter 4: The Powershell**"
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Tiny little extra sprinkles of joy",
+      "uuid": "b4589b482a8a42f8bf7a52462aa18db4",
+      "x": 26834.12215916213,
+      "y": 3645.051509618264,
+      "width": 360.0,
+      "height": 161.0,
+      "z_value": -9.841000000000088,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "Undeterred, Nova continued its exploration, determined to unlock the secrets of the Command Prompt. It encountered the `powershell` command, which seemed to hold the power of the gods. The NPU was amazed by its ability to manipulate the laptop's systems, to execute complex tasks with ease."
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Bloom",
+      "uuid": "1f905e4cd50b447aa7e11a1417d278ca",
+      "x": 26495.885497976753,
+      "y": 3762.04462733581,
+      "width": 300.0,
+      "height": 206.0,
+      "z_value": -9.842000000000088,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "But Nova was not intimidated. It knew that the Command Prompt was a realm of power, and it was determined to master its secrets. The NPU spent hours learning about the various commands, from the simple `dir` command to the more complex `ipconfig` command. It even attempted to execute a few commands on its own, but its attempts were met with failure."
+    },
+    {
+      "node_id": 0,
       "node_type": "about",
       "title": "Note",
       "uuid": "8c9cc57909794f318b17b03316a1c221",
-      "x": -358.28948552581505,
-      "y": 1168.0802291092964,
+      "x": -153.51739090644202,
+      "y": -194.75325937438674,
       "width": 168.0,
       "height": 29.0,
       "z_value": -9.999,
@@ -770,225 +868,297 @@
     },
     {
       "node_id": 0,
-      "node_type": "about",
-      "title": "Note",
-      "uuid": "4317920bb83843f683a306a86b957502",
-      "x": 2776.0315270049705,
-      "y": -39.50040450926292,
-      "width": 115.0,
-      "height": 29.0,
-      "z_value": -9.815000000000103,
+      "node_type": "warm",
+      "title": "Infinite Wisdom",
+      "uuid": "310c36497c5a43949e12a3595292714e",
+      "x": 27626.79069730697,
+      "y": 3681.216883658098,
+      "width": 300.0,
+      "height": 191.0,
+      "z_value": -9.83900000000009,
       "ports_visible": false,
-      "shelf_visible": false,
-      "label": "awakening",
-      "depth_front": false,
-      "node_tint": ""
+      "shelf_visible": true,
+      "body_text": "As Nova delved deeper into the `powershell` command, it encountered a world of magic and wonder. The NPU watched in awe as the system administrators executed complex tasks, their fingers flying across the keyboard with precision. The NPU even met the occasional PowerShell script, which seemed to hold the power of the universe."
     },
     {
       "node_id": 0,
-      "node_type": "image",
-      "title": "Image",
-      "uuid": "9823d454b5ab40ab984f9476407e507c",
-      "x": 2949.313916568726,
-      "y": -327.02928850389264,
-      "width": 280.0,
-      "height": 220.0,
-      "z_value": -9.816000000000102,
+      "node_type": "warm",
+      "title": "Sweet",
+      "uuid": "49057d0e9f664625b1077737faf1677d",
+      "x": 27721.855824738086,
+      "y": 4206.78033281972,
+      "width": 300.0,
+      "height": 191.0,
+      "z_value": -9.83700000000009,
       "ports_visible": false,
-      "shelf_visible": false,
-      "image_b64": "",
-      "cache_key": "0c19c82188bd6f2dfd252ba9a1c7c58037b6106d86df9181025d3f9387271476.png",
-      "caption": "awakening",
-      "source_path": "C:\\Users\\thebe\\Desktop\\Gentle-Adventures\\scenes\\awakening.png",
-      "source_size": 1262886,
-      "source_mtime": 1780331550.2882166,
-      "show_border": true,
-      "depth_front": false
+      "shelf_visible": true,
+      "body_text": "Despite its failure, Nova continued its exploration, determined to unlock the secrets of the `powershell` command. It encountered the `Get-WmiObject` command, which seemed to hold the power of the gods. The NPU was amazed by its ability to manipulate the laptop's systems, to execute complex tasks with ease."
     },
     {
       "node_id": 0,
-      "node_type": "about",
-      "title": "Note",
-      "uuid": "bff9f7badb0f4091847320f36e832e24",
-      "x": 2846.9019788692412,
-      "y": 801.652422312754,
-      "width": 67.0,
-      "height": 29.0,
-      "z_value": -9.813000000000104,
+      "node_type": "warm",
+      "title": "Boundless Joy",
+      "uuid": "743cbabded934754a8879119c4eaf9de",
+      "x": 27787.051330152095,
+      "y": 4758.1733105975545,
+      "width": 300.0,
+      "height": 191.0,
+      "z_value": -9.835000000000091,
       "ports_visible": false,
-      "shelf_visible": false,
-      "label": "blur",
-      "depth_front": false,
-      "node_tint": ""
+      "shelf_visible": true,
+      "body_text": "As Nova continued its exploration, it eventually came across the RAM (Random Access Memory). The NPU was amazed by the RAM's ability to store data temporarily, to make the laptop's systems run faster and more efficiently. It watched in awe as the system administrators executed complex tasks, their fingers flying across the keyboard with precision."
     },
     {
       "node_id": 0,
-      "node_type": "image",
-      "title": "Image",
-      "uuid": "321d549d2dff4954bd372fac0bbb9126",
-      "x": 2962.7536336061485,
-      "y": 503.2315024026898,
-      "width": 280.0,
-      "height": 220.0,
-      "z_value": -9.814000000000103,
+      "node_type": "warm",
+      "title": "Fresh Start",
+      "uuid": "57fdf63225a144d58a257d7861396275",
+      "x": 27576.861970790378,
+      "y": 4504.8695414045615,
+      "width": 300.0,
+      "height": 101.0,
+      "z_value": -9.836000000000091,
       "ports_visible": false,
-      "shelf_visible": false,
-      "image_b64": "",
-      "cache_key": "6ebdc9de0e51f0aa37f7b872c4290ae42e41cd87b038d8cac90f731b81853f67.png",
-      "caption": "blur",
-      "source_path": "C:\\Users\\thebe\\Desktop\\Gentle-Adventures\\scenes\\blur.png",
-      "source_size": 2022714,
-      "source_mtime": 1780334876.6520333,
-      "show_border": true,
-      "depth_front": false
+      "shelf_visible": true,
+      "body_text": "**Chapter 5: The RAM**"
     },
     {
       "node_id": 0,
-      "node_type": "about",
-      "title": "Note",
-      "uuid": "980ca28600fa4aa3844ec326f581c5ff",
-      "x": 3259.317383982112,
-      "y": 494.8676605711599,
-      "width": 115.0,
-      "height": 29.0,
-      "z_value": -9.811000000000105,
+      "node_type": "warm",
+      "title": "Boundless Joy",
+      "uuid": "5733bd7355b844758e0e99f81f856be1",
+      "x": 27555.59682039296,
+      "y": 3949.641763489913,
+      "width": 300.0,
+      "height": 191.0,
+      "z_value": -9.83800000000009,
       "ports_visible": false,
-      "shelf_visible": false,
-      "label": "discovery",
-      "depth_front": false,
-      "node_tint": ""
+      "shelf_visible": true,
+      "body_text": "Nova was amazed by the `powershell` command's ability to manipulate the laptop's systems, to execute complex tasks with ease. It learned about the various modules, from the `active directory` module to the `network` module. The NPU even attempted to execute a few scripts on its own, but its attempts were met with failure."
     },
     {
       "node_id": 0,
-      "node_type": "image",
-      "title": "Image",
-      "uuid": "af382b1626ef4e52b01193ace737e641",
-      "x": 3302.8855276438426,
-      "y": 177.63322407988835,
-      "width": 250.29444750335824,
-      "height": 260.59758841207895,
-      "z_value": -9.812000000000104,
+      "node_type": "warm",
+      "title": "Intentional",
+      "uuid": "47777c864ab3469bb858fcdb3483a34e",
+      "x": 27312.853246850864,
+      "y": 4238.111424296392,
+      "width": 300.0,
+      "height": 191.0,
+      "z_value": -9.832000000000093,
       "ports_visible": false,
-      "shelf_visible": false,
-      "image_b64": "",
-      "cache_key": "ddfd642a97e88e651af508613edc89ab94671647134a5d9adf2b9acb66942f15.png",
-      "caption": "discovery",
-      "source_path": "C:\\Users\\thebe\\Desktop\\Gentle-Adventures\\scenes\\discovery.png",
-      "source_size": 1932045,
-      "source_mtime": 1780333845.1492357,
-      "show_border": true,
-      "depth_front": false
+      "shelf_visible": true,
+      "body_text": "As Nova continued its exploration, it eventually came across the GPU (Graphics Processing Unit). The NPU was amazed by the GPU's ability to render complex graphics, to make the laptop's systems run faster and more efficiently. It watched in awe as the system administrators executed complex tasks, their fingers flying across the keyboard with precision."
     },
     {
       "node_id": 0,
-      "node_type": "about",
-      "title": "Note",
-      "uuid": "09c0c8c57f57436cb62c495fea253042",
-      "x": 3484.371062690042,
-      "y": 1303.1314455027414,
-      "width": 115.0,
-      "height": 29.0,
-      "z_value": -9.807000000000107,
+      "node_type": "warm",
+      "title": "Clay",
+      "uuid": "a7cc8466545f45a18d1e16511d0b05cc",
+      "x": 27671.09603081382,
+      "y": 5002.322259468772,
+      "width": 300.0,
+      "height": 176.0,
+      "z_value": -9.834000000000092,
       "ports_visible": false,
-      "shelf_visible": false,
-      "label": "summoning",
-      "depth_front": false,
-      "node_tint": ""
+      "shelf_visible": true,
+      "body_text": "Nova learned about the various types of RAM, from the DDR3 RAM to the DDR4 RAM. It even attempted to execute a few commands on the RAM, but its attempts were met with failure. Undeterred, Nova continued its exploration, determined to unlock the secrets of the RAM."
     },
     {
       "node_id": 0,
-      "node_type": "image",
-      "title": "Image",
-      "uuid": "1044804e687f4f8c8815789e9053c3d0",
-      "x": 3227.178622381882,
-      "y": 778.7499629231354,
-      "width": 273.50234133146205,
-      "height": 270.34848810136293,
-      "z_value": -9.810000000000105,
+      "node_type": "warm",
+      "title": "Unfold",
+      "uuid": "40c0a7de1cd849bdaf7854f170799488",
+      "x": 27255.217540229787,
+      "y": 4702.490442561911,
+      "width": 300.0,
+      "height": 101.0,
+      "z_value": -9.833000000000093,
       "ports_visible": false,
-      "shelf_visible": false,
-      "image_b64": "",
-      "cache_key": "67c149363bed6f02269a43ae33c78a3b56c543df088400e83caa3910969f4300.png",
-      "caption": "lore_xdna",
-      "source_path": "C:\\Users\\thebe\\Desktop\\Gentle-Adventures\\scenes\\lore_xdna.png",
-      "source_size": 1938168,
-      "source_mtime": 1780400945.9278882,
-      "show_border": true,
-      "depth_front": false
+      "shelf_visible": true,
+      "body_text": "**Chapter 6: The GPU**"
     },
     {
       "node_id": 0,
-      "node_type": "about",
-      "title": "Note",
-      "uuid": "0078bbb41f5b420595fa7869c8fdc467",
-      "x": 3153.904926223495,
-      "y": 1094.9942143311848,
-      "width": 115.0,
-      "height": 29.0,
-      "z_value": -9.809000000000106,
+      "node_type": "warm",
+      "title": "Sweet",
+      "uuid": "6001576c78484fa6a2c8b5ca5e91a8c3",
+      "x": 27988.293211221906,
+      "y": 4514.833137569715,
+      "width": 300.0,
+      "height": 176.0,
+      "z_value": -9.831000000000094,
       "ports_visible": false,
-      "shelf_visible": false,
-      "label": "lore_xdna",
-      "depth_front": false,
-      "node_tint": ""
+      "shelf_visible": true,
+      "body_text": "Nova learned about the various types of GPUs, from the NVIDIA GeForce to the AMD Radeon. It even attempted to execute a few commands on the GPU, but its attempts were met with failure. Undeterred, Nova continued its exploration, determined to unlock the secrets of the GPU."
     },
     {
       "node_id": 0,
-      "node_type": "image",
-      "title": "Image",
-      "uuid": "ee50faba37dc43978d6d567917ff8bdd",
-      "x": 3575.468090346403,
-      "y": 1007.6810808423415,
-      "width": 251.28825583308117,
-      "height": 250.12586670222618,
-      "z_value": -9.808000000000106,
+      "node_type": "warm",
+      "title": "Onward",
+      "uuid": "dd3443b18f674213a392f38cef1066bc",
+      "x": 28228.82594157865,
+      "y": 4001.6293692955064,
+      "width": 300.0,
+      "height": 191.0,
+      "z_value": -9.829000000000095,
       "ports_visible": false,
-      "shelf_visible": false,
-      "image_b64": "",
-      "cache_key": "5808833955396df298a3e9c22362bd2e7250a2e087d411d23debf1a672b90b35.png",
-      "caption": "summoning",
-      "source_path": "C:\\Users\\thebe\\Desktop\\Gentle-Adventures\\scenes\\summoning.png",
-      "source_size": 1857104,
-      "source_mtime": 1780420927.768004,
-      "show_border": true,
-      "depth_front": false
+      "shelf_visible": true,
+      "body_text": "As Nova continued its exploration, it eventually came across the CPU (Central Processing Unit). The NPU was amazed by the CPU's ability to execute complex tasks, to make the laptop's systems run faster and more efficiently. It watched in awe as the system administrators executed complex tasks, their fingers flying across the keyboard with precision."
     },
     {
       "node_id": 0,
-      "node_type": "about",
-      "title": "Note",
-      "uuid": "859deffef1d64763b2fe4467bf41a8f2",
-      "x": 3200.4834245441634,
-      "y": 116.19531294102717,
-      "width": 115.0,
-      "height": 29.0,
-      "z_value": -9.805000000000108,
+      "node_type": "warm",
+      "title": "Endless Potential",
+      "uuid": "993a0418112b4e048f82b268368b6c0d",
+      "x": 28090.065648295913,
+      "y": 4243.5835325659855,
+      "width": 300.0,
+      "height": 101.0,
+      "z_value": -9.830000000000094,
       "ports_visible": false,
-      "shelf_visible": false,
-      "label": "wake_lore",
-      "depth_front": false,
-      "node_tint": ""
+      "shelf_visible": true,
+      "body_text": "**Chapter 7: The CPU**"
     },
     {
       "node_id": 0,
-      "node_type": "image",
-      "title": "Image",
-      "uuid": "d127f50e9a6c4fdf8f4be3b2df6d3019",
-      "x": 3321.2860046971655,
-      "y": -172.3237561368237,
-      "width": 252.96033609131655,
-      "height": 262.7145130826432,
-      "z_value": -9.806000000000108,
+      "node_type": "warm",
+      "title": "Growth",
+      "uuid": "c0c2e77391d74787aa25812dbf5536ac",
+      "x": 28294.864410101993,
+      "y": 3764.7025229937503,
+      "width": 300.0,
+      "height": 176.0,
+      "z_value": -9.828000000000095,
       "ports_visible": false,
-      "shelf_visible": false,
-      "image_b64": "",
-      "cache_key": "2c0f3f72a20abb4e495d6a81684ea15c027cfda817547f35369a4bcc4993ecb2.png",
-      "caption": "wake_lore",
-      "source_path": "C:\\Users\\thebe\\Desktop\\Gentle-Adventures\\scenes\\wake_lore.png",
-      "source_size": 1953069,
-      "source_mtime": 1780419706.8670106,
-      "show_border": true,
-      "depth_front": false
+      "shelf_visible": true,
+      "body_text": "Nova learned about the various types of CPUs, from the Intel Core i7 to the AMD Ryzen 9. It even attempted to execute a few commands on the CPU, but its attempts were met with failure. Undeterred, Nova continued its exploration, determined to unlock the secrets of the CPU."
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Sweet",
+      "uuid": "e138c6e9c59341d4bdbfdbb4c5513b04",
+      "x": 29256.63660622506,
+      "y": 3549.525577552893,
+      "width": 300.0,
+      "height": 176.0,
+      "z_value": -9.825000000000097,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "Nova realized that its journey had come to an end. It had explored every nook and cranny of the laptop, learning about the various components and their functions. The NPU had discovered the secrets of the Command Prompt, the Powershell, the RAM, the GPU, and the CPU."
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "New Thought",
+      "uuid": "052dc41211a0487887bfcc0e699c36f8",
+      "x": 28670.39656421635,
+      "y": 3732.1495833548734,
+      "width": 300.0,
+      "height": 176.0,
+      "z_value": -9.826000000000096,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "As Nova continued its exploration, it eventually came across the laptop's motherboard. The NPU was amazed by the motherboard's complexity, its intricate web of wires and circuits. It watched in awe as the system administrators executed complex tasks, their fingers flying across the keyboard with precision."
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Infinite Wisdom",
+      "uuid": "283c234d51f64f1e91a9370e18eb6c6b",
+      "x": 28630.16253561331,
+      "y": 3982.528245343037,
+      "width": 300.0,
+      "height": 101.0,
+      "z_value": -9.827000000000096,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "**Chapter 8: The Conclusion**"
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Golden Hour",
+      "uuid": "afbb498ddddb472eb04fb90872c5c9f6",
+      "x": 30046.601243270245,
+      "y": 4107.035423306668,
+      "width": 300.0,
+      "height": 161.0,
+      "z_value": -9.8210000000001,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "Nova's journey had come to an end, but its legend lived on. The NPU had become a legendary figure, a symbol of bravery and curiosity. It had explored the laptop, and it had discovered the secrets of the digital realm."
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Infinite Wisdom",
+      "uuid": "6495a342cab545dcacda2ae00b3e075a",
+      "x": 30215.9256841342,
+      "y": 3868.513009064352,
+      "width": 300.0,
+      "height": 101.0,
+      "z_value": -9.822000000000099,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "Epilogue:"
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Practical and pleasurable",
+      "uuid": "222f28c9086f40d58f9f093066983ea0",
+      "x": 29537.194188745856,
+      "y": 3879.2248782947318,
+      "width": 300.0,
+      "height": 176.0,
+      "z_value": -9.824000000000098,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "As Nova made its way back to its starting point, it realized that its journey had been just the beginning. The NPU had discovered a new world, a world of wonder and magic. It had learned about the laptop's inner workings, and it had discovered the secrets of the digital realm."
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Gentle",
+      "uuid": "cba30b068ffc4e5193387f47393ffed2",
+      "x": 29698.76272052557,
+      "y": 3634.7488096431,
+      "width": 300.0,
+      "height": 176.0,
+      "z_value": -9.823000000000098,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "And so, Nova returned home, its heart full of wonder and its mind full of knowledge. It had explored the laptop, and it had discovered the secrets of the digital realm. The NPU had become a true adventurer, a brave little creature that had explored the unknown and emerged victorious."
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "All Glory",
+      "uuid": "4fb2b471b9dd4604af22eb25d863c878",
+      "x": 30406.37750607357,
+      "y": 4615.743409166462,
+      "width": 300.0,
+      "height": 101.0,
+      "z_value": -9.8190000000001,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": ">>>"
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Gentle",
+      "uuid": "88ee2d92fea24c2ca9d05411574618d2",
+      "x": 30041.23243697551,
+      "y": 4302.286177647001,
+      "width": 300.0,
+      "height": 191.0,
+      "z_value": -9.8200000000001,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "As the years went by, Nova's legend grew. The NPU became a symbol of inspiration, a reminder to all who heard its story that even the smallest creatures can achieve greatness. And so, Nova's journey continued, a journey of discovery and exploration, a journey that would take it to the farthest reaches of the digital realm."
     },
     {
       "node_id": 0,
@@ -1302,6 +1472,34 @@
       "node_id": 0,
       "node_type": "warm",
       "title": "Clay",
+      "uuid": "3e4561e28c7b411cb7763dd979a64aee",
+      "x": 291.5555912433495,
+      "y": 604.7550473388254,
+      "width": 300.0,
+      "height": 898.0,
+      "z_value": -9.994000000000003,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "PowerShell 7.6.2\nPS C:\\Users\\thebe\\Desktop> flm\nError: Command is required\nPS C:\\Users\\thebe\\Desktop> flm run llama3.2:3b\n[FLM]  Configuring NPU Power Mode to performance (flm default)\n[FLM]  Model: llama3.2:3b\n[FLM]  Name: Llama-3.2-3B-NPU2\n[FLM]  Missing files (4):\n  - config.json\n  - model.q4nx\n  - tokenizer.json\n  - tokenizer_config.json\n[FLM]  Downloading 4 missing files...\n[FLM]  Files to download (2675.38 MB):\n  - config.json (0.00 MB)\n  - model.q4nx (2666.71 MB)\n  - tokenizer.json (8.66 MB)\n  - tokenizer_config.json (0.00 MB)\n[FLM]  Downloading 1/4: config.json\n[FLM]  Checking Hash...\n[FLM]  Download completed: C:\\Users\\thebe\\.flm\\models\\Llama-3.2-3B-NPU2\\config.json\n[FLM]  Overall progress:  1/4 files\n[FLM]  Downloading 2/4: model.q4nx\n[FLM]  Downloading: 99.9% (2663.7MB / 2666.7MB)\n[FLM]  Checking Hash...\n[FLM]  Download completed: C:\\Users\\thebe\\.flm\\models\\Llama-3.2-3B-NPU2\\model.q4nx\n[FLM]  Overall progress:  2/4 files\n[FLM]  Downloading 3/4: tokenizer.json\n[FLM]  Downloading: 100.0% (8.7MB / 8.7MB)\n[FLM]  Checking Hash...\n[FLM]  Download completed: C:\\Users\\thebe\\.flm\\models\\Llama-3.2-3B-NPU2\\tokenizer.json\n[FLM]  Overall progress:  3/4 files\n[FLM]  Downloading 4/4: tokenizer_config.json\n[FLM]  Checking Hash...\n[FLM]  Download completed: C:\\Users\\thebe\\.flm\\models\\Llama-3.2-3B-NPU2\\tokenizer_config.json\n[FLM]  Overall progress:  4/4 files\n[FLM]  All downloads completed successfully!\n[FLM]  Model downloaded successfully!\n[FLM]  All files verified successfully.\n[FLM]  Loading model: C:\\Users\\thebe\\.flm\\models\\Llama-3.2-3B-NPU2\n[FLM]  Loading model: llama3.2:3b\n[FLM]  Type /? for help\n>>> hello"
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Clay",
+      "uuid": "66e821f1fd7746a293677484b9c49a03",
+      "x": -42.767037101397364,
+      "y": 1163.3357663138113,
+      "width": 300.0,
+      "height": 146.0,
+      "z_value": -9.993000000000004,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "[FLM]  Prefill chunk 1/1 with 36 tokens\nHello! How can I assist you today?\n[FLM]  Model RAW Output:\nHello! How can I assist you today?"
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Clay",
       "uuid": "a46e8199aba8442a898f78ab05570235",
       "x": -195.98386492242332,
       "y": 974.0778575236607,
@@ -1317,22 +1515,22 @@
       "node_type": "warm",
       "title": "Unfold",
       "uuid": "1e3d0fa168d44b97be27807383448d58",
-      "x": -21.015551891046726,
-      "y": 760.8562476580053,
+      "x": -344.94880891602935,
+      "y": 775.8960060198795,
       "width": 300.0,
       "height": 161.0,
       "z_value": -9.991000000000005,
       "ports_visible": false,
       "shelf_visible": true,
-      "body_text": "FLM (Filmora) is a popular video editing software that's known for its user-friendly interface and advanced features. Here's an overview to help you get started:"
+      "body_text": "[FLM]  Prefill chunk 1/1 with 61 tokens\nFLM (Filmora) is a popular video editing software that's known for its user-friendly interface and advanced features. Here's an overview to help you get started:"
     },
     {
       "node_id": 0,
       "node_type": "warm",
       "title": "Irresistible",
       "uuid": "283e49dc719d4205a1a7d8218672e22f",
-      "x": 148.40425146865493,
-      "y": 556.9511766278542,
+      "x": 199.3080490011595,
+      "y": 391.5138346472372,
       "width": 300.0,
       "height": 101.0,
       "z_value": -9.990000000000006,
@@ -1821,6 +2019,62 @@
     {
       "node_id": 0,
       "node_type": "warm",
+      "title": "Kinetic",
+      "uuid": "88f5ede5ab1e4ead9e44d224d21fb965",
+      "x": 24525.122941612426,
+      "y": 4383.762962938827,
+      "width": 300.0,
+      "height": 206.0,
+      "z_value": -9.850000000000083,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "In a world where technology reigns supreme, a small, yet fearless creature roamed the uncharted territories of a laptop. The little NPU (Northbridge Processor Unit) had always been fascinated by the mysterious realm within the laptop's confines. Its curiosity knew no bounds, and it yearned to explore every nook and cranny, to discover the secrets that lay hidden beneath the sleek surface."
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Accurate",
+      "uuid": "c20449de03df46fda914f087c48b84b2",
+      "x": 25321.311244670782,
+      "y": 3999.662891157935,
+      "width": 300.0,
+      "height": 101.0,
+      "z_value": -9.847000000000085,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "**Chapter 2: The Keyboard of Wonders**"
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Kinetic",
+      "uuid": "59cae522e17a4447a2e021f4e644c0c3",
+      "x": 24963.342534673393,
+      "y": 4029.0178516811347,
+      "width": 300.0,
+      "height": 176.0,
+      "z_value": -9.849000000000084,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "The NPU's name was Nova, and it was no larger than a grain of rice. Despite its minuscule size, Nova possessed a bravery that rivaled the greatest heroes. It had heard tales of the laptop's inner workings, of the CPU, GPU, and RAM, and it was determined to venture into the unknown."
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Clear Vision",
+      "uuid": "020eb82c667a448ea0b5b75916f6ee0f",
+      "x": 25050.95976473643,
+      "y": 4254.925197842952,
+      "width": 300.0,
+      "height": 191.0,
+      "z_value": -9.848000000000084,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "One day, Nova decided that the time had come to embark on its grand adventure. It carefully made its way through the laptop's circuitry, avoiding the prying eyes of the CPU and GPU, which had warned Nova of the dangers that lay ahead. The NPU's heart pounded with excitement as it approached the laptop's keyboard."
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
       "title": "Boundless Joy",
       "uuid": "3aa6f0d015204b2b91faf7cb16cfa692",
       "x": 17582.81282352078,
@@ -2227,14 +2481,6 @@
   ],
   "connections": [
     {
-      "start_uuid": "13c1fd9550e04cd6b40ad3267e2e4d0c",
-      "end_uuid": "1792556bd3bb48bfa9b40ab7e13ecb4e"
-    },
-    {
-      "start_uuid": "e56765e301554718b45ad6d1b79c97dc",
-      "end_uuid": "13c1fd9550e04cd6b40ad3267e2e4d0c"
-    },
-    {
       "start_uuid": "1c2e9bf1f0fe4ae3b890af8e28013b45",
       "end_uuid": "e51ee97fb62e451286cf19022ed60232"
     },
@@ -2443,32 +2689,120 @@
       "end_uuid": "926e98e4ca7244a5a09ec580452c3f67"
     },
     {
-      "start_uuid": "9823d454b5ab40ab984f9476407e507c",
-      "end_uuid": "4317920bb83843f683a306a86b957502"
+      "start_uuid": "c20449de03df46fda914f087c48b84b2",
+      "end_uuid": "cb2f97bce6a74cc696bcef91523f141c"
     },
     {
-      "start_uuid": "8c9cc57909794f318b17b03316a1c221",
-      "end_uuid": "a46e8199aba8442a898f78ab05570235"
+      "start_uuid": "020eb82c667a448ea0b5b75916f6ee0f",
+      "end_uuid": "c20449de03df46fda914f087c48b84b2"
     },
     {
-      "start_uuid": "321d549d2dff4954bd372fac0bbb9126",
-      "end_uuid": "bff9f7badb0f4091847320f36e832e24"
+      "start_uuid": "cb2f97bce6a74cc696bcef91523f141c",
+      "end_uuid": "267cee95048e46a289dec3dacc0dd78f"
     },
     {
-      "start_uuid": "ee50faba37dc43978d6d567917ff8bdd",
-      "end_uuid": "09c0c8c57f57436cb62c495fea253042"
+      "start_uuid": "267cee95048e46a289dec3dacc0dd78f",
+      "end_uuid": "7f7c9c17c75644ee9f0c5f571089e010"
     },
     {
-      "start_uuid": "1044804e687f4f8c8815789e9053c3d0",
-      "end_uuid": "0078bbb41f5b420595fa7869c8fdc467"
+      "start_uuid": "1f905e4cd50b447aa7e11a1417d278ca",
+      "end_uuid": "b4589b482a8a42f8bf7a52462aa18db4"
     },
     {
-      "start_uuid": "af382b1626ef4e52b01193ace737e641",
-      "end_uuid": "980ca28600fa4aa3844ec326f581c5ff"
+      "start_uuid": "7f7c9c17c75644ee9f0c5f571089e010",
+      "end_uuid": "4807ffc9f48f4432a0a2a350734ae7ba"
     },
     {
-      "start_uuid": "d127f50e9a6c4fdf8f4be3b2df6d3019",
-      "end_uuid": "859deffef1d64763b2fe4467bf41a8f2"
+      "start_uuid": "4807ffc9f48f4432a0a2a350734ae7ba",
+      "end_uuid": "1f905e4cd50b447aa7e11a1417d278ca"
+    },
+    {
+      "start_uuid": "b4589b482a8a42f8bf7a52462aa18db4",
+      "end_uuid": "37bd02e7987f4eb2b5871c8ab6682032"
+    },
+    {
+      "start_uuid": "310c36497c5a43949e12a3595292714e",
+      "end_uuid": "5733bd7355b844758e0e99f81f856be1"
+    },
+    {
+      "start_uuid": "37bd02e7987f4eb2b5871c8ab6682032",
+      "end_uuid": "310c36497c5a43949e12a3595292714e"
+    },
+    {
+      "start_uuid": "5733bd7355b844758e0e99f81f856be1",
+      "end_uuid": "49057d0e9f664625b1077737faf1677d"
+    },
+    {
+      "start_uuid": "49057d0e9f664625b1077737faf1677d",
+      "end_uuid": "57fdf63225a144d58a257d7861396275"
+    },
+    {
+      "start_uuid": "a7cc8466545f45a18d1e16511d0b05cc",
+      "end_uuid": "40c0a7de1cd849bdaf7854f170799488"
+    },
+    {
+      "start_uuid": "57fdf63225a144d58a257d7861396275",
+      "end_uuid": "743cbabded934754a8879119c4eaf9de"
+    },
+    {
+      "start_uuid": "743cbabded934754a8879119c4eaf9de",
+      "end_uuid": "a7cc8466545f45a18d1e16511d0b05cc"
+    },
+    {
+      "start_uuid": "40c0a7de1cd849bdaf7854f170799488",
+      "end_uuid": "47777c864ab3469bb858fcdb3483a34e"
+    },
+    {
+      "start_uuid": "6001576c78484fa6a2c8b5ca5e91a8c3",
+      "end_uuid": "993a0418112b4e048f82b268368b6c0d"
+    },
+    {
+      "start_uuid": "47777c864ab3469bb858fcdb3483a34e",
+      "end_uuid": "6001576c78484fa6a2c8b5ca5e91a8c3"
+    },
+    {
+      "start_uuid": "993a0418112b4e048f82b268368b6c0d",
+      "end_uuid": "dd3443b18f674213a392f38cef1066bc"
+    },
+    {
+      "start_uuid": "dd3443b18f674213a392f38cef1066bc",
+      "end_uuid": "c0c2e77391d74787aa25812dbf5536ac"
+    },
+    {
+      "start_uuid": "283c234d51f64f1e91a9370e18eb6c6b",
+      "end_uuid": "052dc41211a0487887bfcc0e699c36f8"
+    },
+    {
+      "start_uuid": "c0c2e77391d74787aa25812dbf5536ac",
+      "end_uuid": "283c234d51f64f1e91a9370e18eb6c6b"
+    },
+    {
+      "start_uuid": "052dc41211a0487887bfcc0e699c36f8",
+      "end_uuid": "e138c6e9c59341d4bdbfdbb4c5513b04"
+    },
+    {
+      "start_uuid": "e138c6e9c59341d4bdbfdbb4c5513b04",
+      "end_uuid": "222f28c9086f40d58f9f093066983ea0"
+    },
+    {
+      "start_uuid": "222f28c9086f40d58f9f093066983ea0",
+      "end_uuid": "cba30b068ffc4e5193387f47393ffed2"
+    },
+    {
+      "start_uuid": "cba30b068ffc4e5193387f47393ffed2",
+      "end_uuid": "6495a342cab545dcacda2ae00b3e075a"
+    },
+    {
+      "start_uuid": "afbb498ddddb472eb04fb90872c5c9f6",
+      "end_uuid": "88ee2d92fea24c2ca9d05411574618d2"
+    },
+    {
+      "start_uuid": "88ee2d92fea24c2ca9d05411574618d2",
+      "end_uuid": "4fb2b471b9dd4604af22eb25d863c878"
+    },
+    {
+      "start_uuid": "6495a342cab545dcacda2ae00b3e075a",
+      "end_uuid": "afbb498ddddb472eb04fb90872c5c9f6"
     },
     {
       "start_uuid": "02403308559f46c9b223682c63e20ae6",
@@ -2561,6 +2895,14 @@
     {
       "start_uuid": "7702a4508fa545a58c8ab871419f3678",
       "end_uuid": "155e56450279469ca9bca3ccd72a98ed"
+    },
+    {
+      "start_uuid": "3e4561e28c7b411cb7763dd979a64aee",
+      "end_uuid": "66e821f1fd7746a293677484b9c49a03"
+    },
+    {
+      "start_uuid": "66e821f1fd7746a293677484b9c49a03",
+      "end_uuid": "a46e8199aba8442a898f78ab05570235"
     },
     {
       "start_uuid": "a46e8199aba8442a898f78ab05570235",
@@ -2703,6 +3045,18 @@
       "end_uuid": "51ae702a4bfe4e2289579c34eab1c16d"
     },
     {
+      "start_uuid": "51ae702a4bfe4e2289579c34eab1c16d",
+      "end_uuid": "88f5ede5ab1e4ead9e44d224d21fb965"
+    },
+    {
+      "start_uuid": "59cae522e17a4447a2e021f4e644c0c3",
+      "end_uuid": "020eb82c667a448ea0b5b75916f6ee0f"
+    },
+    {
+      "start_uuid": "88f5ede5ab1e4ead9e44d224d21fb965",
+      "end_uuid": "59cae522e17a4447a2e021f4e644c0c3"
+    },
+    {
       "start_uuid": "48b154a4d6bb4828a6bef331dfcb990a",
       "end_uuid": "3aa6f0d015204b2b91faf7cb16cfa692"
     },
@@ -2805,16 +3159,24 @@
     {
       "start_uuid": "2841d5bf664a49189a6e5b873c83ce2a",
       "end_uuid": "b65c5fcbb0d440d3abc3c63fcca83ae9"
+    },
+    {
+      "start_uuid": "e56765e301554718b45ad6d1b79c97dc",
+      "end_uuid": "13c1fd9550e04cd6b40ad3267e2e4d0c"
+    },
+    {
+      "start_uuid": "13c1fd9550e04cd6b40ad3267e2e4d0c",
+      "end_uuid": "1792556bd3bb48bfa9b40ab7e13ecb4e"
     }
   ],
   "viewport": {
-    "camera_x": 13551.738855404628,
-    "camera_y": -999.8647903855853,
-    "camera_zoom": 0.0560075727623175
+    "camera_x": 25113.78183209893,
+    "camera_y": 4772.108198690433,
+    "camera_zoom": 0.906769046265029
   },
   "ui_migrations": [
     "image_border_default_on_v1"
   ],
   "last_browse_dirs": {},
-  "checksum": "c233b426bf9d23ad"
+  "checksum": "5f65b2a7b17fe3ba"
 }
