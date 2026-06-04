@@ -561,7 +561,7 @@ class NarrativePanel(QWidget):
         # Paragraph divider asset: GA's own play sticker (the app logo), with a
         # 2px white rule out from its centre — the Majestic's "lines and stickers"
         # treatment, dropped between paragraphs as the reveal crosses them.
-        _play = Path(__file__).resolve().parent.parent / "icons" / "playIconic.png"
+        _play = Path(__file__).resolve().parent.parent / "icons" / "playIcon.png"
         self._play_url = _play.as_uri() if _play.exists() else ""
 
         # ── typewriter state ─────────────────────────────────────────────────

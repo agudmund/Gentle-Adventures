@@ -64,8 +64,8 @@ def main() -> int:
         pass
 
     app = QApplication(sys.argv)
-    # Window + taskbar icon: playIconic, Gentle Adventures' brand mark.
-    _app_icon = app_dir / "icons" / "playIconic.ico"
+    # Window + taskbar icon: playIcon, Gentle Adventures' brand mark.
+    _app_icon = app_dir / "icons" / "playIcon.ico"
     if _app_icon.exists():
         app.setWindowIcon(QIcon(str(_app_icon)))
     register_app_fonts()  # load Chandler42's full style table before any widget builds

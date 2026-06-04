@@ -712,10 +712,10 @@ class GentleAdventuresApp(QMainWindow):
     # ───── system tray ─────
 
     def _setup_system_tray(self) -> None:
-        """System tray icon with a Show / Exit menu. The icon is playIconic —
+        """System tray icon with a Show / Exit menu. The icon is playIcon —
         Gentle Adventures' brand mark, copied into icons/ from the family set."""
         self._tray_icon = QSystemTrayIcon(self)
-        icon_path = self.app_dir / "icons" / "playIconic.ico"
+        icon_path = self.app_dir / "icons" / "playIcon.ico"
         if icon_path.exists():
             self._tray_icon.setIcon(QIcon(str(icon_path)))
         else:
@@ -736,7 +736,7 @@ class GentleAdventuresApp(QMainWindow):
         self._tray_icon.activated.connect(self._on_tray_activated)
 
         # Self-heal the Personalization > Taskbar panel so the entry reads
-        # "Gentle Adventures" with the playIconic mark instead of "Python" with
+        # "Gentle Adventures" with the playIcon mark instead of "Python" with
         # a stale snapshot. Silent no-op on failure — see Intricate's
         # Documents/Design/Icon Pipeline.md › The Brand Mark Refresh Chain.
         try:
@@ -753,7 +753,7 @@ class GentleAdventuresApp(QMainWindow):
         import winreg
         from PySide6.QtCore import QBuffer, QIODevice
 
-        icon_path = self.app_dir / "icons" / "playIconic.ico"
+        icon_path = self.app_dir / "icons" / "playIcon.ico"
         if not icon_path.exists():
             return
 
