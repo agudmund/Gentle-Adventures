@@ -23,5 +23,4 @@ intricate_log           # the family Rust logger backend — lock-free ring buff
 # ── Standard library covers the rest ─────────────────────────────────────
 # Gemini image generation goes over urllib + base64 + json (no requests).
 # The NPU "ship's engine" probe shells out to PowerShell (no wmi/pywin32).
-# TOML loads via stdlib tomllib on 3.11+; older Pythons need tomli:
-tomli; python_version < "3.11"
+# TOML loads via stdlib tomllib (Python 3.11+); the family is on 3.14, no backport needed.
