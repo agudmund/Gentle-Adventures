@@ -411,6 +411,23 @@ def _scenes_hash(scenes) -> str:
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
 
+def _load_floor_json() -> list[dict] | None:
+    """The committed offline floor (data/quest_floor.json), resynced from the live
+    Quest_Log by utils/resync_floor.py. Preferred over the inline QUEST so a fresh
+    clone with no network + no snapshot still opens on current content. Resolves
+    next to this module (source/clone use); returns None when absent or running
+    frozen (where __file__ is in the bundle), so the inline QUEST is the backstop."""
+    try:
+        p = Path(__file__).resolve().parent / "quest_floor.json"
+        if p.exists():
+            data = json.loads(p.read_text(encoding="utf-8"))
+            if isinstance(data, list) and data:
+                return data
+    except Exception as e:
+        logger.debug(f"[ledger] quest_floor.json unreadable ({e}); falling back to inline QUEST")
+    return None
+
+
 class _Ledger:
     """The CONTENT authority pipe (sheet -> game). See Documents/State Sync v2.md.
 
@@ -528,9 +545,11 @@ class _Ledger:
                     self._scenes, self.source, self._hash = snap, "snapshot", _scenes_hash(snap)
                     logger.info(f"[ledger] offline — loaded {len(snap)} scene(s) from the local snapshot")
                 else:
-                    floor = list(QUEST)
-                    self._scenes, self.source, self._hash = floor, "bundled", _scenes_hash(floor)
-                    logger.info(f"[ledger] using {len(floor)} bundled scene(s) — the floor")
+                    fj = _load_floor_json()
+                    floor = fj if fj else list(QUEST)
+                    src = "floor-json" if fj else "bundled"
+                    self._scenes, self.source, self._hash = floor, src, _scenes_hash(floor)
+                    logger.info(f"[ledger] using {len(floor)} {src} scene(s) — the floor")
         return self._scenes
 
     def refresh(self) -> list[dict]:
