@@ -1,0 +1,35 @@
+# UTF-8
+#
+# Windows version resource for the Gentle Adventures exe. Embedded by
+# build.py via --version-file. Gives the taskbar / Properties dialog a
+# real identity (ProductName, CompanyName, FileDescription) instead of
+# the generic "Python" launcher. Mirrors the family's other apps.
+#
+# Bump filevers / prodvers (4-tuples) on meaningful releases.
+VSVersionInfo(
+  ffi=FixedFileInfo(
+    filevers=(0, 1, 0, 0),
+    prodvers=(0, 1, 0, 0),
+    mask=0x3f,
+    flags=0x0,
+    OS=0x40004,
+    fileType=0x1,
+    subtype=0x0,
+    date=(0, 0)
+  ),
+  kids=[
+    StringFileInfo(
+      [
+      StringTable(
+        u'040904B0',
+        [StringStruct(u'CompanyName', u'Single Shared Braincell'),
+        StringStruct(u'FileDescription', u'Gentle Adventures'),
+        StringStruct(u'FileVersion', u'0.1.0.0'),
+        StringStruct(u'InternalName', u'Gentle Adventures'),
+        StringStruct(u'OriginalFilename', u'Gentle Adventures.exe'),
+        StringStruct(u'ProductName', u'Gentle Adventures'),
+        StringStruct(u'ProductVersion', u'0.1.0.0')])
+      ]),
+    VarFileInfo([VarStruct(u'Translation', [1033, 1200])])
+  ]
+)
