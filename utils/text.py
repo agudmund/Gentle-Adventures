@@ -11,7 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from shared_braincell.llm import Backend, make_backend
-from utils.gemini import load_api_key
+from shared_braincell.gemini_image import load_api_key
 from utils.logger import get_logger
 
 logger = get_logger("gentle")

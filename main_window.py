@@ -33,7 +33,7 @@ from graphics.widgets import BottomToolbar, InteractionBar, NarrativePanel, Scen
 from graphics.scene_map import SceneMap
 from graphics.sidebar import Sidebar
 from graphics.weather import WeatherOverlay
-from utils.gemini import (
+from shared_braincell.gemini_image import (
     GeminiAPIError,
     GeminiAuthError,
     GeminiImageClient,
