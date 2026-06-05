@@ -1104,6 +1104,12 @@ class GentleAdventuresApp(QMainWindow):
 
         self.title_bar.set_title(scene["title"])
         self.interaction.set_parser_mode("free")
+        # The parser hint follows the scene: when a llama is in the room, address
+        # it directly; otherwise it's the ship at large. Content-driven so it
+        # tracks wherever the llama appears, no per-scene wiring needed.
+        _blob = f"{scene.get('title', '')} {scene.get('narrative', '')}".lower()
+        self.interaction.set_parser_placeholder(
+            "✦ Ask the Lama… ✦" if "llama" in _blob else "✦ ask the ship anything ✦")
 
         # Kick the painting first — it never depended on the NPU probe and it's
         # the long pole anyway.
