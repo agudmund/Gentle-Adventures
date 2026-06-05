@@ -411,21 +411,129 @@ def _scenes_hash(scenes) -> str:
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()
 
 
-def _load_floor_json() -> list[dict] | None:
-    """The committed offline floor (data/quest_floor.json), resynced from the live
-    Quest_Log by utils/resync_floor.py. Preferred over the inline QUEST so a fresh
-    clone with no network + no snapshot still opens on current content. Resolves
-    next to this module (source/clone use); returns None when absent or running
-    frozen (where __file__ is in the bundle), so the inline QUEST is the backstop."""
+# ── HY-World narrative (the 'hyworld' tab) — a short orbital-twin tour ─────────
+# Bundled inline (compiled into the PYZ, so it plays frozen) for the HY_World
+# narrative tab. A short 3-beat climb to the orbital GPU + a confirmation page
+# whose two little games (Llama no Drama Lama / The Void and the Noid) are the
+# soft proof HY-World is running. verify:'hyworld' on the last scene is the probe
+# hook for Part B's gated half (render-proof + live probe wire in once the EC2 box
+# is up). A live HY_World Sheet tab, if created later, overrides this.
+HYWORLD_QUEST = [
+    {
+        "id": "hy_ascent",
+        "title": "HY-World, 00 — The Long Climb",
+        "narrative": (
+            "Some thoughts are bigger than one small ship.\n\n"
+            "The NPU does what it can, breathing softly — but tonight the captain "
+            "looks up, past the blur, to a second light holding steady in orbit.\n\n"
+            "HY-World. A bigger room, built for the heavy thinking. Still ours — "
+            "just further up.\n\n"
+            "Shall we climb?"
+        ),
+        "choices": [
+            {"label": "Climb to HY-World", "next": "hy_arrival"},
+            {"label": "Ask what waits up there", "next": "hy_arrival"},
+        ],
+        "verify": None,
+        "image_prompt": (
+            "A chibi astronaut in a soft pastel-pink spaceship bridge looking up "
+            "through a round window at a second glowing station-light holding steady "
+            "in orbit among stars, cozy 3D, soft bloom, gentle palette."
+        ),
+    },
+    {
+        "id": "hy_arrival",
+        "title": "HY-World, 01 — The Orbital Twin",
+        "narrative": (
+            "The hatch opens onto a wide, humming hall.\n\n"
+            "Not a faraway data centre — yours. The same little mind as the ship's "
+            "llama, only with room to stretch: more memory, more cores, the heavy "
+            "paint and the long thinking the NPU would labour over.\n\n"
+            "\"When I can't carry it alone,\" the ship murmurs, \"I pass it up here. "
+            "It comes back in your own voice — never a borrowed giant.\"\n\n"
+            "The orbital twin waits, patient and bright."
+        ),
+        "choices": [{"label": "See what it can do", "next": "hy_warmup"}],
+        "verify": None,
+        "image_prompt": (
+            "A chibi astronaut drifting into a wide glowing pastel orbital-station "
+            "hall, soft humming machines and warm light, big friendly cores, cozy 3D."
+        ),
+    },
+    {
+        "id": "hy_warmup",
+        "title": "HY-World, 02 — Warming the Cores",
+        "narrative": (
+            "A dial turns. Far-off fans rise from a whisper to a gentle roar, then "
+            "settle.\n\n"
+            "The cores warm — starlight pooling in glass. This is where the big "
+            "pictures get painted and the long answers get thought, then sent home "
+            "to the ship as if they'd never left.\n\n"
+            "\"Almost ready,\" the twin says. \"Shall we see if it's truly awake?\""
+        ),
+        "choices": [{"label": "Wake the little games", "next": "hy_confirm"}],
+        "verify": None,
+        "image_prompt": (
+            "Glowing pastel GPU cores warming up like starlight pooling in glass "
+            "tubes, a small chibi astronaut watching with wonder, soft warm bloom, cozy 3D."
+        ),
+    },
+    {
+        "id": "hy_confirm",
+        "title": "HY-World, 03 — Two Little Games",
+        "narrative": (
+            "If HY-World is awake, two little games bloom on the wall:\n\n"
+            "Llama no Drama Lama — a calm llama hops from tile to tile, never "
+            "flustered, answering riddles without a single bead of sweat.\n\n"
+            "The Void and the Noid — tiny void-noids tumble out of the dark, and you "
+            "boop them gently back to sleep.\n\n"
+            "The orbital twin paints them in real time. If you can see them playing, "
+            "HY-World is running — soft proof, no dials to read.\n\n"
+            "Welcome to the bigger room, Captain."
+        ),
+        "choices": [
+            {"label": "Watch them play", "next": "hy_confirm"},
+            {"label": "Home, to the ship", "next": "hy_ascent"},
+        ],
+        "verify": "hyworld",
+        "image_prompt": (
+            "Two playful pastel mini-game vignettes glowing on an orbital-station "
+            "wall: a calm cute llama hopping (Llama no Drama Lama) and tiny round "
+            "dark blobs with sleepy eyes tumbling out of a soft void being gently "
+            "booped (void-noids), cozy 3D, warm proof-of-life glow, chibi style."
+        ),
+    },
+]
+
+
+# Per-tab committed floor files (resynced from the live Sheet by
+# utils/resync_floor.py). Falls back to the inline lists below when absent/frozen.
+_FLOOR_FILES = {"Quest_Log": "quest_floor.json", "HY_World": "hyworld_floor.json"}
+
+
+def _load_floor_json(tab: str) -> list[dict] | None:
+    """The committed offline floor for `tab` (e.g. data/quest_floor.json), resynced
+    from the live Sheet. Preferred over the inline lists so a fresh clone with no
+    network + no snapshot opens on current content. Resolves next to this module
+    (source/clone use); returns None when absent or running frozen (where __file__
+    is in the bundle), so the inline lists are the compiled-in backstop."""
+    fn = _FLOOR_FILES.get(tab)
+    if not fn:
+        return None
     try:
-        p = Path(__file__).resolve().parent / "quest_floor.json"
+        p = Path(__file__).resolve().parent / fn
         if p.exists():
             data = json.loads(p.read_text(encoding="utf-8"))
             if isinstance(data, list) and data:
                 return data
     except Exception as e:
-        logger.debug(f"[ledger] quest_floor.json unreadable ({e}); falling back to inline QUEST")
+        logger.debug(f"[ledger] {fn} unreadable ({e}); using the inline floor")
     return None
+
+
+def _inline_floor(tab: str) -> list[dict]:
+    """The compiled-in backstop scene set for `tab` (works frozen)."""
+    return HYWORLD_QUEST if tab == "HY_World" else QUEST
 
 
 class _Ledger:
@@ -545,11 +653,11 @@ class _Ledger:
                     self._scenes, self.source, self._hash = snap, "snapshot", _scenes_hash(snap)
                     logger.info(f"[ledger] offline — loaded {len(snap)} scene(s) from the local snapshot")
                 else:
-                    fj = _load_floor_json()
-                    floor = fj if fj else list(QUEST)
+                    fj = _load_floor_json(self._tab)
+                    floor = fj if fj else list(_inline_floor(self._tab))
                     src = "floor-json" if fj else "bundled"
                     self._scenes, self.source, self._hash = floor, src, _scenes_hash(floor)
-                    logger.info(f"[ledger] using {len(floor)} {src} scene(s) — the floor")
+                    logger.info(f"[ledger] using {len(floor)} {src} scene(s) for {self._tab} — the floor")
         return self._scenes
 
     def refresh(self) -> list[dict]:
@@ -595,7 +703,7 @@ class _Ledger:
 # default tour; HY-World drops in the moment its tab exists.
 NARRATIVES = [
     {"key": "npu", "label": "Gentle Adventures", "tab": "Quest_Log"},
-    # {"key": "hyworld", "label": "HY-World", "tab": "HY_World"},  # uncomment once the tab exists
+    {"key": "hyworld", "label": "HY-World", "tab": "HY_World"},
 ]
 DEFAULT_NARRATIVE = "npu"
 _ACTIVE_FILE = _app_root() / "active_narrative.txt"
