@@ -278,7 +278,7 @@ QUEST: list[dict] = [
             "mark, the other a tiny lightbulb. The NPU meter in the corner is active."
         ),
         "narrative": (
-            "You ask it: \"What is the meaning of low-power inference?\"\n\n"
+            "You ask it: \"What do you feed a sparrow if one were so inclined to find one in a window on a spaceship?\"\n\n"
             "The llama answers in your terminal, syllable by syllable.\n"
             "No call leaves the ship. No server warms in a faraway data center.\n"
             "Just the NPU, breathing softly, doing what it was made for.\n\n"
