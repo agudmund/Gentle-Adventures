@@ -32,6 +32,7 @@ from pretty_widgets.graphics.Theme import Theme as Fam
 from pretty_widgets.utils.fonts import chandler42
 from pretty_widgets.PrettyTooltip import install_tooltip
 from pretty_widgets.PrettyCombo import combo as pretty_combo
+from pretty_widgets.PrettySlider import slider as pretty_slider
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -631,12 +632,44 @@ class NarrativePanel(QWidget):
         vfont.setBold(True)
         self._verified.setFont(vfont)
 
-        # Story fills the column; verification line pinned to the bottom.
+        # Story fills the column; verification line pinned to the bottom. The body
+        # rides a pretty_slider scrollbar on its right — The Majestic's rail. The
+        # native Qt scrollbar stays hidden (policy set above), so only the styled
+        # slider shows; it's wired bidirectionally to the text's vertical scrollbar
+        # (whose object + range still track content even while the policy is off).
+        self._scroll_slider = pretty_slider(
+            Qt.Orientation.Vertical,
+            handle_icon="slider_handle_vertical.png",
+            range=(0, 100),
+            value=0,
+            invertedAppearance=True,
+        )
+        _slider_col = QWidget()
+        _slider_col.setFixedWidth(30)
+        _slider_col.setStyleSheet("background: transparent;")
+        _slider_v = QVBoxLayout(_slider_col)
+        _slider_v.setContentsMargins(0, 0, 0, 0)
+        _slider_v.setSpacing(0)
+        _slider_v.addWidget(self._scroll_slider)
+
+        _body_row = QWidget()
+        _body_row.setStyleSheet("background: transparent;")
+        _body_h = QHBoxLayout(_body_row)
+        _body_h.setContentsMargins(0, 0, 0, 0)
+        _body_h.setSpacing(0)
+        _body_h.addWidget(self._text, 1)
+        _body_h.addWidget(_slider_col, 0)
+
         layout = QVBoxLayout(self)
         layout.setContentsMargins(40, 32, 28, 20)
         layout.setSpacing(6)
-        layout.addWidget(self._text, 1)
+        layout.addWidget(_body_row, 1)
         layout.addWidget(self._verified)
+
+        _vsb = self._text.verticalScrollBar()
+        _vsb.rangeChanged.connect(self._scroll_slider.setRange)
+        _vsb.valueChanged.connect(self._scroll_slider.setValue)
+        self._scroll_slider.valueChanged.connect(_vsb.setValue)
 
         # Paragraph divider asset: GA's own play sticker (the app logo), with a
         # 2px white rule out from its centre — the Majestic's "lines and stickers"
@@ -677,7 +710,8 @@ class NarrativePanel(QWidget):
         self._tw_buffer = ""
         self._segments = []
 
-    def set_text(self, body: str, verified: bool | None = None, question: str | None = None):
+    def set_text(self, body: str, verified: bool | None = None, question: str | None = None,
+                 source: str | None = None):
         # Bump the generation FIRST: any settle callbacks still pending from the
         # previous scene now belong to an old generation and will no-op, so they
         # can't repaint this fresh text.
@@ -701,6 +735,21 @@ class NarrativePanel(QWidget):
             cur.insertText(question.strip(), qfmt)
             cur.insertBlock()
             cur.insertBlock()   # a blank line between the question and the answer
+            self._lit_from = cur.position()
+
+        # Optional source attribution — WHO is replying (the ship / the llama /
+        # HY-World) — in a distinct italic accent above the answer, so the voice
+        # is always unmistakable. Sits between the question header and the answer.
+        if source and source.strip():
+            cur = QTextCursor(self._text.document())
+            cur.movePosition(QTextCursor.MoveOperation.End)
+            sfmt = QTextCharFormat()
+            sfmt.setForeground(QColor(Fam.healthColorCalm))
+            sfont = QFont(self._text.font())
+            sfont.setItalic(True)
+            sfmt.setFont(sfont)
+            cur.insertText(source.strip(), sfmt)
+            cur.insertBlock()
             self._lit_from = cur.position()
 
         # Weave a divider between paragraphs: text, sep, text, sep, … (empty

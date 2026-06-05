@@ -1678,7 +1678,8 @@ class GentleAdventuresApp(QMainWindow):
         line = (text or "").strip()
         if line:
             self.narrative.set_text(line, verified=None,
-                                    question=getattr(self, "_oracle_question", None))
+                                    question=getattr(self, "_oracle_question", None),
+                                    source="the ship's llama")
 
     def _on_oracle_failed(self, error: str) -> None:
         logger.info(f"[oracle] {error}")
