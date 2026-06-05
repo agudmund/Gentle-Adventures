@@ -65,7 +65,8 @@ def _stdlib_logger(name: str) -> logging.Logger:
     logger.setLevel(logging.DEBUG)
     fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s", "%H:%M:%S")
     try:
-        logs_dir = Path(__file__).resolve().parent.parent / "logs"
+        from utils.paths import app_root
+        logs_dir = app_root() / "logs"
         logs_dir.mkdir(exist_ok=True)
         fh = logging.FileHandler(logs_dir / "gentle.log", mode="w", encoding="utf-8")
         fh.setLevel(logging.DEBUG)

@@ -143,7 +143,8 @@ class Oracle:
         """File for flm serve's own session output — the 'Start-Transcript when
         calling flm' capture, kept in the GA repo. None if the dir can't be made."""
         try:
-            d = Path(__file__).resolve().parent.parent / "Documents" / "Data" / "Oracle"
+            from utils.paths import app_root
+            d = app_root() / "Documents" / "Data" / "Oracle"
             d.mkdir(parents=True, exist_ok=True)
             return d / f"flm_serve_{time.strftime('%Y%m%d-%H.%M.%S')}.log"
         except Exception:
@@ -155,7 +156,8 @@ class Oracle:
         backups, just in case', mirroring The Majestic's chat persistence."""
         dirs = []
         try:
-            dirs.append(Path(__file__).resolve().parent.parent / "Documents" / "Data" / "Oracle")
+            from utils.paths import app_root
+            dirs.append(app_root() / "Documents" / "Data" / "Oracle")
         except Exception:
             pass
         try:

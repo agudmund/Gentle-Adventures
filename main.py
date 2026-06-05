@@ -38,6 +38,7 @@ from PySide6.QtWidgets import QApplication
 
 from main_window import GentleAdventuresApp
 from utils.logger import init_logger
+from utils.paths import app_root
 from utils.settings import load_settings
 from pretty_widgets.utils.fonts import register_app_fonts
 from pretty_widgets.graphics.Theme import Theme as FamTheme
@@ -51,7 +52,7 @@ def main() -> int:
     # A hard kill skips closeEvent's sweep — the startup purge above covers it.
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
-    app_dir = Path(__file__).resolve().parent
+    app_dir = app_root()   # frozen-aware: next to the .exe, not inside _internal/
     init_logger(app_dir)
     settings = load_settings(app_dir / "settings.toml")
 

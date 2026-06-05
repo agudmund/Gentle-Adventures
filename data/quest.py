@@ -397,7 +397,8 @@ def _rows_to_scenes(rows: list[list]) -> list[dict]:
 
 # Last-good content snapshot for cold starts (an offline launch loads this rather
 # than a blank game); bundled QUEST is the floor beneath it. See State Sync v2.md.
-_SNAPSHOT = Path(__file__).resolve().parent.parent / "quest_cache.json"
+from utils.paths import app_root as _app_root
+_SNAPSHOT = _app_root() / "quest_cache.json"
 
 
 def _scenes_hash(scenes) -> str:
