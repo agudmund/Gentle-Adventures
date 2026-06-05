@@ -80,7 +80,12 @@ def main() -> int:
 
     window = GentleAdventuresApp(settings=settings, app_dir=app_dir)
     _watcher.changed.connect(window._reapply_theme)  # live palette ripple from The Settlers
-    window.show()
+    # --minimized (login autostart): come up as a quiet minimized taskbar button
+    # rather than popping the always-on-top window in the user's face on boot.
+    if "--minimized" in sys.argv:
+        window.showMinimized()
+    else:
+        window.show()
     return app.exec()
 
 
