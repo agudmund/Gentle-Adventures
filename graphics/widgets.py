@@ -677,7 +677,7 @@ class NarrativePanel(QWidget):
         self._tw_buffer = ""
         self._segments = []
 
-    def set_text(self, body: str, verified: bool | None = None):
+    def set_text(self, body: str, verified: bool | None = None, question: str | None = None):
         # Bump the generation FIRST: any settle callbacks still pending from the
         # previous scene now belong to an old generation and will no-op, so they
         # can't repaint this fresh text.
@@ -686,6 +686,22 @@ class NarrativePanel(QWidget):
         self._text.clear()
         self._tw_buffer = ""
         self._lit_from = 0
+
+        # Optional bold question header (the captain's own words), shown at once
+        # above the typed answer so it's always clear what was asked. _lit_from is
+        # advanced past it so the typewriter's settle pass never reaches back over it.
+        if question and question.strip():
+            cur = QTextCursor(self._text.document())
+            cur.movePosition(QTextCursor.MoveOperation.End)
+            qfmt = QTextCharFormat()
+            qfmt.setForeground(self._base_color)
+            qfont = QFont(self._text.font())
+            qfont.setBold(True)
+            qfmt.setFont(qfont)
+            cur.insertText(question.strip(), qfmt)
+            cur.insertBlock()
+            cur.insertBlock()   # a blank line between the question and the answer
+            self._lit_from = cur.position()
 
         # Weave a divider between paragraphs: text, sep, text, sep, … (empty
         # paragraphs are skipped so two dividers never stack).

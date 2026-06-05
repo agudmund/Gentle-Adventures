@@ -1651,14 +1651,16 @@ class GentleAdventuresApp(QMainWindow):
         the answer into the narrative — no call leaves the ship. If flm isn't aboard,
         gently point back to the summoning. Off the UI thread; the model load on the
         first ask is the 'stirs awake' beat. Never blocks the quest."""
+        self._oracle_question = question
         if not resolve_flm():
             self.narrative.set_text(
                 "✦ The oracle isn't aboard yet — summon it first: fetch FastFlowLM, "
                 "then run flm run llama3.2:3b. Once it's here, ask me anything. ✦",
-                verified=False)
+                verified=False, question=question)
             return
         self.narrative.set_text(
-            "✦ the oracle stirs, gathering a small private thought… ✦", verified=None)
+            "✦ the oracle stirs, gathering a small private thought… ✦",
+            verified=None, question=question)
         system = (
             "You are the on-device oracle — a small local llama running on the ship's "
             "NPU in a cozy chibi space adventure. Answer the captain's question warmly "
@@ -1675,13 +1677,15 @@ class GentleAdventuresApp(QMainWindow):
     def _on_oracle_answer(self, text: str) -> None:
         line = (text or "").strip()
         if line:
-            self.narrative.set_text(line, verified=None)
+            self.narrative.set_text(line, verified=None,
+                                    question=getattr(self, "_oracle_question", None))
 
     def _on_oracle_failed(self, error: str) -> None:
         logger.info(f"[oracle] {error}")
         self.narrative.set_text(
             "✦ the oracle drew a quiet breath and couldn't quite answer — it's a small "
-            "mind, and sometimes it rests. Try once more in a moment. ✦", verified=False)
+            "mind, and sometimes it rests. Try once more in a moment. ✦", verified=False,
+            question=getattr(self, "_oracle_question", None))
 
     # ───── Psychological Weather — the vibe vector (System 2 Phase 2) ─────
 
