@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
     QSystemTrayIcon,
 )
 
-from data.quest import all_scenes, first_scene_id, get_scene, reload_quest, NO_NPU_NOTE, NPU_PROBING_NOTE
+from data.quest import all_scenes, first_scene_id, get_scene, reload_quest, switch_narrative, NO_NPU_NOTE, NPU_PROBING_NOTE
 from pretty_widgets.graphics.Theme import Theme as Fam
 from graphics.widgets import BottomToolbar, InteractionBar, NarrativePanel, ResizeGrip, SceneView, TitleBar
 from graphics.scene_map import SceneMap
@@ -458,6 +458,22 @@ class GentleAdventuresApp(QMainWindow):
         grip.show()
         grip.raise_()
 
+    # ───── narrative swap ─────
+
+    def _on_narrative_changed(self, key: str):
+        """Titlebar narrative selector changed -> point the Ledger at that
+        narrative's Quest_Log tab and restart it at its opening scene. (No-op for
+        a single registered narrative; live once a second tab is dropped in.)"""
+        if not key:
+            return
+        switch_narrative(key)
+        try:
+            self.player_state.set("current_scene", first_scene_id())
+        except Exception:
+            pass
+        self._load_scene(first_scene_id())
+        logger.info(f"[narrative] switched to '{key}'")
+
     # ───── layout ─────
 
     def _build_layout(self):
@@ -468,6 +484,7 @@ class GentleAdventuresApp(QMainWindow):
 
         self.title_bar = TitleBar()
         self.title_bar.curtains_clicked.connect(self.toggle_curtains)
+        self.title_bar.narrative_changed.connect(self._on_narrative_changed)
         layout.addWidget(self.title_bar)
 
         # Everything below the titlebar lives in one container so the curtain

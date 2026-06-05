@@ -430,6 +430,25 @@ class _Ledger:
         self.source = "unloaded"           # 'sheet' | 'snapshot' | 'bundled'
         self._hash = ""                    # fingerprint of the live set
         self._version: int | None = None   # last accepted _meta!version
+        self._tab = "Quest_Log"            # active narrative's Sheet tab (swappable)
+
+    def set_tab(self, tab: str) -> None:
+        """Point the Ledger at a different narrative tab. Clears the live set so
+        the next read pulls the new tab; the OLD tab's last-good stays on disk in
+        its own per-tab snapshot, so switching back is instant + offline-safe."""
+        if tab != self._tab:
+            self._tab = tab
+            self._scenes = None
+            self._hash = ""
+            self._version = None
+
+    def _snap_path(self) -> Path:
+        """Per-tab snapshot file. The default tab keeps the legacy filename so
+        existing caches still load; other narratives cache alongside it."""
+        if self._tab == "Quest_Log":
+            return _SNAPSHOT
+        safe = "".join(c if c.isalnum() else "_" for c in self._tab)
+        return _SNAPSHOT.with_name(f"quest_cache_{safe}.json")
 
     # ── fetch (worker-thread safe; never raises to the caller) ─────────────────
     def _fetch_live(self) -> list[dict] | None:
@@ -441,7 +460,7 @@ class _Ledger:
             logger.warning(f"[ledger] sheets client unavailable: {e}")
             return None
         try:
-            rows = SheetsClient().read_sheet("Quest_Log")
+            rows = SheetsClient().read_sheet(self._tab)
         except SheetsError as e:
             logger.debug(f"[ledger] Quest_Log unavailable ({e}); keeping previous content")
             return None
@@ -471,9 +490,10 @@ class _Ledger:
 
     # ── snapshot (cold-start last-good) ────────────────────────────────────────
     def _load_snapshot(self) -> list[dict] | None:
+        snap = self._snap_path()
         try:
-            if _SNAPSHOT.exists():
-                data = json.loads(_SNAPSHOT.read_text(encoding="utf-8"))
+            if snap.exists():
+                data = json.loads(snap.read_text(encoding="utf-8"))
                 scenes = data.get("scenes")
                 if scenes:
                     self._version = data.get("version")
@@ -483,12 +503,13 @@ class _Ledger:
         return None
 
     def _save_snapshot(self) -> None:
+        snap = self._snap_path()
         try:
-            tmp = _SNAPSHOT.with_suffix(".tmp")
+            tmp = snap.with_suffix(".tmp")
             tmp.write_text(
                 json.dumps({"version": self._version, "scenes": self._scenes},
                            ensure_ascii=False, indent=2), encoding="utf-8")
-            tmp.replace(_SNAPSHOT)   # atomic publish of the local last-good
+            tmp.replace(snap)   # atomic publish of the local last-good
         except Exception as e:
             logger.debug(f"[ledger] snapshot write skipped ({e})")
 
@@ -549,7 +570,54 @@ class _Ledger:
         return None
 
 
+# ── Narrative registry — each narrative is one Quest_Log-shaped Sheet tab ─────
+# Drop-in: add an entry here (and create the matching tab in the Sheet) and it
+# shows up in the titlebar narrative selector automatically. 'npu' is the bundled
+# default tour; HY-World drops in the moment its tab exists.
+NARRATIVES = [
+    {"key": "npu", "label": "Gentle Adventures", "tab": "Quest_Log"},
+    # {"key": "hyworld", "label": "HY-World", "tab": "HY_World"},  # uncomment once the tab exists
+]
+DEFAULT_NARRATIVE = "npu"
+_ACTIVE_FILE = _app_root() / "active_narrative.txt"
+
+
+def narratives() -> list[dict]:
+    """The registered narratives — the titlebar selector reads this."""
+    return list(NARRATIVES)
+
+
+def _tab_for(key: str) -> str:
+    return next((n["tab"] for n in NARRATIVES if n["key"] == key), "Quest_Log")
+
+
+def active_narrative_key() -> str:
+    """The persisted active narrative key (DEFAULT_NARRATIVE if unset/unknown)."""
+    try:
+        k = _ACTIVE_FILE.read_text(encoding="utf-8").strip()
+        if any(n["key"] == k for n in NARRATIVES):
+            return k
+    except Exception:
+        pass
+    return DEFAULT_NARRATIVE
+
+
 _ledger = _Ledger()
+_ledger.set_tab(_tab_for(active_narrative_key()))   # honour the persisted choice at boot
+
+
+def switch_narrative(key: str) -> list[dict]:
+    """Point the Ledger at narrative `key`'s tab, persist the choice, and re-pull.
+    Unknown key -> no-op (returns the current scenes)."""
+    if not any(n["key"] == key for n in NARRATIVES):
+        logger.warning(f"[ledger] unknown narrative '{key}'; ignoring")
+        return _ledger.scenes()
+    try:
+        _ACTIVE_FILE.write_text(key, encoding="utf-8")
+    except Exception as e:
+        logger.debug(f"[ledger] could not persist active narrative ({e})")
+    _ledger.set_tab(_tab_for(key))
+    return _ledger.refresh()
 
 
 def get_scene(scene_id: str) -> dict | None:

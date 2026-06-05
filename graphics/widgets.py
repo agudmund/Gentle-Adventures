@@ -120,6 +120,7 @@ class TitleBar(QWidget):
     """
 
     curtains_clicked = Signal()    # roll up into the strip / expand back out
+    narrative_changed = Signal(str)  # selected narrative key (titlebar selector)
 
     # Titlebar height = the shared suite value (Theme.handleHeightTop), the exact
     # number Intricate / The Majestic use — so GA's bar matches the family rather
@@ -164,9 +165,23 @@ class TitleBar(QWidget):
         # ── center: single-entry PrettyCombo faking a project selector — the
         #    same look-and-feel trick The Majestic uses ──
         self._combo = pretty_combo()
-        self._combo.addItem("Gentle Adventures")
         self._combo.setParent(self)
         self._combo.setFixedWidth(self._COMBO_W)
+        # Narrative selector — registry-driven (data.quest.NARRATIVES). With one
+        # narrative it reads as the old single-entry label; add a narrative tab
+        # and it becomes a live switcher: currentIndexChanged -> narrative_changed
+        # -> main_window swaps the active Quest_Log tab. blockSignals while
+        # populating (Qt fires activated on programmatic setCurrentIndex).
+        from data.quest import narratives as _narratives, active_narrative_key as _active_nk
+        self._combo.blockSignals(True)
+        for _n in _narratives():
+            self._combo.addItem(_n["label"], _n["key"])
+        _ai = self._combo.findData(_active_nk())
+        if _ai >= 0:
+            self._combo.setCurrentIndex(_ai)
+        self._combo.blockSignals(False)
+        self._combo.currentIndexChanged.connect(
+            lambda _i: self.narrative_changed.emit(self._combo.currentData() or ""))
 
         # ── brand / curtains button ──
         self._btn_curtains = self._control(
