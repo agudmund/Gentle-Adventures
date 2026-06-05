@@ -646,7 +646,7 @@ class _Ledger:
                 self._version = self._fetch_version()
                 self._scenes, self.source, self._hash = live, "sheet", _scenes_hash(live)
                 self._save_snapshot()
-                logger.info(f"[ledger] loaded {len(live)} scene(s) from the live Quest_Log (v{self._version})")
+                logger.info(f"[ledger] loaded {len(live)} scene(s) from the live {self._tab} (v{self._version})")
             else:
                 snap = self._load_snapshot()
                 if snap:
