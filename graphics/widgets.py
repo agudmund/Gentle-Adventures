@@ -13,7 +13,7 @@ import re
 from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal, QTimer, QSize, QVariantAnimation
-from PySide6.QtGui import QFont, QPixmap, QIcon, QColor, QTextCursor, QTextCharFormat
+from PySide6.QtGui import QFont, QPixmap, QIcon, QColor, QPainter, QPen, QTextCursor, QTextCharFormat
 from PySide6.QtWidgets import (
     QGraphicsOpacityEffect,
     QHBoxLayout,
@@ -32,6 +32,71 @@ from pretty_widgets.graphics.Theme import Theme as Fam
 from pretty_widgets.utils.fonts import chandler42
 from pretty_widgets.PrettyTooltip import install_tooltip
 from pretty_widgets.PrettyCombo import combo as pretty_combo
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Resize grip — bottom-right window resize handle (ported from Intricate)
+# ─────────────────────────────────────────────────────────────────────────────
+class ResizeGrip(QWidget):
+    """Bottom-right window resize handle, ported from Intricate's main-window grip.
+
+    Drags the target window's geometry from the corner, clamped to the window's
+    minimum size. Like the rest of the family it keeps the plain arrow cursor —
+    the OS diagonal resize cursor stays *hidden*; the painted three-line glyph is
+    the affordance. Self-contained and raised above the layout, so it works over
+    whatever child fills the corner (the scene view / bottom toolbar, in GA).
+    """
+
+    _SIZE = 20   # widget footprint; the glyph tucks into its lower-right
+
+    def __init__(self, target_window: QWidget, parent: QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._win = target_window
+        self._drag = False
+        self._press_global = None
+        self._press_size = None
+        self.setFixedSize(self._SIZE, self._SIZE)
+        self.setToolTip("Drag to resize the window")
+
+    def paintEvent(self, _event) -> None:
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        col = QColor(Fam.textPrimary)
+        col.setAlpha(140)
+        p.setPen(QPen(col, 2))
+        w, h = self.width(), self.height()
+        # Three nested diagonal ticks — the universal resize-corner glyph.
+        for off in (4, 9, 14):
+            p.drawLine(w - off, h - 4, w - 4, h - off)
+        p.end()
+
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.LeftButton:
+            self._drag = True
+            self._press_global = event.globalPosition().toPoint()
+            self._press_size = self._win.size()
+            event.accept()
+
+    def mouseMoveEvent(self, event) -> None:
+        if self._drag and self._press_global is not None:
+            delta = event.globalPosition().toPoint() - self._press_global
+            # Absolute floors as well as the window minimum — the curtains roll
+            # zeroes setMinimumHeight() mid-gesture and doesn't restore it, so
+            # minimumHeight() alone could let the grip shrink the window to nothing.
+            floor_w = max(self._win.minimumWidth(), 320)
+            floor_h = max(self._win.minimumHeight(), 240)
+            new_w = max(floor_w, self._press_size.width()  + delta.x())
+            new_h = max(floor_h, self._press_size.height() + delta.y())
+            self._win.resize(new_w, new_h)
+            event.accept()
+
+    def mouseReleaseEvent(self, event) -> None:
+        self._drag = False
+        event.accept()
+
+    def restyle(self) -> None:
+        """Re-tint on live palette reload."""
+        self.update()
 
 
 # ─────────────────────────────────────────────────────────────────────────────

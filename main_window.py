@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
 
 from data.quest import all_scenes, first_scene_id, get_scene, reload_quest, NO_NPU_NOTE, NPU_PROBING_NOTE
 from pretty_widgets.graphics.Theme import Theme as Fam
-from graphics.widgets import BottomToolbar, InteractionBar, NarrativePanel, SceneView, TitleBar
+from graphics.widgets import BottomToolbar, InteractionBar, NarrativePanel, ResizeGrip, SceneView, TitleBar
 from graphics.scene_map import SceneMap
 from graphics.sidebar import Sidebar
 from graphics.weather import WeatherOverlay
@@ -379,6 +379,13 @@ class GentleAdventuresApp(QMainWindow):
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
 
         self._build_layout()
+        # Resizable from the bottom-right (ported from Intricate's grip): a
+        # min-size floor + a corner handle that drags the geometry. No OS resize
+        # cursor (family convention) — the painted glyph is the affordance.
+        self.setMinimumSize(480, 360)
+        self.resize_grip = ResizeGrip(self, parent=self.centralWidget())
+        self.resize_grip.raise_()
+        self._position_resize_grip()
         self._setup_system_tray()
         self._start()
 
@@ -419,12 +426,37 @@ class GentleAdventuresApp(QMainWindow):
             self.sidebar.restyle()
         if hasattr(self, "narrative"):
             self.narrative.restyle()
+        if hasattr(self, "resize_grip"):
+            self.resize_grip.restyle()
 
     def _on_workers_busy_changed(self, busy: bool) -> None:
         """Worker registry crossed idle<->busy: fade the sidebar 'working' meter
         in and breathe while anything runs, out when all's quiet."""
         if hasattr(self, "sidebar"):
             self.sidebar.set_working(busy)
+
+    # ───── window resize grip ─────
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._position_resize_grip()
+
+    def _position_resize_grip(self):
+        """Keep the bottom-right resize handle pinned to the corner, and tuck it
+        away while the curtains are rolled up (no resizing a collapsed strip)."""
+        grip = getattr(self, "resize_grip", None)
+        if grip is None:
+            return
+        if hasattr(self, "_body") and not self._body.isVisible():
+            grip.hide()
+            return
+        c = self.centralWidget()
+        if c is None:
+            return
+        m = 3
+        grip.move(c.width() - grip.width() - m, c.height() - grip.height() - m)
+        grip.show()
+        grip.raise_()
 
     # ───── layout ─────
 
