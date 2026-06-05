@@ -726,18 +726,19 @@ class NarrativePanel(QWidget):
             QTimer.singleShot(self._GLOW_MS, lambda g=gen: self._settle_tail(g))
             return
         rem = len(self._tw_buffer)
-        # Batch + delay scale with what's left (The Majestic's pacing curve).
+        # Batch + delay scale with what's left (The Majestic's pacing curve) —
+        # sped up ~2x: bigger batches, shorter delays, same scaling shape.
         if rem > 500:
-            n, delay = 8, random.randint(18, 35)
+            n, delay = 16, random.randint(9, 18)
         elif rem > 200:
-            n, delay = 4, random.randint(25, 50)
+            n, delay = 8, random.randint(12, 26)
         elif rem > 80:
-            n, delay = 2, random.randint(30, 60)
+            n, delay = 4, random.randint(16, 32)
         else:
-            n = 1
+            n = 2
             # 85% brisk, 15% a human breath — the cadence that reads as thinking.
             delay = random.choices(
-                [random.randint(25, 65), random.randint(80, 160)],
+                [random.randint(14, 36), random.randint(45, 90)],
                 weights=[85, 15],
             )[0]
 
