@@ -9,6 +9,14 @@ logs/
 .gemini_model
 window_state.json
 
+# Local-first caches of the Google Sheet (the source of truth) + the persisted
+# active-narrative choice. Committing these is a stale-data trap — a fresh clone
+# would load OLD Sheet data from git instead of re-syncing on launch. The Sheet
+# is canon (see the Sheets state machine); these regenerate from it.
+player_state.json
+quest_cache*.json
+active_narrative.txt
+
 # -- Build outputs: derived, rebuilt per machine, never tracked --
 # _internal is a directory JUNCTION to ../_runtime; without this, GitHub Desktop
 # walks into it and offers every shared-runtime file for commit.
