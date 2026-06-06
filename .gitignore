@@ -9,6 +9,17 @@ logs/
 .gemini_model
 window_state.json
 
+# -- Build outputs: derived, rebuilt per machine, never tracked --
+# _internal is a directory JUNCTION to ../_runtime; without this, GitHub Desktop
+# walks into it and offers every shared-runtime file for commit.
+/_internal/
+/build/
+/dist/
+/archive/
+/__trace_spec__/
+*.spec
+*.exe
+
 # NOTE: scenes/*.png ARE committed on purpose — a generated scene image is
 # canonical game art, baked into the repo so it travels with a fresh clone and
 # reloads on revisit/relaunch instead of re-commissioning the painter.
