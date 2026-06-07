@@ -752,12 +752,14 @@ class GentleAdventuresApp(QMainWindow):
         self.setGeometry(self.work_area())
         self._is_maxed = True
         self.title_bar.reflect_maximized(True)
+        QTimer.singleShot(0, self._save_window_state)   # survive a hard kill (rebuild)
 
     def restore_window(self):
         if self._restore_geom_max is not None:
             self.setGeometry(self._restore_geom_max)
         self._is_maxed = False
         self.title_bar.reflect_maximized(False)
+        QTimer.singleShot(0, self._save_window_state)   # survive a hard kill (rebuild)
 
     def toggle_maximize(self):
         self.restore_window() if self._is_maxed else self.maximize_window()
@@ -773,6 +775,11 @@ class GentleAdventuresApp(QMainWindow):
         else:
             self._restore_geom_fullscreen = self.geometry()
             self.showFullScreen()
+        # Persist immediately. build.py hard-kills the app to rebuild it (no
+        # closeEvent, so the close-time save never runs) — without this a
+        # rebuild-relaunch reopens from a stale window_state.json. Deferred so
+        # isFullScreen() reflects the just-applied state.
+        QTimer.singleShot(0, self._save_window_state)
 
     def _enter_fullscreen_restored(self):
         """Re-enter fullscreen on startup, capturing the just-restored normal
