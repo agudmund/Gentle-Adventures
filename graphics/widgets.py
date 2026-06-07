@@ -330,11 +330,9 @@ class TitleBar(QWidget):
         self.window().close()
 
     def _toggle_fullscreen(self):
-        w = self.window()
-        if w.isFullScreen():
-            w.showNormal()
-        else:
-            w.showFullScreen()
+        # Delegate to the window so it can capture the pre-fullscreen geometry and
+        # persist the fullscreen state across restarts (see toggle_fullscreen).
+        self.window().toggle_fullscreen()
 
     # ── window drag (frameless) — Intricate's globalPosition-delta move ───────
 

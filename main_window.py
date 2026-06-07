@@ -362,8 +362,10 @@ class GentleAdventuresApp(QMainWindow):
         self._curtain_anim = None
         self._is_maxed = False
         self._restore_geom_max = None
+        self._restore_geom_fullscreen = None   # pre-fullscreen geom, for a sane exit
         self._quitting = False            # tray "Exit" / Ctrl-C set this; ✕ restarts
         self._restore_maximized = False   # set by _restore_window_geometry
+        self._restore_fullscreen = False  # set by _restore_window_geometry
         self._window_state_path = app_dir / "window_state.json"
 
         win_cfg = settings.get("window", {})
@@ -389,9 +391,11 @@ class GentleAdventuresApp(QMainWindow):
         self._setup_system_tray()
         self._start()
 
-        # Re-apply last session's maximized state once the loop is running
-        # (work_area needs the shown window's screen).
-        if self._restore_maximized:
+        # Re-apply last session's fullscreen / maximized state once the loop is
+        # running (work_area needs the shown window's screen). Fullscreen wins.
+        if self._restore_fullscreen:
+            QTimer.singleShot(0, self._enter_fullscreen_restored)
+        elif self._restore_maximized:
             QTimer.singleShot(0, self.maximize_window)
 
     # ───── theme ─────
@@ -757,6 +761,24 @@ class GentleAdventuresApp(QMainWindow):
 
     def toggle_maximize(self):
         self.restore_window() if self._is_maxed else self.maximize_window()
+
+    def toggle_fullscreen(self):
+        """Real Qt fullscreen (distinct from the work-area maximize). Captures the
+        pre-fullscreen geometry so exiting returns to a sane size, and so the state
+        persists/restores across a restart (double-click the title bar)."""
+        if self.isFullScreen():
+            self.showNormal()
+            if self._restore_geom_fullscreen is not None:
+                self.setGeometry(self._restore_geom_fullscreen)
+        else:
+            self._restore_geom_fullscreen = self.geometry()
+            self.showFullScreen()
+
+    def _enter_fullscreen_restored(self):
+        """Re-enter fullscreen on startup, capturing the just-restored normal
+        geometry as the exit target so a later un-fullscreen is sane."""
+        self._restore_geom_fullscreen = self.geometry()
+        self.showFullScreen()
 
     # ───── system tray ─────
 
@@ -1456,18 +1478,27 @@ class GentleAdventuresApp(QMainWindow):
         if "x" in state and "y" in state:
             self.move(int(state["x"]), int(state["y"]))
         self._restore_maximized = bool(state.get("maximized", False))
+        self._restore_fullscreen = bool(state.get("fullscreen", False))
 
     def _save_window_state(self) -> None:
         """Persist size/position + maximized flag so the next launch reopens the
         same way. When maximized, store the pre-maximize geometry so a later
         unmaximize returns to a sane size rather than the work-area rect."""
+        fullscreen = self.isFullScreen()
         maxed = self._is_maxed
-        geom = (self._restore_geom_max
-                if maxed and self._restore_geom_max is not None else self.geometry())
+        # Store the pre-fullscreen / pre-maximize geometry so the saved size is a
+        # sane normal one, not the full-screen or work-area rect.
+        if fullscreen and self._restore_geom_fullscreen is not None:
+            geom = self._restore_geom_fullscreen
+        elif maxed and self._restore_geom_max is not None:
+            geom = self._restore_geom_max
+        else:
+            geom = self.geometry()
         state = {
             "x": geom.x(), "y": geom.y(),
             "width": geom.width(), "height": geom.height(),
             "maximized": maxed,
+            "fullscreen": fullscreen,
         }
         try:
             self._window_state_path.write_text(json.dumps(state, indent=2), encoding="utf-8")
