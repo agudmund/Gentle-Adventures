@@ -468,7 +468,7 @@ class GentleAdventuresApp(QMainWindow):
             return
         switch_narrative(key)
         try:
-            self.player_state.set("current_scene", first_scene_id())
+            self.player_state.set({"current_scene": first_scene_id()})
         except Exception:
             pass
         self._load_scene(first_scene_id())
