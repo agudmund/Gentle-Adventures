@@ -2,19 +2,19 @@
 # "it works for me / it works for you / done" — no version pins; Python is the
 # floor, pip resolves the rest.
 #
-# Family packages (pretty_widgets / shared_braincell / intricate_log) are
+# Family packages (pretty_widgets / shared_braincell / leopold) are
 # editable installs from their sibling repos on the Desktop, not PyPI:
 #   pip install -e "<desktop>/Pretty-Widgets"
 #   pip install -e "<desktop>/Shared-Braincell"
-#   pip install -e "<desktop>/intricate-log"      # maturin/pyo3 — builds the Rust .pyd
+#   python "<desktop>/Leopold/install.py"         # maturin/pyo3 — builds + installs the Rust .pyd
 
 # ── Runtime: GUI ──────────────────────────────────────────────────────────
 PySide6                 # Qt bindings — the frameless window, titlebar, scene view
 
 # ── Runtime: shared family infrastructure ────────────────────────────────
 pretty_widgets          # titlebar combo/button/tooltip, the shared Theme, Chandler42 fonts
-shared_braincell        # settings resolution + the logger adapter onto intricate_log
-intricate_log           # the family Rust logger backend — lock-free ring buffer,
+shared_braincell        # settings resolution + the logger adapter onto leopold
+leopold                 # the family Rust logger backend — lock-free ring buffer,
                         # timestamped-per-run files, retention. Soft-falls to a
                         # pure-Python sink if the .pyd is absent; GA falls back further
                         # to a stdlib console+file logger if the whole spine is missing.

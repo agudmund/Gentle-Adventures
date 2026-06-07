@@ -343,7 +343,7 @@ def buildApp(launch: bool = True):
         "--hidden-import=shared_braincell.gemini_image",
         "--hidden-import=shared_braincell.llm",
         "--hidden-import=shared_braincell.winenv",
-        "--hidden-import=intricate_log",
+        "--hidden-import=leopold",
         # GA is pure Qt — keep pygame out even if it's installed in the env
         # for sibling apps (see the family's pygame-hook-trap note).
         "--exclude-module=pygame",

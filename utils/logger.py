@@ -19,12 +19,12 @@ from pathlib import Path
 # stdlib console+file logger so GA still keeps its logs rather than going
 # silent — GA's own choice, distinct from the family's NullLogger contract.
 try:
-    import intricate_log  # noqa: F401 — presence probe
+    import leopold  # noqa: F401 — presence probe
     from shared_braincell.logger import setup_logger as _family_setup
     from shared_braincell.logger import init_app as _family_init_app
     _HAVE_FAMILY = True
 except Exception:
-    intricate_log = None  # type: ignore
+    leopold = None  # type: ignore
     _family_setup = None
     _family_init_app = None
     _HAVE_FAMILY = False
