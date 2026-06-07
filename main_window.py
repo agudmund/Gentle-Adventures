@@ -320,6 +320,8 @@ class GentleAdventuresApp(QMainWindow):
         self.current_scene: dict | None = None
         self._visited: set[str] = set()   # scene ids reached — gates the map
         self._oracle_summoned = False     # Hardware Oracle fires once per session
+        self._milestones: set[str] = set()  # health-heartbeat milestones already emitted
+        self._milestone_pulsed = False    # gold pulse fires on the FIRST milestone only
         self._oracle_line = ""            # cached calibration line once it arrives
         self._npu_probed = False          # NPU probe is cached (it can't change mid-session)
         self._npu_engine: str | None = None
@@ -1169,6 +1171,8 @@ class GentleAdventuresApp(QMainWindow):
         elsewhere while we probed, in which case we only keep the cached result."""
         self._npu_engine = engine
         self._npu_probed = True
+        if engine:
+            self._emit_milestone("npu_detected")
         if self.current_scene is scene:
             self._resolve_scene(scene, engine, spec=spec)
 
@@ -1247,25 +1251,45 @@ class GentleAdventuresApp(QMainWindow):
 
     # ───── ledger write-back (Player_State heartbeat) ─────
 
-    def _sync_player_state(self, updates: dict) -> None:
+    def _emit_milestone(self, name: str) -> None:
+        """Health-heartbeat: record a once-per-session milestone to Player_State as
+        the ISO timestamp of its first occurrence. The high-res trace stays in the
+        local .log (logger.info); the Sheet gets the semantic summary. Reuses the
+        local-first set -> off-thread flush spine; the gold spectral pulse fires only
+        on the FIRST milestone of the session (whisper-volume)."""
+        if name in self._milestones:
+            return
+        self._milestones.add(name)
+        from datetime import datetime, timezone
+        ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        logger.info(f"[milestone] {name} @ {ts}")
+        first = not self._milestone_pulsed
+        self._milestone_pulsed = True
+        self._sync_player_state({name: ts}, pulse=first)
+
+    def _sync_player_state(self, updates: dict, pulse: bool = True) -> None:
         """Local-FIRST: persist to the on-board logbook instantly (a disconnect can
         never cost progress), then attempt the cloud push off the UI thread. The dot
         goes amber the moment there's unsynced data, gold once the Ledger confirms.
-        With no proxy it still saves locally — the dot just stays dim."""
+        With no proxy it still saves locally — the dot just stays dim.
+
+        `pulse` gates the gold spectral flash on a confirmed round-trip; milestone
+        writes pass pulse=False after the first so the heartbeat stays whisper-quiet."""
         self.player_state.set(updates)
         if not self.sheets:
             self._set_ledger_indicator("off")
             return
         self._set_ledger_indicator("pending")
         worker = PlayerStateSyncWorker(self.player_state)
-        worker.synced.connect(self._on_state_synced)
+        worker.synced.connect(lambda reached, p=pulse: self._on_state_synced(reached, p))
         self._workers.run(worker)
 
-    def _on_state_synced(self, reached: bool) -> None:
+    def _on_state_synced(self, reached: bool, pulse: bool = True) -> None:
         if reached:
             # Reached the stars and came back — gold tick + dot to live (unless
             # newer changes are already buffered behind it).
-            self.bottom_toolbar.spectral_pulse()
+            if pulse:
+                self.bottom_toolbar.spectral_pulse()
             self._set_ledger_indicator("live" if not self.player_state.has_pending() else "pending")
         else:
             # Push deferred — changes are safe on board; we'll catch the cloud up.
@@ -1324,6 +1348,7 @@ class GentleAdventuresApp(QMainWindow):
         if self._oracle_summoned:
             return
         self._oracle_summoned = True
+        self._emit_milestone("oracle_summoned")
         spec = spec or {}
         spec_text = "\n".join(f"{k}: {v}" for k, v in spec.items()) or f"npu: {engine_name}"
         system = (
@@ -1429,6 +1454,7 @@ class GentleAdventuresApp(QMainWindow):
 
     def _on_validate_settled(self, code: int, gentle: str, classification, raw: str) -> None:
         if code == 0:
+            self._emit_milestone("sandbox_cleared")
             found = [ln for ln in raw.splitlines() if ln.strip()][:4]
             body = ("Your ship is sound. The Lantern found:\n\n"
                     + "\n".join(found)
