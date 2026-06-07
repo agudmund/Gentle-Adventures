@@ -810,6 +810,12 @@ class GentleAdventuresApp(QMainWindow):
             from PySide6.QtWidgets import QMenu
             tray_menu = QMenu(self)
         tray_menu.addAction("Show", self._restore_from_tray)
+        # 'Live' (dev affordance): hand a frozen build off to the live source
+        # main.py via a real Python. Present ONLY when frozen AND a source
+        # checkout + interpreter are actually reachable — contextual absence, so
+        # it never shows on an end-user install. Family-lift candidate.
+        if getattr(sys, "frozen", False) and self._resolve_live_source() is not None:
+            tray_menu.addAction("Live", self._go_live)
         tray_menu.addSeparator()
         tray_menu.addAction("Exit", self._quit_app)
         self._tray_icon.setContextMenu(tray_menu)
@@ -1555,6 +1561,62 @@ class GentleAdventuresApp(QMainWindow):
             logger.info("[restart] spawned a fresh session — back in a blink ✨")
         except Exception as e:
             logger.warning(f"[restart] spawn failed (closing without relaunch): {e}")
+
+    def _resolve_live_source(self):
+        """Find a runnable live checkout (a root holding main.py + utils/paths.py)
+        plus a real Python interpreter to run it — the targets for the tray 'Live'
+        hand-off out of a frozen build. Returns (root: Path, python_exe: str), or
+        None when either is missing. All cheap filesystem probes, safe to call
+        during tray setup. Machine-agnostic (derives ~/Desktop, never a hardcoded
+        user). Family-lift candidate: only the folder names are GA-specific."""
+        from pathlib import Path
+        import shutil
+        candidates = []
+        here = self.app_dir
+        for p in [here, *here.parents][:4]:
+            candidates.append(p)                       # exe sitting inside a checkout
+        desktop = Path.home() / "Desktop"
+        candidates += [desktop / "Gentle-Adventures", desktop / "Gentle Adventures"]
+        root = None
+        for c in candidates:
+            try:
+                if (c / "main.py").is_file() and (c / "utils" / "paths.py").is_file():
+                    root = c
+                    break
+            except Exception:
+                continue
+        if root is None:
+            return None
+        py = None
+        for name in ("python", "python3", "py"):
+            exe = shutil.which(name)
+            if exe:
+                py = exe
+                break
+        if not py:
+            return None
+        return (root, py)
+
+    def _go_live(self) -> None:
+        """Tray 'Live': relaunch from the live source main.py through a real
+        Python (its own console for the dev log), then leave this frozen instance
+        for good — a single-instance hand-off frozen → live so the edit→test loop
+        needs no terminal. _quitting makes closeEvent skip the ✕-relaunch."""
+        found = self._resolve_live_source()
+        if not found:
+            self.bottom_toolbar.set_info("✦ live source not found ✦")
+            return
+        root, py = found
+        try:
+            flags = getattr(subprocess, "CREATE_NEW_CONSOLE", 0) if sys.platform == "win32" else 0
+            subprocess.Popen([py, str(root / "main.py")], cwd=str(root), creationflags=flags)
+            logger.info(f"[live] handing off to source main.py via {py} @ {root}")
+        except Exception as e:
+            logger.warning(f"[live] hand-off spawn failed: {e}")
+            self.bottom_toolbar.set_info("✦ couldn't go live ✦")
+            return
+        self._quitting = True   # don't ✕-relaunch the frozen build; leave it for good
+        self.close()
 
     # ───── map (scene navigator) ─────
 
