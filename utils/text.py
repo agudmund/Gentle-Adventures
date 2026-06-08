@@ -13,6 +13,7 @@ from pathlib import Path
 from shared_braincell.llm import Backend, make_backend
 from shared_braincell.gemini_image import load_api_key
 from utils.logger import get_logger
+from utils.identity import user_agent
 
 logger = get_logger("gentle")
 
@@ -41,9 +42,11 @@ def build_text_backend(settings: dict, app_dir: Path) -> Backend:
     if name == "gemini":
         backend = make_backend("gemini",
                                model=cfg.get("gemini_model", _DEFAULTS["gemini_model"]),
-                               api_key=load_api_key(app_dir))
+                               api_key=load_api_key(app_dir),
+                               user_agent=user_agent())
     else:
         backend = make_backend("claude",
-                               model=cfg.get("claude_model", _DEFAULTS["claude_model"]))
+                               model=cfg.get("claude_model", _DEFAULTS["claude_model"]),
+                               user_agent=user_agent())
     logger.info(f"[text] backend = {backend.name} ({backend.model})")
     return backend

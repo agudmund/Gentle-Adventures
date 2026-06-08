@@ -19,6 +19,7 @@ import urllib.request
 from pathlib import Path
 
 from utils.logger import get_logger
+from utils.identity import user_agent
 
 logger = get_logger("gentle")
 
@@ -197,7 +198,8 @@ def probe_fastflowlm() -> bool:
 def probe_local_api(url: str = "http://localhost:1234/v1/models", timeout: float = 1.5) -> bool:
     """Return True if an OpenAI-compatible local server (LM Studio etc.) is up."""
     try:
-        with urllib.request.urlopen(url, timeout=timeout) as resp:
+        req = urllib.request.Request(url, headers={"user-agent": user_agent()}, method="GET")
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
             return resp.status == 200
     except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError):
         return False

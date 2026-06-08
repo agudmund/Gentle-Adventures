@@ -18,6 +18,7 @@ import urllib.request
 from pathlib import Path
 
 from utils.logger import get_logger
+from utils.identity import user_agent
 from utils.probe import resolve_flm
 from utils.proc import CREATE_NO_WINDOW
 
@@ -75,7 +76,8 @@ class Oracle:
 
     def _is_up(self, timeout: float = 2.0) -> bool:
         try:
-            with urllib.request.urlopen(f"{self._base()}/v1/models", timeout=timeout) as r:
+            req = urllib.request.Request(f"{self._base()}/v1/models", headers={"user-agent": user_agent()}, method="GET")
+            with urllib.request.urlopen(req, timeout=timeout) as r:
                 return r.status == 200
         except Exception:
             return False
@@ -123,7 +125,7 @@ class Oracle:
         }).encode("utf-8")
         req = urllib.request.Request(
             f"{self._base()}/v1/chat/completions", data=body,
-            headers={"Content-Type": "application/json"}, method="POST")
+            headers={"Content-Type": "application/json", "user-agent": user_agent("Oracle")}, method="POST")
         try:
             with urllib.request.urlopen(req, timeout=120) as r:
                 data = json.loads(r.read().decode("utf-8"))

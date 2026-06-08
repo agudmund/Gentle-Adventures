@@ -16,6 +16,7 @@ import urllib.request
 from pathlib import Path
 
 from utils.logger import get_logger
+from utils.identity import user_agent
 
 logger = get_logger("gentle")
 
@@ -93,13 +94,13 @@ class SheetsClient:
 
     def _get(self, sheet: str):
         qs = urllib.parse.urlencode({"token": self._token, "sheet": sheet})
-        return self._send(urllib.request.Request(f"{self._url}?{qs}", method="GET"))
+        return self._send(urllib.request.Request(f"{self._url}?{qs}", headers={"user-agent": user_agent("Sheets")}, method="GET"))
 
     def _post(self, payload: dict):
         body = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(
             self._url, data=body,
-            headers={"Content-Type": "application/json"}, method="POST")
+            headers={"Content-Type": "application/json", "user-agent": user_agent("Sheets")}, method="POST")
         return self._send(req)
 
     def _send(self, req):

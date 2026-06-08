@@ -44,6 +44,7 @@ from shared_braincell.gemini_image import (
     save_selected_model,
     validate_key,
 )
+from utils.identity import user_agent
 from utils.probe import probe_fastflowlm, probe_npu, raw_hardware_spec, resolve_flm
 from utils.oracle import Oracle
 from utils.scene_cache import SceneCache
@@ -314,7 +315,7 @@ class GentleAdventuresApp(QMainWindow):
 
         default_model = settings.get("gemini", {}).get("model", "gemini-2.5-flash-image")
         selected = load_selected_model(app_dir) or default_model
-        self.image_client = GeminiImageClient(app_dir=app_dir, model=selected)
+        self.image_client = GeminiImageClient(app_dir=app_dir, model=selected, user_agent=user_agent())
 
         self._workers = WorkerRegistry(on_busy_changed=self._on_workers_busy_changed)
         self.current_scene: dict | None = None
