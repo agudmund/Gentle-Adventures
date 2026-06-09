@@ -78,12 +78,15 @@ def main() -> int:
     _watcher = init_watcher()
     _watcher.changed.connect(FamTheme.reload)
 
-    window = GentleAdventuresApp(settings=settings, app_dir=app_dir)
+    start_in_tray = "--minimized" in sys.argv
+    window = GentleAdventuresApp(settings=settings, app_dir=app_dir,
+                                 start_in_tray=start_in_tray)
     _watcher.changed.connect(window._reapply_theme)  # live palette ripple from The Settlers
-    # --minimized (login autostart): come up as a quiet minimized taskbar button
-    # rather than popping the always-on-top window in the user's face on boot.
-    if "--minimized" in sys.argv:
-        window.showMinimized()
+    # --minimized (login autostart): live in the systray only, exactly like the
+    # titlebar minimize button and The Settlers' autostart — no taskbar button,
+    # the window comes back via the tray icon's click / Show.
+    if start_in_tray:
+        window.minimize_to_tray()
     else:
         window.show()
     return app.exec()

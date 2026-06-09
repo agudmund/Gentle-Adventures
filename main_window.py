@@ -301,10 +301,15 @@ class GentleAdventuresApp(QMainWindow):
     # be triggered and never gets occluded — matches Intricate's constant.
     _TASKBAR_TRIGGER_MARGIN = 5
 
-    def __init__(self, settings: dict, app_dir: Path):
+    def __init__(self, settings: dict, app_dir: Path, start_in_tray: bool = False):
         super().__init__()
         self.settings = settings
         self.app_dir = app_dir
+        # Login-autostart (--minimized): the window stays unshown in the systray,
+        # so any fullscreen/maximized session restore must wait until the user
+        # actually summons the window back — see _restore_from_tray.
+        self._start_in_tray = start_in_tray
+        self._deferred_state_restore = False
 
         scenes_subdir = settings.get("paths", {}).get("scenes_dir", "scenes")
         self.scenes_dir = app_dir / scenes_subdir
@@ -396,7 +401,11 @@ class GentleAdventuresApp(QMainWindow):
 
         # Re-apply last session's fullscreen / maximized state once the loop is
         # running (work_area needs the shown window's screen). Fullscreen wins.
-        if self._restore_fullscreen:
+        # On a tray-only autostart this would pop the window over the login
+        # desktop — park the restore until the tray summons the window instead.
+        if self._start_in_tray:
+            self._deferred_state_restore = self._restore_fullscreen or self._restore_maximized
+        elif self._restore_fullscreen:
             QTimer.singleShot(0, self._enter_fullscreen_restored)
         elif self._restore_maximized:
             QTimer.singleShot(0, self.maximize_window)
@@ -906,6 +915,15 @@ class GentleAdventuresApp(QMainWindow):
         self.raise_()
         self.activateWindow()
         self._tray_icon.hide()
+        # First summon after a tray-only autostart: apply the session's
+        # fullscreen / maximized state now that the window is shown and its
+        # screen is known. Fullscreen wins — same precedence as boot.
+        if self._deferred_state_restore:
+            self._deferred_state_restore = False
+            if self._restore_fullscreen:
+                QTimer.singleShot(0, self._enter_fullscreen_restored)
+            elif self._restore_maximized:
+                QTimer.singleShot(0, self.maximize_window)
 
     def _on_tray_activated(self, reason) -> None:
         if reason in (QSystemTrayIcon.ActivationReason.Trigger,
