@@ -272,7 +272,8 @@ then 401/403s on the first `Player_State` write, silently breaking Systems 4 and
 - **Watch:** `llama3.2:3b` is a noisy PASS/FAIL judge — forgiving retry + strict parsing;
   worker collisions (registry); Sheets write-auth is the biggest unknown; subprocess
   fragility (`flm run` buffering/quoting on Windows); persist progress before the
-  self-restart-on-close.
+  tray-menu Restart relaunch (the ✕ now tucks to tray; the exit ritual moved to
+  the tray's Restart / Exit).
 
 ### Section III — High-end visual contrast (The Flex) · large · own phase
 - **Today:** no background layer; every foreground widget paints an opaque `windowBg`
