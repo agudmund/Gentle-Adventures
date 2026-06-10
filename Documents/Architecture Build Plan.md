@@ -2,7 +2,7 @@
 
 > Generated 2026-06-02 from a read-only scoping pass (7 architect agents over the live
 > codebase + 1 synthesis pass). Grounded against the real repo at
-> `C:\Users\thebe\Desktop\Gentle-Adventures`. This is the build map for the
+> `<user-desktop>\Gentle Adventures`. This is the build map for the
 > Architecture Bible's 7 systems — sequencing, shared infrastructure, decisions
 > the captain must make, and the quick wins.
 >
