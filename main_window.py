@@ -19,6 +19,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QThread, Signal, QPropertyAnimation, QEasingCurve, QRect, QTimer, QEvent
 from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtWidgets import (
+    QApplication,
     QMainWindow,
     QVBoxLayout,
     QHBoxLayout,
@@ -371,7 +372,8 @@ class GentleAdventuresApp(QMainWindow):
         self._is_maxed = False
         self._restore_geom_max = None
         self._restore_geom_fullscreen = None   # pre-fullscreen geom, for a sane exit
-        self._quitting = False            # tray "Exit" / Ctrl-C set this; ✕ restarts
+        self._quitting = False            # tray "Exit" / Ctrl-C set this — true exit
+        self._restarting = False          # tray "Restart" sets this — exit ritual + relaunch
         self._restore_maximized = False   # set by _restore_window_geometry
         self._restore_fullscreen = False  # set by _restore_window_geometry
         self._window_state_path = app_dir / "window_state.json"
@@ -820,6 +822,10 @@ class GentleAdventuresApp(QMainWindow):
             from PySide6.QtWidgets import QMenu
             tray_menu = QMenu(self)
         tray_menu.addAction("Show", self._restore_from_tray)
+        # 'Restart' carries the full exit ritual (state save, worker drain,
+        # pycache sweep) + relaunch — what the titlebar ✕ used to do. The ✕
+        # itself now just tucks into the tray, matching The Settlers.
+        tray_menu.addAction("Restart", self._restart_app)
         # 'Live' (dev affordance): hand a frozen build off to the live source
         # main.py via a real Python. Present ONLY when frozen AND a source
         # checkout + interpreter are actually reachable — contextual absence, so
@@ -1497,12 +1503,12 @@ class GentleAdventuresApp(QMainWindow):
     # ───── shutdown ─────
 
     def closeEvent(self, event):
-        """The ✕ button refreshes the app: save window state, sweep bytecode,
-        relaunch a fresh instance, and close this one — Intricate's
-        restart-on-close, so the edit→restart loop never touches the console.
-        Tray 'Exit' and Ctrl-C set self._quitting to skip the relaunch and
-        actually leave. pycache is swept BEFORE the spawn so the child's own
-        startup purge owns a clean tree (no race)."""
+        """The exit ritual: save window state, drain workers, stop the oracle,
+        sweep bytecode. Reached only via tray 'Restart' (relaunch after) or
+        tray 'Exit' / Ctrl-C / 'Live' (leave for good) — the titlebar ✕ no
+        longer closes; it tucks into the tray like The Settlers. pycache is
+        swept BEFORE the spawn so the child's own startup purge owns a clean
+        tree (no race)."""
         self._save_window_state()
         self._workers.stop_all()   # drain in-flight threads cleanly before relaunch
         self.oracle.shutdown()     # stop our local oracle server (only if we started one)
@@ -1514,7 +1520,7 @@ class GentleAdventuresApp(QMainWindow):
             logger.warning(f"pycache cleanup on exit failed: {e}")
         if hasattr(self, "_tray_icon"):
             self._tray_icon.hide()
-        if not self._quitting:
+        if self._restarting:
             self._spawn_restart()
         super().closeEvent(event)
 
@@ -1564,19 +1570,36 @@ class GentleAdventuresApp(QMainWindow):
             logger.warning(f"window state save failed: {e}")
 
     def _quit_app(self) -> None:
-        """True exit (tray 'Exit') — sets the quit flag so closeEvent skips the
-        ✕-button relaunch and the app actually leaves."""
+        """True exit (tray 'Exit') — runs the closeEvent ritual, then quits
+        explicitly: lastWindowClosed never fires for a window that is hidden
+        in the tray, so without the quit() the process would linger headless."""
         self._quitting = True
         self.close()
+        QApplication.quit()
+
+    def _restart_app(self) -> None:
+        """Tray 'Restart' — the full refresh that used to live on the titlebar
+        ✕: closeEvent runs the exit ritual (state save, worker drain, oracle
+        shutdown, pycache sweep), spawns a fresh instance, and this one leaves.
+        Explicit quit() for the same hidden-window reason as _quit_app."""
+        self._restarting = True
+        self.close()
+        QApplication.quit()
 
     def _spawn_restart(self) -> None:
-        """Relaunch a fresh instance. The child inherits this console (no
-        creationflags), so logs keep flowing and Ctrl-C still quits — unlike
-        Intricate's CREATE_NO_WINDOW, which fits its .lnk launch but would
-        detach our dev console. To leave for good: tray 'Exit' or Ctrl-C."""
+        """Relaunch a fresh instance. Frozen-aware (mirrors The Settlers): in
+        the frozen build sys.executable IS Gentle Adventures.exe — a complete
+        entry point, passed alone. In source mode it's the interpreter, so
+        main.py rides along and the child inherits this console (no
+        creationflags) — logs keep flowing and Ctrl-C still quits."""
         try:
-            main_py = self.app_dir / "main.py"
-            subprocess.Popen([sys.executable, str(main_py)])
+            if getattr(sys, "frozen", False):
+                subprocess.Popen(
+                    [sys.executable], cwd=str(self.app_dir),
+                    creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,
+                )
+            else:
+                subprocess.Popen([sys.executable, str(self.app_dir / "main.py")])
             logger.info("[restart] spawned a fresh session — back in a blink ✨")
         except Exception as e:
             logger.warning(f"[restart] spawn failed (closing without relaunch): {e}")
@@ -1634,8 +1657,9 @@ class GentleAdventuresApp(QMainWindow):
             logger.warning(f"[live] hand-off spawn failed: {e}")
             self.bottom_toolbar.set_info("✦ couldn't go live ✦")
             return
-        self._quitting = True   # don't ✕-relaunch the frozen build; leave it for good
+        self._quitting = True   # leave the frozen build for good — the live child takes over
         self.close()
+        QApplication.quit()     # explicit: lastWindowClosed won't fire from the tray
 
     # ───── map (scene navigator) ─────
 

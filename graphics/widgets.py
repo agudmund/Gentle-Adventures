@@ -327,7 +327,10 @@ class TitleBar(QWidget):
         self._btn_max.setIcon(QIcon(Fam.icon(Fam.iconMaximize)))
 
     def _on_close(self):
-        self.window().close()
+        # Family behaviour (matches The Settlers): ✕ tucks the app into the
+        # tray rather than closing. The full exit ritual + relaunch moved to
+        # the tray menu's Restart; true departure is the tray's Exit.
+        self.window().minimize_to_tray()
 
     def _toggle_fullscreen(self):
         # Delegate to the window so it can capture the pre-fullscreen geometry and
