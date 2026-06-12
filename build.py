@@ -143,7 +143,8 @@ class BuildManager:
 
     @classmethod
     def rotateAndArchive(cls, root: Path):
-        archiveDir = root / "archive"
+        # Machine-local build ring — outside the repo, never tracked or browsed
+        archiveDir = Path(os.environ["LOCALAPPDATA"]) / "SingleSharedBraincell" / "BuildArchive" / appName
         ensure_dir(archiveDir)
         docsDir = root / docsFolder
         ensure_dir(docsDir)
@@ -161,12 +162,12 @@ class BuildManager:
 
         if prevExeFile.exists():
             prevExeFile.rename(archExeFile)
-            rotationSummary.append(f"archive/{cls.prevExe} -> archive/{cls.archExe}")
+            rotationSummary.append(f"BuildArchive/{cls.prevExe} -> BuildArchive/{cls.archExe}")
 
         if currentExeFile.exists():
             try:
                 currentExeFile.rename(prevExeFile)
-                rotationSummary.append(f"{cls.exeName} -> archive/{cls.prevExe}")
+                rotationSummary.append(f"{cls.exeName} -> BuildArchive/{cls.prevExe}")
             except PermissionError:
                 return None, []
 

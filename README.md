@@ -30,7 +30,7 @@ The active choice persists in `active_narrative.txt`, and each narrative keeps i
 |---|---|
 | Play | Double-click `Gentle Adventures.vbs` (headless, no console) |
 | Develop | `python main.py` from the app directory |
-| Standalone | `archive/Gentle Adventures_archive.exe` (built by `build.py`) |
+| Standalone | `Gentle Adventures.exe` (thin frozen build over the shared family runtime, produced by `build.py`) |
 
 Needs Python 3.11+ with the family packages installed editable (`pretty_widgets`, `shared_braincell`, `leopold`). Credentials live in environment variables only, never on disk: `GEMINI_API_KEY` (or `SingleSharedBraincell_GeminiKey`) for scene images, `SingleSharedBraincell_ApiKey` for Claude text, `GA_WebApp` and `GA_Ledger` for the Sheet proxy. A first-run wizard handles the Gemini key.
 

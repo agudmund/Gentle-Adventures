@@ -23,7 +23,6 @@ active_narrative.txt
 /_internal/
 /build/
 /dist/
-/archive/
 /__trace_spec__/
 *.spec
 *.exe
