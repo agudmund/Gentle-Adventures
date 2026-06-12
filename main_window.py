@@ -1546,6 +1546,15 @@ class GentleAdventuresApp(QMainWindow):
         self._workers.stop_all()   # drain in-flight threads cleanly before relaunch
         self.oracle.shutdown()     # stop our local oracle server (only if we started one)
         try:
+            # Tuck the orbital twin in (detached EC2 stop — never blocks the
+            # exit; no-op when unconfigured or already asleep). The cores
+            # don't stay warm for an empty room.
+            from utils.hyworld import tuck_in_hyworld
+            if tuck_in_hyworld(self.settings):
+                logger.info("Tucked in the orbital twin on exit.")
+        except Exception as e:
+            logger.warning(f"twin tuck-in on exit failed: {e}")
+        try:
             from utils.housekeeping import clean_pycache
             n = clean_pycache(self.app_dir)
             logger.info(f"Cleaned Python cache on exit ({n} tree(s) swept).")

@@ -79,6 +79,45 @@ def probe_hyworld(settings: dict) -> str | None:
         return None
 
 
+def tuck_in_hyworld(settings: dict) -> bool:
+    """Send the twin back to sleep on app exit — a DETACHED stop-instances that
+    outlives the dying process (the Intricate exit-housekeeping pattern), so the
+    exit ritual never waits on AWS. Fire-and-forget: stop on an already-stopped
+    instance is a no-op, an unreachable cloud just means the whisper is lost.
+    True when the whisper was sent (configured + CLI present), False otherwise."""
+    cfg = _cfg(settings)
+    if not cfg:
+        return False
+    exe = shutil.which("aws")
+    if not exe:
+        logger.debug("[hyworld] aws CLI not on PATH — no tuck-in from here")
+        return False
+    cmd = [exe, "ec2", "stop-instances",
+           "--instance-ids", str(cfg["instance_id"]), "--output", "json"]
+    if cfg.get("profile"):
+        cmd += ["--profile", str(cfg["profile"])]
+    if cfg.get("region"):
+        cmd += ["--region", str(cfg["region"])]
+    try:
+        import os
+        if os.name == "nt":
+            flags = (subprocess.DETACHED_PROCESS
+                     | subprocess.CREATE_NEW_PROCESS_GROUP
+                     | CREATE_NO_WINDOW)
+            subprocess.Popen(cmd, creationflags=flags,
+                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL)
+        else:
+            subprocess.Popen(cmd, start_new_session=True,
+                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL)
+        logger.info("[hyworld] tuck-in sent — the twin yawns back to sleep")
+        return True
+    except Exception as e:
+        logger.debug(f"[hyworld] tuck-in stumbled: {e}")
+        return False
+
+
 def wake_hyworld(settings: dict) -> str | None:
     """Ask AWS to start the twin. Returns the state it reports ('pending' on a
     fresh wake, 'running' if it was already up — start-instances is idempotent),
