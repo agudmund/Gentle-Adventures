@@ -19,7 +19,7 @@ def app_root() -> Path:
     Why this exists — PyInstaller --onedir bundles the code under ``_internal/``,
     which GA junctions to the SHARED ``../_runtime``. So in a frozen build any
     ``Path(__file__).parent...`` in a *non-entry* module resolves INTO the shared
-    runtime, not next to the .exe: asset reads miss (icons/, scenes/, the play
+    runtime, not next to the .exe: asset reads miss (Images/Icons/, Images/Scenes/, the play
     sticker) and — worse — writes (logs, Documents/Data, caches) would pollute
     the runtime that every family app junctions to. Always derive app-local
     paths from here, never from a non-entry module's ``__file__``.

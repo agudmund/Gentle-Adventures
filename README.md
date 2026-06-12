@@ -46,7 +46,8 @@ graphics/                  Self-contained UI citizens: widgets, scene map,
 utils/                     Fail-able features, lazy-imported so a fault stays
                            scoped to one file: sheets client, player state,
                            NPU probe, oracle, text backends, sticker loot
-scenes/                    Cached Gemini-rendered scene art
+Images/                    Icons (brand mark, stickers) and cached
+                           Gemini-rendered scene art
 Documents/                 Design briefs, the narrator voice guide, build
                            manifest, oracle transcripts
 settings.toml              Live-read window, theme, model, and game values

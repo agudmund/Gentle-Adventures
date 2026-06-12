@@ -312,7 +312,7 @@ class GentleAdventuresApp(QMainWindow):
         self._start_in_tray = start_in_tray
         self._deferred_state_restore = False
 
-        scenes_subdir = settings.get("paths", {}).get("scenes_dir", "scenes")
+        scenes_subdir = settings.get("paths", {}).get("scenes_dir", "Images/Scenes")
         self.scenes_dir = app_dir / scenes_subdir
         # Image-state manager — checks/loads/stores baked scene art so a scene
         # is painted once and reloaded forever (the cache is committed to the
@@ -805,9 +805,9 @@ class GentleAdventuresApp(QMainWindow):
 
     def _setup_system_tray(self) -> None:
         """System tray icon with a Show / Exit menu. The icon is playIcon —
-        Gentle Adventures' brand mark, copied into icons/ from the family set."""
+        Gentle Adventures' brand mark, copied into Images/Icons/ from the family set."""
         self._tray_icon = QSystemTrayIcon(self)
-        icon_path = self.app_dir / "icons" / "playIcon.ico"
+        icon_path = self.app_dir / "Images" / "Icons" / "playIcon.ico"
         if icon_path.exists():
             self._tray_icon.setIcon(QIcon(str(icon_path)))
         else:
@@ -855,7 +855,7 @@ class GentleAdventuresApp(QMainWindow):
         import winreg
         from PySide6.QtCore import QBuffer, QIODevice
 
-        icon_path = self.app_dir / "icons" / "playIcon.ico"
+        icon_path = self.app_dir / "Images" / "Icons" / "playIcon.ico"
         if not icon_path.exists():
             return
 
@@ -963,7 +963,7 @@ class GentleAdventuresApp(QMainWindow):
             body = f"{body}\n\n✦ painter says: {error}"
         self.narrative.set_text(body, verified=None)
         # Scene 0 is the one frame the painter can't paint for itself — it shows
-        # BEFORE a key is connected, so it ships pre-rendered in scenes/. Show it
+        # BEFORE a key is connected, so it ships pre-rendered in Images/Scenes/. Show it
         # when present; fall back to the placeholder if it's ever missing (e.g. a
         # partial clone or a stripped build).
         if self.scene_cache.has("commissioning"):

@@ -26,7 +26,7 @@ claude_model = "claude-opus-4-8"
 gemini_model = "gemini-3.5-flash"
 
 [paths]
-scenes_dir = "scenes"
+scenes_dir = "Images/Scenes"
 
 [game]
 # Persisted resume point — the launcher reads this on startup.

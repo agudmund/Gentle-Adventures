@@ -234,7 +234,7 @@ class TitleBar(QWidget):
         # gently touching them; no hand-pointer swap on hover.
         btn.setFocusPolicy(Qt.NoFocus)
         if icon_name:
-            # Family icons resolve via Theme.icon() → app icons/ then the asset
+            # Family icons resolve via Theme.icon() → app Images/Icons/ then the asset
             # vault ($SingleSharedBraincell_AssetVault/Icons). Missing → honest
             # circle, no crash. main.py's FamTheme.reload() loads the mappings.
             btn.setIcon(QIcon(Fam.icon(icon_name)))
@@ -676,7 +676,7 @@ class NarrativePanel(QWidget):
         # 2px white rule out from its centre — the Majestic's "lines and stickers"
         # treatment, dropped between paragraphs as the reveal crosses them.
         from utils.paths import app_root
-        _play = app_root() / "icons" / "playIcon.png"
+        _play = app_root() / "Images" / "Icons" / "playIcon.png"
         self._play_url = _play.as_uri() if _play.exists() else ""
 
         # ── typewriter state ─────────────────────────────────────────────────

@@ -66,7 +66,7 @@ def main() -> int:
 
     app = QApplication(sys.argv)
     # Window + taskbar icon: playIcon, Gentle Adventures' brand mark.
-    _app_icon = app_dir / "icons" / "playIcon.ico"
+    _app_icon = app_dir / "Images" / "Icons" / "playIcon.ico"
     if _app_icon.exists():
         app.setWindowIcon(QIcon(str(_app_icon)))
     register_app_fonts()  # load Chandler42's full style table before any widget builds
@@ -74,6 +74,9 @@ def main() -> int:
     # Load the shared family Theme (colors + [theme.icons]) so the titlebar
     # icons resolve from the asset vault, and live-reload it when the shared
     # settings.toml changes — same wiring as the rest of the suite.
+    # GA keeps its repo-local icons under Images/Icons (not the ./icons/
+    # default), so repoint Theme's app-local lookup before first resolution.
+    FamTheme.set_local_icons_subfolder("Images/Icons")
     FamTheme.reload()
     _watcher = init_watcher()
     _watcher.changed.connect(FamTheme.reload)

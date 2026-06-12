@@ -35,7 +35,7 @@ from send2trash import send2trash
 # --- Configuration ---
 appName      = "Gentle Adventures"
 entryPoint   = "main.py"
-iconsFolder  = "icons"
+iconsFolder  = "Images/Icons"
 appIconFile  = "playIcon.ico"               # GA's brand mark (matches main.py's window/taskbar icon)
 docsFolder   = str(Path("Documents") / "Build")
 

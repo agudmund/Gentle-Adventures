@@ -28,6 +28,6 @@ active_narrative.txt
 *.spec
 *.exe
 
-# NOTE: scenes/*.png ARE committed on purpose — a generated scene image is
+# NOTE: Images/Scenes/*.png ARE committed on purpose — a generated scene image is
 # canonical game art, baked into the repo so it travels with a fresh clone and
 # reloads on revisit/relaunch instead of re-commissioning the painter.
