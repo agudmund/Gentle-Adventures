@@ -6,7 +6,6 @@ Documents/Data/Logs/
 
 # Local secrets and runtime state — never commit
 .gemini_key
-.gemini_model
 window_state.json
 
 # Local-first caches of the Google Sheet (the source of truth) + the persisted

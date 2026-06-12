@@ -39,10 +39,8 @@ from shared_braincell.gemini_image import (
     GeminiAuthError,
     GeminiImageClient,
     load_api_key,
-    load_selected_model,
     pick_default_image_model,
     save_api_key,
-    save_selected_model,
     validate_key,
 )
 from utils.identity import GEMINI_KEY_ENV, user_agent
@@ -319,8 +317,10 @@ class GentleAdventuresApp(QMainWindow):
         # repo, so it travels with a clone and survives close/reopen).
         self.scene_cache = SceneCache(self.scenes_dir)
 
-        default_model = settings.get("gemini", {}).get("model", "gemini-2.5-flash-image")
-        selected = load_selected_model(app_dir) or default_model
+        # [gemini].model in settings.toml is the single source of truth for the
+        # painter — the .gemini_model sidecar is retired. Wizard picks apply for
+        # the session; a durable swap is a settings.toml edit.
+        selected = settings.get("gemini", {}).get("model", "gemini-2.5-flash-image")
         self.image_client = GeminiImageClient(app_dir=app_dir, model=selected, user_agent=user_agent(), key_env_var=GEMINI_KEY_ENV)
 
         self._workers = WorkerRegistry(on_busy_changed=self._on_workers_busy_changed)
@@ -996,17 +996,15 @@ class GentleAdventuresApp(QMainWindow):
             save_api_key(self.app_dir, self._pending_key, env_var=GEMINI_KEY_ENV)
         self._pending_key = ""
 
-        # Honour an existing saved selection if it's still accessible
-        selected = load_selected_model(self.app_dir)
+        # Honour the settings.toml choice if this key can actually reach it
+        selected = self.image_client.model
         if selected and selected in models:
-            self.image_client.set_model(selected)
             self._after_painter()
             return
 
-        # Otherwise auto-pick the strongest and offer override
+        # Otherwise auto-pick the strongest for the session and offer override
         default = pick_default_image_model(models) or models[0]
         self.image_client.set_model(default)
-        save_selected_model(self.app_dir, default)
         self._enter_setup_model(default)
 
     def _on_validation_failure(self, error: str, is_auth: bool):
@@ -1771,8 +1769,7 @@ class GentleAdventuresApp(QMainWindow):
         if action == "pick_model":
             model = choice.get("model")
             if model:
-                self.image_client.set_model(model)
-                save_selected_model(self.app_dir, model)
+                self.image_client.set_model(model)   # session-scoped; settings.toml stays the durable choice
                 self._after_painter()
             return
         if action == "quit":
