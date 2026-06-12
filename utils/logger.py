@@ -66,8 +66,10 @@ def _stdlib_logger(name: str) -> logging.Logger:
     fmt = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s", "%H:%M:%S")
     try:
         from utils.paths import app_root
-        logs_dir = app_root() / "logs"
-        logs_dir.mkdir(exist_ok=True)
+        # Family convention: app-local logs live under Documents/Data/Logs/
+        # (the shared [shared] log_dir fallback shape), not a root-level logs/.
+        logs_dir = app_root() / "Documents" / "Data" / "Logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
         fh = logging.FileHandler(logs_dir / "gentle.log", mode="w", encoding="utf-8")
         fh.setLevel(logging.DEBUG)
         fh.setFormatter(fmt)
@@ -90,8 +92,8 @@ def init_logger(app_dir: Path):
     logger = get_logger("gentle")
     if _HAVE_FAMILY:
         try:
-            backend = intricate_log.BACKEND
-            path = intricate_log.log_file_path() or "(shared log dir)"
+            backend = leopold.BACKEND
+            path = leopold.log_file_path() or "(shared log dir)"
         except Exception:
             backend, path = "family", "(shared log dir)"
         logger.info(f"Gentle Adventures logger ready — intricate_log [{backend}] → {path}")
