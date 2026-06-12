@@ -15,6 +15,15 @@ Part of the Single Shared Braincell family, alongside Intricate, The Majestic, a
 - **Carries psychological weather.** A click-through overlay of rain, wind, and mist whose intensity follows the story's emotional state.
 - **Degrades by absence, not by error.** No NPU aboard? The scene becomes a kind, patient place that imagines one. Missing FastFlowLM gets an in-world nudge. Nothing in the game shows a red wall.
 
+## Two adventures
+
+The title bar carries a narrative selector, fed by a drop-in registry in `data/quest.py`. Each narrative is one Quest_Log-shaped tab in the same Sheet; add a tab and a registry line, and a new adventure appears in the selector.
+
+- **Gentle Adventures** (default): the NPU tour described above. The ship learns to use its own small grid of minds.
+- **HY-World**: the orbital twin. Some thoughts are bigger than one small ship, so the captain climbs to a second light holding steady in orbit: their own GPU machine on AWS, an EC2 box built for the heavy paint and the long thinking, with answers sent home as if they'd never left. A short three-beat ascent ends in a confirmation scene where two little real-time mini-games (Llama no Drama Lama, and The Void and the Noid) are the soft proof the orbital twin is awake. The live probe gating that final scene wires in once the box is up.
+
+The active choice persists in `active_narrative.txt`, and each narrative keeps its own offline floor (`data/quest_floor.json`, `data/hyworld_floor.json`) resynced from the live Sheet.
+
 ## Running it
 
 | Way | How |
