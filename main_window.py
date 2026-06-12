@@ -113,6 +113,26 @@ class HyWorldWakeWorker(QThread):
         self.settled.emit(state)
 
 
+class HyWorldStatusWorker(QThread):
+    """Ask after the orbital twin (describe-instances) off the UI thread —
+    the in-game `hy status`. Reports state + public IP; empty state means
+    no word came back from orbit."""
+
+    reported = Signal(str, str)   # state, public ip ('' when none)
+
+    def __init__(self, settings: dict):
+        super().__init__()
+        self._settings = settings
+
+    def run(self):
+        from utils.hyworld import status_hyworld   # departmental: lazy
+        res = status_hyworld(self._settings)
+        if res:
+            self.reported.emit(res[0], res[1])
+        else:
+            self.reported.emit("", "")
+
+
 class SceneRequestWorker(QThread):
     image_ready = Signal(bytes, str)
     image_failed = Signal(str, str)
@@ -1819,6 +1839,9 @@ class GentleAdventuresApp(QMainWindow):
         if action == "wake_hyworld":
             self._wake_hyworld()
             return
+        if action == "hyworld_status":
+            self._ask_after_twin()
+            return
         if action == "quit":
             self.close()
             return
@@ -2006,6 +2029,24 @@ class GentleAdventuresApp(QMainWindow):
             self.bottom_toolbar.set_info(f"✦ the twin stirs ({state}) — warming the cores… ✦")
         else:
             self.bottom_toolbar.set_info("✦ the whisper didn't reach orbit — the twin sleeps on ✦")
+
+    def _ask_after_twin(self):
+        """The Lookout choice: the same describe-instances `hy status` runs,
+        answered on the bottom strip in the ship's voice."""
+        self.bottom_toolbar.set_info("✦ the lookout raises the long glass… ✦")
+        worker = HyWorldStatusWorker(self.settings)
+        worker.reported.connect(self._on_twin_status)
+        self._workers.run(worker)
+
+    def _on_twin_status(self, state: str, ip: str):
+        where = f" at {ip}" if ip else ""
+        lines = {
+            "running":  f"✦ the twin is awake{where} — cores warm ✦",
+            "pending":  "✦ the twin stirs — not yet at the rail ✦",
+            "stopping": "✦ the twin is yawning down to sleep ✦",
+            "stopped":  "✦ the twin sleeps, cores cold, blanket on ✦",
+        }
+        self.bottom_toolbar.set_info(lines.get(state, "✦ no word from orbit ✦"))
 
     def _on_hyworld_settled(self, state: str):
         if state == "running":

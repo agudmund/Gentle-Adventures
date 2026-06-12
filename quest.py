@@ -512,6 +512,7 @@ HYWORLD_QUEST = [
         ),
         "choices": [
             {"label": "Watch them play", "next": "hy_confirm"},
+            {"label": "Up to the lookout", "next": "hy_lookout"},
             {"label": "Home, to the ship", "next": "hy_ascent"},
         ],
         "verify": "hyworld",
@@ -523,6 +524,7 @@ HYWORLD_QUEST = [
         ),
         "choices_absent": [
             {"label": "Wake the orbital twin", "action": "wake_hyworld"},
+            {"label": "Up to the lookout", "next": "hy_lookout"},
             {"label": "Home, to the ship", "next": "hy_ascent"},
         ],
         "image_prompt": (
@@ -530,6 +532,31 @@ HYWORLD_QUEST = [
             "wall: a calm cute llama hopping (Llama no Drama Lama) and tiny round "
             "dark blobs with sleepy eyes tumbling out of a soft void being gently "
             "booped (void-noids), cozy 3D, warm proof-of-life glow, chibi style."
+        ),
+    },
+    {
+        "id": "hy_lookout",
+        "title": "HY-World, 04 — The Lookout",
+        "narrative": (
+            "A narrow stair curls up from the games wall to a small glass dome — "
+            "the lookout.\n\n"
+            "A long brass glass rests on the rail, already aimed at the twin's "
+            "berth. The ship asks the harbour the same small question your console "
+            "asks — \"how is she?\" — and the harbour always answers plainly.\n\n"
+            "Raise the glass whenever you wonder, Captain. Wondering is free; "
+            "only the warm cores cost coin."
+        ),
+        "choices": [
+            {"label": "Ask after the twin", "action": "hyworld_status"},
+            {"label": "Back to the games", "next": "hy_confirm"},
+            {"label": "Home, to the ship", "next": "hy_ascent"},
+        ],
+        "verify": None,
+        "image_prompt": (
+            "A tiny chibi astronaut in a small round glass observatory dome atop "
+            "a pastel space station, peering through a long brass telescope aimed "
+            "at a distant warm station-light among soft stars, cozy 3D, glossy "
+            "toy finish, dreamy bokeh, gentle volumetric light."
         ),
     },
 ]

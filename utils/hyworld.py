@@ -79,6 +79,25 @@ def probe_hyworld(settings: dict) -> str | None:
         return None
 
 
+def status_hyworld(settings: dict) -> tuple[str, str] | None:
+    """State + public IP, the in-game `hy status`: ("running", "3.92.1.7"),
+    ("stopped", ""), … or None when unconfigured/unreachable. The Lookout
+    scene asks this — the same describe-instances the console wrapper runs."""
+    cfg = _cfg(settings)
+    if not cfg:
+        return None
+    payload = _aws(["ec2", "describe-instances",
+                    "--instance-ids", str(cfg["instance_id"])], cfg, _PROBE_TIMEOUT)
+    try:
+        inst = payload["Reservations"][0]["Instances"][0]
+        state = str(inst["State"]["Name"])
+        ip = str(inst.get("PublicIpAddress") or "")
+        logger.info(f"[hyworld] lookout: twin is {state}{' at ' + ip if ip else ''}")
+        return state, ip
+    except (TypeError, KeyError, IndexError):
+        return None
+
+
 def tuck_in_hyworld(settings: dict) -> bool:
     """Send the twin back to sleep on app exit — a DETACHED stop-instances that
     outlives the dying process (the Intricate exit-housekeeping pattern), so the
