@@ -28,20 +28,27 @@ try:
 except Exception:
     pass
 
-from quest import _rows_to_scenes
+from quest import _FLOOR_FILES, _rows_to_scenes
 from utils.sheets import SheetsClient
 
 
 def main() -> int:
-    rows = SheetsClient().read_sheet("Quest_Log")
-    scenes = _rows_to_scenes(rows)
-    if not scenes:
-        print("Quest_Log empty or unreadable — floor NOT updated.")
-        return 1
-    out = Path(__file__).resolve().parent.parent / "Documents" / "Data" / "quest_floor.json"
-    out.write_text(json.dumps(scenes, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"resynced floor: {len(scenes)} scene(s) -> {out.relative_to(out.parent.parent.parent)}")
-    return 0
+    """Resync every registered tab's committed floor (quest._FLOOR_FILES) from
+    the live Sheet. A tab that's empty/unreachable keeps its existing floor."""
+    client = SheetsClient()
+    data_dir = Path(__file__).resolve().parent.parent / "Documents" / "Data"
+    failures = 0
+    for tab, fn in _FLOOR_FILES.items():
+        rows = client.read_sheet(tab)
+        scenes = _rows_to_scenes(rows)
+        if not scenes:
+            print(f"{tab} empty or unreadable — {fn} NOT updated.")
+            failures += 1
+            continue
+        out = data_dir / fn
+        out.write_text(json.dumps(scenes, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"resynced floor: {tab} {len(scenes)} scene(s) -> Documents/Data/{fn}")
+    return 1 if failures else 0
 
 
 if __name__ == "__main__":

@@ -42,12 +42,13 @@ def _prompt(specific: str) -> str:
 #   image_prompt: full text sent to Gemini (already styled)
 #   narrative   : the story panel text
 #   choices     : list of buttons. Each has label + next (scene id) or action.
-#   verify      : optional — "npu" | "fastflowlm" | None — system probe to confirm
-#   narrative_absent / choices_absent : optional — shown INSTEAD when verify=="npu"
-#                 fails (no NPU aboard). Lets the story itself become the gentle
-#                 guide. A verify=="npu" scene without its own narrative_absent
-#                 simply gets NO_NPU_NOTE appended, so the tour reads as a lovely
-#                 'someday' rather than a broken step.
+#   verify      : optional — "npu" | "fastflowlm" | "hyworld" | None — system
+#                 probe to confirm (hyworld = the orbital twin EC2, utils/hyworld)
+#   narrative_absent / choices_absent : optional — shown INSTEAD when the scene's
+#                 verify fails (no NPU aboard, the twin asleep). Lets the story
+#                 itself become the gentle guide. A verify=="npu" scene without
+#                 its own narrative_absent simply gets NO_NPU_NOTE appended, so
+#                 the tour reads as a lovely 'someday' rather than a broken step.
 # ─────────────────────────────────────────────────────────────────────────────
 
 # Appended to any NPU-gated scene's narrative when no neural engine is found and
@@ -357,6 +358,11 @@ _SHEET_COLUMNS = {
     "Choices_JSON": "choices",
     "Verify_Trigger": "verify",
     "Image_Prompt": "image_prompt",
+    # Optional absent-face columns — shown INSTEAD when the row's verify fails
+    # (the twin asleep, no NPU aboard). Older tabs without these columns parse
+    # exactly as before; by-name mapping keeps them order-independent.
+    "Narrative_Absent": "narrative_absent",
+    "Choices_Absent_JSON": "choices_absent",
 }
 
 
@@ -384,14 +390,27 @@ def _rows_to_scenes(rows: list[list]) -> list[dict]:
         except Exception as e:
             logger.warning(f"[ledger] scene {sid!r}: bad Choices_JSON ({e}); using empty choices")
             choices = []
-        scenes.append({
+        scene = {
             "id": sid,
             "title": str(cells.get("Title", "") or ""),
             "narrative": str(cells.get("Narrative_Template", "") or ""),
             "choices": choices,
             "verify": (str(cells.get("Verify_Trigger") or "").strip() or None),
             "image_prompt": str(cells.get("Image_Prompt", "") or ""),
-        })
+        }
+        # Absent face (optional columns) — same JSON guard as Choices_JSON.
+        absent_n = str(cells.get("Narrative_Absent", "") or "").strip()
+        if absent_n:
+            scene["narrative_absent"] = absent_n
+        raw_absent = cells.get("Choices_Absent_JSON")
+        if raw_absent and str(raw_absent).strip():
+            try:
+                ca = json.loads(raw_absent) if isinstance(raw_absent, str) else raw_absent
+                if isinstance(ca, list) and ca:
+                    scene["choices_absent"] = ca
+            except Exception as e:
+                logger.warning(f"[ledger] scene {sid!r}: bad Choices_Absent_JSON ({e}); ignoring")
+        scenes.append(scene)
     return scenes
 
 
@@ -496,6 +515,16 @@ HYWORLD_QUEST = [
             {"label": "Home, to the ship", "next": "hy_ascent"},
         ],
         "verify": "hyworld",
+        "narrative_absent": (
+            "The wall stays dark, and patient.\n\n"
+            "Somewhere far above, the bigger room is sleeping — cores cold, fans "
+            "still, the two little games tucked away in their tiles.\n\n"
+            "One whisper would wake it, Captain. Shall we send it up?"
+        ),
+        "choices_absent": [
+            {"label": "Wake the orbital twin", "action": "wake_hyworld"},
+            {"label": "Home, to the ship", "next": "hy_ascent"},
+        ],
         "image_prompt": (
             "Two playful pastel mini-game vignettes glowing on an orbital-station "
             "wall: a calm cute llama hopping (Llama no Drama Lama) and tiny round "

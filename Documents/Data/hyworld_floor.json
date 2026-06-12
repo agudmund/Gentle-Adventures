@@ -1,0 +1,73 @@
+[
+  {
+    "id": "hy_ascent",
+    "title": "HY-World, 00 — The Long Climb",
+    "narrative": "Some thoughts are bigger than one small ship.\n\nThe NPU does what it can, breathing softly — but tonight the captain looks up, past the blur, to a second light holding steady in orbit.\n\nHY-World. A bigger room, built for the heavy thinking. Still ours — just further up.\n\nShall we climb?",
+    "choices": [
+      {
+        "label": "Climb to HY-World",
+        "next": "hy_arrival"
+      },
+      {
+        "label": "Ask what waits up there",
+        "next": "hy_arrival"
+      }
+    ],
+    "verify": null,
+    "image_prompt": "A chibi astronaut in a soft pastel-pink spaceship bridge looking up through a round window at a second glowing station-light holding steady in orbit among stars, cozy 3D, soft bloom, gentle palette."
+  },
+  {
+    "id": "hy_arrival",
+    "title": "HY-World, 01 — The Orbital Twin",
+    "narrative": "The hatch opens onto a wide, humming hall.\n\nNot a faraway data centre — yours. The same little mind as the ship's llama, only with room to stretch: more memory, more cores, the heavy paint and the long thinking the NPU would labour over.\n\n\"When I can't carry it alone,\" the ship murmurs, \"I pass it up here. It comes back in your own voice — never a borrowed giant.\"\n\nThe orbital twin waits, patient and bright.",
+    "choices": [
+      {
+        "label": "See what it can do",
+        "next": "hy_warmup"
+      }
+    ],
+    "verify": null,
+    "image_prompt": "A chibi astronaut drifting into a wide glowing pastel orbital-station hall, soft humming machines and warm light, big friendly cores, cozy 3D."
+  },
+  {
+    "id": "hy_warmup",
+    "title": "HY-World, 02 — Warming the Cores",
+    "narrative": "A dial turns. Far-off fans rise from a whisper to a gentle roar, then settle.\n\nThe cores warm — starlight pooling in glass. This is where the big pictures get painted and the long answers get thought, then sent home to the ship as if they'd never left.\n\n\"Almost ready,\" the twin says. \"Shall we see if it's truly awake?\"",
+    "choices": [
+      {
+        "label": "Wake the little games",
+        "next": "hy_confirm"
+      }
+    ],
+    "verify": null,
+    "image_prompt": "Glowing pastel GPU cores warming up like starlight pooling in glass tubes, a small chibi astronaut watching with wonder, soft warm bloom, cozy 3D."
+  },
+  {
+    "id": "hy_confirm",
+    "title": "HY-World, 03 — Two Little Games",
+    "narrative": "If HY-World is awake, two little games bloom on the wall:\n\nLlama no Drama Lama — a calm llama hops from tile to tile, never flustered, answering riddles without a single bead of sweat.\n\nThe Void and the Noid — tiny void-noids tumble out of the dark, and you boop them gently back to sleep.\n\nThe orbital twin paints them in real time. If you can see them playing, HY-World is running — soft proof, no dials to read.\n\nWelcome to the bigger room, Captain.",
+    "choices": [
+      {
+        "label": "Watch them play",
+        "next": "hy_confirm"
+      },
+      {
+        "label": "Home, to the ship",
+        "next": "hy_ascent"
+      }
+    ],
+    "verify": "hyworld",
+    "image_prompt": "Two playful pastel mini-game vignettes glowing on an orbital-station wall: a calm cute llama hopping (Llama no Drama Lama) and tiny round dark blobs with sleepy eyes tumbling out of a soft void being gently booped (void-noids), cozy 3D, warm proof-of-life glow, chibi style.",
+    "narrative_absent": "The wall stays dark, and patient.\n\nSomewhere far above, the bigger room is sleeping — cores cold, fans still, the two little games tucked away in their tiles.\n\nOne whisper would wake it, Captain. Shall we send it up?",
+    "choices_absent": [
+      {
+        "label": "Wake the orbital twin",
+        "action": "wake_hyworld"
+      },
+      {
+        "label": "Home, to the ship",
+        "next": "hy_ascent"
+      }
+    ]
+  }
+]

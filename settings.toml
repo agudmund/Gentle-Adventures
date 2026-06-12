@@ -28,6 +28,15 @@ gemini_model = "gemini-3.5-flash"
 [paths]
 scenes_dir = "Images/Scenes"
 
+[hyworld]
+# The orbital twin — the captain's own GPU machine on AWS (the HY-World
+# narrative's second light in orbit). Woken in-game through the aws CLI;
+# an empty instance_id means the twin is unconfigured on this machine and
+# the scene simply plays its asleep face (contextual absence).
+instance_id = "i-0c651442d11880187"
+profile = "penelope"
+region = "us-east-1"
+
 [game]
 # Persisted resume point — the launcher reads this on startup.
 last_scene = ""

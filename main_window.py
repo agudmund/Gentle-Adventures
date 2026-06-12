@@ -82,6 +82,37 @@ class KeyValidationWorker(QThread):
             self.failed.emit(str(e), False)
 
 
+class HyWorldWakeWorker(QThread):
+    """Whisper the orbital twin awake (EC2 start) and wait for it to truly run.
+    `stirred` fires as soon as AWS accepts the wake; `settled` reports the state
+    once the instance reaches 'running' (or the patience budget runs out)."""
+
+    stirred = Signal(str)   # state right after the wake request ('' = unreachable)
+    settled = Signal(str)   # final state after polling
+
+    _POLL_S = 6.0
+    _BUDGET_S = 150.0
+
+    def __init__(self, settings: dict):
+        super().__init__()
+        self._settings = settings
+
+    def run(self):
+        import time
+        from utils.hyworld import probe_hyworld, wake_hyworld   # departmental: lazy
+        state = wake_hyworld(self._settings) or ""
+        self.stirred.emit(state)
+        if not state:
+            self.settled.emit("")
+            return
+        waited = 0.0
+        while state != "running" and waited < self._BUDGET_S:
+            time.sleep(self._POLL_S)
+            waited += self._POLL_S
+            state = probe_hyworld(self._settings) or state
+        self.settled.emit(state)
+
+
 class SceneRequestWorker(QThread):
     image_ready = Signal(bytes, str)
     image_failed = Signal(str, str)
@@ -671,8 +702,10 @@ class GentleAdventuresApp(QMainWindow):
             verified = self._npu_engine is not None
         else:
             verified = self._verify(verify_kind)
-        if verify_kind == "npu" and not verified:
-            narrative = fresh.get("narrative_absent") or (fresh["narrative"] + "\n\n" + NO_NPU_NOTE)
+        if verify_kind and not verified:
+            # Contextual absence for ANY verify kind — npu keeps its bespoke note
+            fallback = (fresh["narrative"] + "\n\n" + NO_NPU_NOTE) if verify_kind == "npu" else fresh["narrative"]
+            narrative = fresh.get("narrative_absent") or fallback
             choices = fresh.get("choices_absent") or fresh["choices"]
         else:
             narrative = fresh["narrative"]
@@ -1222,8 +1255,10 @@ class GentleAdventuresApp(QMainWindow):
         # "not detected". A scene may carry its own narrative_absent (the rich
         # first-contact guide on 'discovery'); any other NPU-gated scene simply
         # gets NO_NPU_NOTE appended so the tour reads as a lovely 'someday'.
-        if verify_kind == "npu" and not verified:
-            narrative = scene.get("narrative_absent") or (scene["narrative"] + "\n\n" + NO_NPU_NOTE)
+        if verify_kind and not verified:
+            # Contextual absence for ANY verify kind — npu keeps its bespoke note
+            fallback = (scene["narrative"] + "\n\n" + NO_NPU_NOTE) if verify_kind == "npu" else scene["narrative"]
+            narrative = scene.get("narrative_absent") or fallback
             choices = scene.get("choices_absent") or scene["choices"]
         else:
             narrative = scene["narrative"]
@@ -1772,6 +1807,9 @@ class GentleAdventuresApp(QMainWindow):
                 self.image_client.set_model(model)   # session-scoped; settings.toml stays the durable choice
                 self._after_painter()
             return
+        if action == "wake_hyworld":
+            self._wake_hyworld()
+            return
         if action == "quit":
             self.close()
             return
@@ -1937,4 +1975,32 @@ class GentleAdventuresApp(QMainWindow):
         # descriptor (for the bottom strip), not just this bool.
         if kind == "fastflowlm":
             return probe_fastflowlm()
+        if kind == "hyworld":
+            from utils.hyworld import probe_hyworld   # departmental: lazy
+            return probe_hyworld(self.settings) == "running"
         return None
+
+    # ───── HY-World: wake the orbital twin (EC2) ─────
+
+    def _wake_hyworld(self):
+        """The hy_confirm wake choice: ask AWS to start the twin on a worker,
+        narrate gently meanwhile, and re-enter the scene once it settles so the
+        re-probe flips the wall to its awake face."""
+        self.bottom_toolbar.set_info("✦ whispering up to the orbital twin… ✦")
+        worker = HyWorldWakeWorker(self.settings)
+        worker.stirred.connect(self._on_hyworld_stirred)
+        worker.settled.connect(self._on_hyworld_settled)
+        self._workers.run(worker)
+
+    def _on_hyworld_stirred(self, state: str):
+        if state:
+            self.bottom_toolbar.set_info(f"✦ the twin stirs ({state}) — warming the cores… ✦")
+        else:
+            self.bottom_toolbar.set_info("✦ the whisper didn't reach orbit — the twin sleeps on ✦")
+
+    def _on_hyworld_settled(self, state: str):
+        if state == "running":
+            self.bottom_toolbar.set_info("✦ the orbital twin is awake ✦")
+        cur = self.current_scene
+        if state == "running" and cur and cur.get("verify") == "hyworld":
+            self._load_scene(cur["id"])   # re-probe paints the awake face
