@@ -512,16 +512,16 @@ _FLOOR_FILES = {"Quest_Log": "quest_floor.json", "HY_World": "hyworld_floor.json
 
 
 def _load_floor_json(tab: str) -> list[dict] | None:
-    """The committed offline floor for `tab` (e.g. data/quest_floor.json), resynced
-    from the live Sheet. Preferred over the inline lists so a fresh clone with no
-    network + no snapshot opens on current content. Resolves next to this module
-    (source/clone use); returns None when absent or running frozen (where __file__
-    is in the bundle), so the inline lists are the compiled-in backstop."""
+    """The committed offline floor for `tab` (e.g. Documents/Data/quest_floor.json),
+    resynced from the live Sheet. Preferred over the inline lists so a fresh clone
+    with no network + no snapshot opens on current content. Resolves via app_root()
+    (frozen-aware), so source runs and the frozen exe in the repo root read the
+    same floor; the inline lists remain the backstop when it's absent."""
     fn = _FLOOR_FILES.get(tab)
     if not fn:
         return None
     try:
-        p = Path(__file__).resolve().parent / fn
+        p = _app_root() / "Documents" / "Data" / fn
         if p.exists():
             data = json.loads(p.read_text(encoding="utf-8"))
             if isinstance(data, list) and data:

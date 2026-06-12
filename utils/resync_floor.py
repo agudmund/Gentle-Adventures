@@ -6,10 +6,10 @@
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 
-# Pulls the live Quest_Log and writes data/quest_floor.json — the committed
-# offline floor the Ledger prefers over the (hand-formatted, drift-prone) inline
-# QUEST when there's no network AND no per-tab snapshot. Re-run whenever the
-# Sheet has moved on (as a module, so `data` is importable):
+# Pulls the live Quest_Log and writes Documents/Data/quest_floor.json — the
+# committed offline floor the Ledger prefers over the (hand-formatted,
+# drift-prone) inline QUEST when there's no network AND no per-tab snapshot.
+# Re-run whenever the Sheet has moved on (as a module, so `quest` is importable):
 #   python -m utils.resync_floor
 #
 # Source-side only: the frozen app keeps the inline QUEST as its compiled-in
@@ -28,7 +28,7 @@ try:
 except Exception:
     pass
 
-from data.quest import _rows_to_scenes
+from quest import _rows_to_scenes
 from utils.sheets import SheetsClient
 
 
@@ -38,9 +38,9 @@ def main() -> int:
     if not scenes:
         print("Quest_Log empty or unreadable — floor NOT updated.")
         return 1
-    out = Path(__file__).resolve().parent.parent / "data" / "quest_floor.json"
+    out = Path(__file__).resolve().parent.parent / "Documents" / "Data" / "quest_floor.json"
     out.write_text(json.dumps(scenes, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"resynced floor: {len(scenes)} scene(s) -> {out.relative_to(out.parent.parent)}")
+    print(f"resynced floor: {len(scenes)} scene(s) -> {out.relative_to(out.parent.parent.parent)}")
     return 0
 
 

@@ -2,7 +2,7 @@
 
 Gentle Adventures can run its quest from a **live Google Sheet** (the *Ledger*) and
 push a **Player_State heartbeat** back up to it. This is optional: when it's not
-configured, GA runs perfectly on the **bundled quest** baked into `data/quest.py`.
+configured, GA runs perfectly on the **bundled quest** baked into `quest.py`.
 Nothing breaks — the cloud layer is a bonus, not a dependency.
 
 This note explains how to tell whether the Ledger is on, and how to turn it on.
@@ -101,7 +101,7 @@ thing you lose is live editing of scenes from the Sheet and the heartbeat.
 
 - Transport: `utils/sheets.py` (`SheetsClient`) — raw `urllib`, the proxy always
   answers **HTTP 200** with errors in the body, so the client inspects the body.
-- Content: `data/quest.py` (`_Ledger`) maps `Quest_Log` rows → scene dicts by
+- Content: `quest.py` (`_Ledger`) maps `Quest_Log` rows → scene dicts by
   **column name** (robust to column reordering), with the bundled `QUEST` as the
   fallback.
 - Config resolution: `load_proxy_config()` — environment first, then

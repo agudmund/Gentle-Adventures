@@ -11,7 +11,7 @@
 #                      and print where they linger. Read-only; surfaces the signal,
 #                      never auto-heals (the family's drift-accountability posture).
 #   --push           — re-mint the Quest_Log tab from the bundled QUEST in
-#                      data/quest.py (code is canon, the sheet is its mirror).
+#                      quest.py (code is canon, the sheet is its mirror).
 #                      Diff-preview by default; --apply actually writes.
 #
 # Why this and not a generated Sheets CLI: the family already owns an Apps Script
@@ -36,7 +36,7 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from utils.sheets import SheetsClient, SheetsError          # noqa: E402
-from data.quest import QUEST, _SHEET_COLUMNS                # noqa: E402
+from quest import QUEST, _SHEET_COLUMNS                # noqa: E402
 
 # ── Control surfaces — edit these like a console ─────────────────────────────
 # Tabs to sweep. Quest_Log is the content mirror; Player_State is live state.

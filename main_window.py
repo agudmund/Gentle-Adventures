@@ -28,7 +28,7 @@ from PySide6.QtWidgets import (
     QSystemTrayIcon,
 )
 
-from data.quest import all_scenes, first_scene_id, get_scene, reload_quest, switch_narrative, NO_NPU_NOTE, NPU_PROBING_NOTE
+from quest import all_scenes, first_scene_id, get_scene, reload_quest, switch_narrative, NO_NPU_NOTE, NPU_PROBING_NOTE
 from pretty_widgets.graphics.Theme import Theme as Fam
 from graphics.widgets import BottomToolbar, InteractionBar, NarrativePanel, ResizeGrip, SceneView, TitleBar
 from graphics.scene_map import SceneMap

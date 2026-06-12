@@ -5,7 +5,7 @@ How Gentle Adventures uses its shared Google Sheet, and the tools that keep it h
 ## The model: the Sheet is the live source of truth
 
 The `Quest_Log` tab of the shared Google Sheet is the **live, dynamically-editable
-source of truth** — the state machine. At startup the `_Ledger` (in `data/quest.py`)
+source of truth** — the state machine. At startup the `_Ledger` (in `quest.py`)
 reads `Quest_Log` through the Apps Script proxy (`utils/sheets.py`, raw urllib) and
 serves scenes from it; the bundled `QUEST` list in `quest.py` is the **fallback
 baseline** used only when the sheet is empty or unreachable.
@@ -35,7 +35,7 @@ state has to be **dynamically editable to be futureproof**, so the Sheet stays c
 
 ## Narratives: one Quest_Log-shaped tab per adventure
 
-The Ledger is not married to a single story. `NARRATIVES` in `data/quest.py` is a
+The Ledger is not married to a single story. `NARRATIVES` in `quest.py` is a
 drop-in registry mapping a narrative key to a Sheet tab, and the titlebar carries a
 selector fed by it. Add a tab to the Sheet plus one registry line, and a new
 adventure appears in the selector with the full Ledger machinery behind it (live
@@ -71,8 +71,8 @@ gets a kind in-world beat, never an error).
 ### Per-tab offline floors
 
 Each tab keeps its own committed floor file, resynced from the live Sheet by
-`utils/resync_floor.py`: `_FLOOR_FILES` maps `Quest_Log` → `data/quest_floor.json`
-and `HY_World` → `data/hyworld_floor.json`. A floor file is preferred over the
+`utils/resync_floor.py`: `_FLOOR_FILES` maps `Quest_Log` → `Documents/Data/quest_floor.json`
+and `HY_World` → `Documents/Data/hyworld_floor.json`. A floor file is preferred over the
 compiled-in lists (`QUEST`, `HYWORLD_QUEST`) so a fresh clone with no network
 still opens on current content; the inline lists remain the frozen-build backstop.
 

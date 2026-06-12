@@ -168,12 +168,12 @@ class TitleBar(QWidget):
         self._combo = pretty_combo()
         self._combo.setParent(self)
         self._combo.setFixedWidth(self._COMBO_W)
-        # Narrative selector — registry-driven (data.quest.NARRATIVES). With one
+        # Narrative selector — registry-driven (quest.NARRATIVES). With one
         # narrative it reads as the old single-entry label; add a narrative tab
         # and it becomes a live switcher: currentIndexChanged -> narrative_changed
         # -> main_window swaps the active Quest_Log tab. blockSignals while
         # populating (Qt fires activated on programmatic setCurrentIndex).
-        from data.quest import narratives as _narratives, active_narrative_key as _active_nk
+        from quest import narratives as _narratives, active_narrative_key as _active_nk
         self._combo.blockSignals(True)
         for _n in _narratives():
             self._combo.addItem(_n["label"], _n["key"])

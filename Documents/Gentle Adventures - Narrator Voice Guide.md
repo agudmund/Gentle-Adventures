@@ -144,6 +144,6 @@ axis the `WeatherOverlay` reads, and it must **ease in like a tide, never snap**
   purest quiet-reflective pole. `NO_NPU_NOTE` + the `discovery` scene's
   `narrative_absent` (the merchant/hugs passage) are the purest expressions of
   contextual-absence-as-someday.
-- Canonical narration + `STYLE_PREAMBLE` + `NO_NPU_NOTE` live in `data/quest.py`.
+- Canonical narration + `STYLE_PREAMBLE` + `NO_NPU_NOTE` live in `quest.py`.
 - Honours the family memory: *echo of my own thoughts*, invitation-not-demand,
   contextual absence, nurture-only, gallery-not-trench, constructive terminology.

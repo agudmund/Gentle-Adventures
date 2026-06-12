@@ -83,7 +83,7 @@ class SheetsClient:
         writes  POST {token, sheet, updates}   -> {"ok": true}
 
     Transport only: mapping Quest_Log rows into scene dicts is the Ledger's job
-    (data/quest.py), not this courier's.
+    (quest.py), not this courier's.
     """
 
     def __init__(self, app_dir: Path | None = None, timeout: float = 15.0):
