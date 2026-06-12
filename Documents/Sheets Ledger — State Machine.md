@@ -55,18 +55,25 @@ Registered today:
   The Void and the Noid) bloom on the station wall as the soft, dial-free proof
   the twin is awake.
 
-The `HY_World` tab does not exist in the Sheet yet; the narrative currently plays
-from its inline floor. The moment the tab is created it becomes canon for that
-adventure, same as `Quest_Log` (the registry comment in `quest.py` records this
-contract).
+The `HY_World` tab is live in the Sheet (created 2026-06-12) and is canon for
+the adventure, same as `Quest_Log`; the inline `HYWORLD_QUEST` and the committed
+floor remain the offline safety net.
 
-### The hyworld verify (Part B, gated)
+### The hyworld verify — live (2026-06-12)
 
-`hy_confirm` carries `verify: "hyworld"` — the probe hook for the gated half of
-the adventure. Once the EC2 box is up, the live probe and render-proof wire in
-behind that key: the scene verifies by the twin actually answering, in the same
-contextual-absence shape as the `npu` and `fastflowlm` verifies (an absent twin
-gets a kind in-world beat, never an error).
+`hy_confirm` carries `verify: "hyworld"`, now wired end-to-end: the probe
+(`utils/hyworld.py`) shells the `aws` CLI — the family's silent-subprocess
+pattern, no SDK in-app — and the scene verifies only when the EC2 twin reports
+`running`. Asleep, the scene plays its absent face from the new optional Sheet
+columns `Narrative_Absent` / `Choices_Absent_JSON` (general to any verify kind):
+a dark patient wall offering **Wake the orbital twin**, which starts the
+instance on a worker, narrates on the bottom strip, and re-enters the scene when
+the twin settles to `running`. On app exit (the closeEvent ritual behind tray
+Restart / Exit / Live), `tuck_in_hyworld` sends a detached `stop-instances` so
+the cores never stay warm for an empty room. `[hyworld]` in GA's settings.toml
+names the instance, profile, and region. The render-proof — the two little
+games painted live by the twin — remains the next chapter, once something on
+the box is listening.
 
 ### Per-tab offline floors
 
