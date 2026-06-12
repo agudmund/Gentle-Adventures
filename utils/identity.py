@@ -11,6 +11,11 @@ from __future__ import annotations
 __version__ = "0.1.0"
 _APP_NAME = "GentleAdventures"
 
+# Gentle Adventures' own Gemini key slot — outranks the legacy .gemini_key
+# file and the generic GEMINI_API_KEY in shared_braincell's key resolution,
+# so this app's painter is keyed independently of its siblings.
+GEMINI_KEY_ENV = "GEMINI_GENTLE_KEY"
+
 
 def user_agent(feature: str = "") -> str:
     """Family User-Agent: ``GentleAdventures[/<Feature>]/<version> (SingleSharedBraincell)``.

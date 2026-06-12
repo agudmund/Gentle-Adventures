@@ -13,7 +13,7 @@ from pathlib import Path
 from shared_braincell.llm import Backend, make_backend
 from shared_braincell.gemini_image import load_api_key
 from utils.logger import get_logger
-from utils.identity import user_agent
+from utils.identity import GEMINI_KEY_ENV, user_agent
 
 logger = get_logger("gentle")
 
@@ -32,7 +32,7 @@ def build_text_backend(settings: dict, app_dir: Path) -> Backend:
     """Construct the configured text backend (Claude default, Gemini swappable).
 
     Reads the [llm] block from settings. For the gemini case we inject GA's own
-    resolved key (it may live in a .gemini_key file, which the shared module
+    resolved key (GEMINI_GENTLE_KEY env first, then legacy fallbacks the shared module
     can't see); Claude reads the family env key (SingleSharedBraincell_ApiKey)
     itself. Construction never hits the network — a missing key only surfaces as
     an LLMAuthError when complete() is actually called.
@@ -42,7 +42,7 @@ def build_text_backend(settings: dict, app_dir: Path) -> Backend:
     if name == "gemini":
         backend = make_backend("gemini",
                                model=cfg.get("gemini_model", _DEFAULTS["gemini_model"]),
-                               api_key=load_api_key(app_dir),
+                               api_key=load_api_key(app_dir, env_var=GEMINI_KEY_ENV),
                                user_agent=user_agent())
     else:
         backend = make_backend("claude",

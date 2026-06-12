@@ -45,7 +45,7 @@ from shared_braincell.gemini_image import (
     save_selected_model,
     validate_key,
 )
-from utils.identity import user_agent
+from utils.identity import GEMINI_KEY_ENV, user_agent
 from utils.probe import probe_fastflowlm, probe_npu, raw_hardware_spec, resolve_flm
 from utils.oracle import Oracle
 from utils.scene_cache import SceneCache
@@ -321,7 +321,7 @@ class GentleAdventuresApp(QMainWindow):
 
         default_model = settings.get("gemini", {}).get("model", "gemini-2.5-flash-image")
         selected = load_selected_model(app_dir) or default_model
-        self.image_client = GeminiImageClient(app_dir=app_dir, model=selected, user_agent=user_agent())
+        self.image_client = GeminiImageClient(app_dir=app_dir, model=selected, user_agent=user_agent(), key_env_var=GEMINI_KEY_ENV)
 
         self._workers = WorkerRegistry(on_busy_changed=self._on_workers_busy_changed)
         self.current_scene: dict | None = None
@@ -939,7 +939,7 @@ class GentleAdventuresApp(QMainWindow):
     # ───── boot flow ─────
 
     def _start(self):
-        key = load_api_key(self.app_dir)
+        key = load_api_key(self.app_dir, env_var=GEMINI_KEY_ENV)
         if not key:
             self._enter_setup_key()
             return
@@ -992,8 +992,8 @@ class GentleAdventuresApp(QMainWindow):
 
     def _on_validation_success(self, models: list):
         self.available_models = models
-        if not load_api_key(self.app_dir):
-            save_api_key(self.app_dir, self._pending_key)
+        if not load_api_key(self.app_dir, env_var=GEMINI_KEY_ENV):
+            save_api_key(self.app_dir, self._pending_key, env_var=GEMINI_KEY_ENV)
         self._pending_key = ""
 
         # Honour an existing saved selection if it's still accessible
