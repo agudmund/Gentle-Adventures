@@ -228,6 +228,9 @@ class BuildManager:
             ["cmd", "/c", "mklink", "/J", str(internal), str(_RUNTIME_DIR)],
             check=True, capture_output=True,
         )
+        # Born hidden — _internal is build plumbing, never browsed by hand.
+        # /L sets the attribute on the junction itself, not the target.
+        subprocess.run(["attrib", "+h", str(internal), "/L"], capture_output=True)
 
         for folder in [buildFolder, distFolder]:
             if folder.exists():
