@@ -33,6 +33,49 @@ state has to be **dynamically editable to be futureproof**, so the Sheet stays c
 > baseline (the offline safety net), NOT the canon. Don't frame `quest.py` as the
 > source of truth — that's backwards for this experiment.
 
+## Narratives: one Quest_Log-shaped tab per adventure
+
+The Ledger is not married to a single story. `NARRATIVES` in `data/quest.py` is a
+drop-in registry mapping a narrative key to a Sheet tab, and the titlebar carries a
+selector fed by it. Add a tab to the Sheet plus one registry line, and a new
+adventure appears in the selector with the full Ledger machinery behind it (live
+canon, offline floor, sanitizer coverage). The active choice persists in
+`active_narrative.txt`; `switch_narrative()` repoints the Ledger and re-pulls.
+
+Registered today:
+
+- **`npu` → `Quest_Log`** (default): the bundled NPU tour. Everything in this
+  document was written against this tab; it remains the reference narrative.
+- **`hyworld` → `HY_World`**: the secondary adventure, **HY-World, the orbital
+  twin**. Where the NPU tour is about the small grid of minds inside the ship,
+  HY-World is the bigger room: the captain's own GPU machine on AWS (an EC2 box)
+  for the heavy paint and the long thinking, with answers sent home as if they'd
+  never left. A three-beat ascent (`hy_ascent` → `hy_arrival` → `hy_warmup`) ends
+  in `hy_confirm`, where two little real-time mini-games (Llama no Drama Lama, and
+  The Void and the Noid) bloom on the station wall as the soft, dial-free proof
+  the twin is awake.
+
+The `HY_World` tab does not exist in the Sheet yet; the narrative currently plays
+from its inline floor. The moment the tab is created it becomes canon for that
+adventure, same as `Quest_Log` (the registry comment in `quest.py` records this
+contract).
+
+### The hyworld verify (Part B, gated)
+
+`hy_confirm` carries `verify: "hyworld"` — the probe hook for the gated half of
+the adventure. Once the EC2 box is up, the live probe and render-proof wire in
+behind that key: the scene verifies by the twin actually answering, in the same
+contextual-absence shape as the `npu` and `fastflowlm` verifies (an absent twin
+gets a kind in-world beat, never an error).
+
+### Per-tab offline floors
+
+Each tab keeps its own committed floor file, resynced from the live Sheet by
+`utils/resync_floor.py`: `_FLOOR_FILES` maps `Quest_Log` → `data/quest_floor.json`
+and `HY_World` → `data/hyworld_floor.json`. A floor file is preferred over the
+compiled-in lists (`QUEST`, `HYWORLD_QUEST`) so a fresh clone with no network
+still opens on current content; the inline lists remain the frozen-build backstop.
+
 ## The sanitizer — `utils/sanitize_sheets.py`
 
 A small operator tool over the **existing proxy** (no new SDK/OAuth — raw-HTTP
