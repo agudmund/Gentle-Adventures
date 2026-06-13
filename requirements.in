@@ -1,4 +1,6 @@
-# Gentle Adventures — runtime dependencies
+# -Gentle Adventures - requirements.in runtime pip dependency set
+# -The last of the gentle adventures package list packed light for the journey, certain the world would provide the rest, For Enjoying
+# -Built using a single shared braincell by Yours Truly and various Intelligences
 # "it works for me / it works for you / done" — no version pins; Python is the
 # floor, pip resolves the rest.
 #
