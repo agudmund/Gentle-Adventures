@@ -1340,39 +1340,48 @@ class GentleAdventuresApp(QMainWindow):
         the ISO timestamp of its first occurrence. The high-res trace stays in the
         local .log (logger.info); the Sheet gets the semantic summary. Reuses the
         local-first set -> off-thread flush spine; the gold spectral pulse fires only
-        on the FIRST milestone of the session (whisper-volume)."""
+        on the first milestone of the session to CONFIRM a round-trip (whisper-volume)
+        — claimed at fire time, so an unreachable first milestone can't spend it."""
         if name in self._milestones:
             return
         self._milestones.add(name)
         from datetime import datetime, timezone
         ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         logger.info(f"[milestone] {name} @ {ts}")
-        first = not self._milestone_pulsed
-        self._milestone_pulsed = True
-        self._sync_player_state({name: ts}, pulse=first)
+        self._sync_player_state({name: ts}, milestone=True)
 
-    def _sync_player_state(self, updates: dict, pulse: bool = True) -> None:
+    def _sync_player_state(self, updates: dict, pulse: bool = True, milestone: bool = False) -> None:
         """Local-FIRST: persist to the on-board logbook instantly (a disconnect can
         never cost progress), then attempt the cloud push off the UI thread. The dot
         goes amber the moment there's unsynced data, gold once the Ledger confirms.
         With no proxy it still saves locally — the dot just stays dim.
 
-        `pulse` gates the gold spectral flash on a confirmed round-trip; milestone
-        writes pass pulse=False after the first so the heartbeat stays whisper-quiet."""
+        `pulse` gates the gold spectral flash on a confirmed round-trip for ordinary
+        writes. A `milestone` write instead claims the session's single gold heartbeat
+        pulse atomically when it confirms (see _on_state_synced), so the flash lands on
+        the first milestone to actually round-trip and can never double-fire."""
         self.player_state.set(updates)
         if not self.sheets:
             self._set_ledger_indicator("off")
             return
         self._set_ledger_indicator("pending")
         worker = PlayerStateSyncWorker(self.player_state)
-        worker.synced.connect(lambda reached, p=pulse: self._on_state_synced(reached, p))
+        worker.synced.connect(lambda reached, p=pulse, m=milestone: self._on_state_synced(reached, p, m))
         self._workers.run(worker)
 
-    def _on_state_synced(self, reached: bool, pulse: bool = True) -> None:
+    def _on_state_synced(self, reached: bool, pulse: bool = True, milestone: bool = False) -> None:
         if reached:
             # Reached the stars and came back — gold tick + dot to live (unless
             # newer changes are already buffered behind it).
-            if pulse:
+            if milestone:
+                # Claim the session's single gold heartbeat pulse at fire time: an
+                # earlier milestone that never reached the cloud didn't spend it, and
+                # two near-simultaneous milestones (npu + oracle fire back-to-back)
+                # can't both flash.
+                if not self._milestone_pulsed:
+                    self._milestone_pulsed = True
+                    self.bottom_toolbar.spectral_pulse()
+            elif pulse:
                 self.bottom_toolbar.spectral_pulse()
             self._set_ledger_indicator("live" if not self.player_state.has_pending() else "pending")
         else:
