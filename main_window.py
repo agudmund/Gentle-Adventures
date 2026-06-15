@@ -782,6 +782,16 @@ class GentleAdventuresApp(QMainWindow):
         self._is_maxed = not collapsing    # the expanded strip fills the work area
         self.title_bar.reflect_maximized(self._is_maxed)
         self._update_ledger_pulse()        # curtains down -> pause the heartbeat
+        # Persist the expanded ("maximized") state immediately. The curtain roll
+        # IS this app's maximize — expanding auto-fills the work area (the anim's
+        # end value above) — but unlike maximize_window / restore_window /
+        # toggle_fullscreen it wasn't persisting, so build.py's hard-kill on
+        # rebuild (no closeEvent) lost it and the relaunch reopened from a stale
+        # window_state.json. Save on EXPAND only: deferred past the roll so the
+        # settled work-area geometry is stored, and so a collapse never persists
+        # the thin hem strip as the window size.
+        if not collapsing:
+            QTimer.singleShot(duration, self._save_window_state)
 
     def _reveal_body_content(self) -> None:
         """Re-show the body's content widgets after an expand settles (or on a
