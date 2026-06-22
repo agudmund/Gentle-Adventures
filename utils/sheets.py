@@ -86,7 +86,7 @@ class SheetsClient:
     (quest.py), not this courier's.
     """
 
-    def __init__(self, app_dir: Path | None = None, timeout: float = 15.0):
+    def __init__(self, app_dir: Path | None = None, timeout: float = 25.0):
         self._url, self._token = load_proxy_config(app_dir)
         self.timeout = timeout
 
@@ -107,8 +107,13 @@ class SheetsClient:
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                 raw = resp.read().decode("utf-8")
-        except urllib.error.URLError as e:
-            raise SheetsAPIError(f"proxy unreachable: {getattr(e, 'reason', e)}") from e
+        except (urllib.error.URLError, TimeoutError) as e:
+            # TimeoutError (socket.timeout since 3.10) is a sibling of URLError, not a
+            # subclass, so a read-phase timeout would otherwise escape unclassified and
+            # the Ledger would log it at WARNING ("unexpected"). Catch it here as a known
+            # transport fault so a routine Apps-Script cold-start blip takes the calm
+            # DEBUG ("unavailable") path instead — same last-good fallback either way.
+            raise SheetsAPIError(f"proxy unreachable or timed out: {getattr(e, 'reason', e)}") from e
         try:
             data = json.loads(raw)
         except json.JSONDecodeError:
