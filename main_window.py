@@ -645,7 +645,12 @@ class GentleAdventuresApp(QMainWindow):
         if self.sheets:
             self._ledger_pulse = QTimer(self)
             self._ledger_pulse.timeout.connect(self._tick_ledger)
-            self._ledger_pulse.start(_LEDGER_PULSE_MS)
+            # Don't poll from boot when we launched straight into the tray (login
+            # autostart): the window is never shown, so no one is watching for live
+            # edits and polling hidden just burns Apps Script quota. _restore_from_tray
+            # starts the pulse the moment the window is actually summoned.
+            if not self._start_in_tray:
+                self._ledger_pulse.start(_LEDGER_PULSE_MS)
 
     def eventFilter(self, obj, event):
         # Keep the weather overlay covering the narrative+scene row as it resizes.
@@ -977,6 +982,9 @@ class GentleAdventuresApp(QMainWindow):
         """Hide the window into the system tray (the titlebar – button)."""
         self._tray_icon.show()
         self.hide()
+        # hide() is not a WindowStateChange, so changeEvent may not fire — pause the
+        # heartbeat explicitly. No network polling while we sit in the tray.
+        self._update_ledger_pulse()
 
     def _restore_from_tray(self) -> None:
         """Bring the window back from the tray."""
@@ -984,6 +992,10 @@ class GentleAdventuresApp(QMainWindow):
         self.raise_()
         self.activateWindow()
         self._tray_icon.hide()
+        # Resume the heartbeat now the window is back — pulls fresh once on wake.
+        # Symmetric partner to minimize_to_tray's explicit pause, and the path that
+        # starts the pulse at all after a boot-straight-to-tray launch.
+        self._update_ledger_pulse()
         # First summon after a tray-only autostart: apply the session's
         # fullscreen / maximized state now that the window is shown and its
         # screen is known. Fullscreen wins — same precedence as boot.
