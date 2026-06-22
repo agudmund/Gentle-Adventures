@@ -5,7 +5,6 @@
 *.md text eol=lf
 *.qss text eol=lf
 *.json text eol=lf
-*.intricate text eol=lf
 # Binary — leave untouched
 *.ico binary
 *.png binary
@@ -14,7 +13,7 @@
 *.gif binary
 *.webp binary
 *.psd binary
-# Video — never text-diff these, they're the DAW's source material
+# Video
 *.mp4 binary
 *.mov binary
 *.mkv binary
@@ -23,7 +22,7 @@
 *.wmv binary
 *.flv binary
 *.m4v binary
-# Audio — DAW and VideoNode ingestion formats
+# Audio
 *.wav binary
 *.mp3 binary
 *.flac binary
@@ -37,5 +36,3 @@
 *.tif binary
 *.tiff binary
 *.pyd binary
-# Large executables tracked via LFS when present
-*.exe filter=lfs diff=lfs merge=lfs -text
