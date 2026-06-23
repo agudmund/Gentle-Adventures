@@ -421,6 +421,11 @@ class GentleAdventuresApp(QMainWindow):
         self._curtains_collapsed = False
         self._curtain_anim = None
         self._is_maxed = False
+        # Window-size floor (see setMinimumSize below). 600x600 clears the lowest
+        # plausible screen (800x600) and sits well above this app's rich-UI natural
+        # size, so a degenerate geometry can never settle near it. _save_window_state
+        # treats anything below this floor as corrupt and substitutes the default.
+        self._MIN_W, self._MIN_H = 600, 600
         self._restore_geom_max = None
         self._restore_geom_fullscreen = None   # pre-fullscreen geom, for a sane exit
         self._quitting = False            # tray "Exit" / Ctrl-C set this — true exit
@@ -445,10 +450,18 @@ class GentleAdventuresApp(QMainWindow):
         # Resizable from the bottom-right (ported from Intricate's grip): a
         # min-size floor + a corner handle that drags the geometry. No OS resize
         # cursor (family convention) — the painted glyph is the affordance.
-        self.setMinimumSize(480, 360)
+        self.setMinimumSize(self._MIN_W, self._MIN_H)
         self.resize_grip = ResizeGrip(self, parent=self.centralWidget())
         self.resize_grip.raise_()
         self._position_resize_grip()
+        # Debounced save for a genuine grip-resize. build.py hard-kills on rebuild
+        # (no closeEvent), so a manual resize would otherwise be lost — only the
+        # managed states (maximize/curtain/fullscreen) persisted. Coalesced so a
+        # drag writes once, after it settles, not on every frame.
+        self._resize_save_timer = QTimer(self)
+        self._resize_save_timer.setSingleShot(True)
+        self._resize_save_timer.setInterval(400)
+        self._resize_save_timer.timeout.connect(self._save_resize_if_normal)
         self._setup_system_tray()
         self._start()
 
@@ -509,6 +522,23 @@ class GentleAdventuresApp(QMainWindow):
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self._position_resize_grip()
+        # Persist a settled grip-resize (debounced). The guard in _save_resize_if_normal
+        # skips the managed/animating states so this only ever captures a real
+        # user-driven windowed resize.
+        if getattr(self, "_resize_save_timer", None) is not None:
+            self._resize_save_timer.start()
+
+    def _save_resize_if_normal(self) -> None:
+        """Debounced-resize save, fired 400ms after the last resizeEvent. Only a
+        plain windowed resize is persisted: skip pre-show startup, the rolled-up
+        curtain strip (would persist the hem), and the maximized / fullscreen
+        states (which save their own restore geometry). Without these guards a
+        collapse would overwrite the good maximized state with a windowed one."""
+        if not self.isVisible():
+            return
+        if self._curtains_collapsed or self._is_maxed or self.isFullScreen():
+            return
+        self._save_window_state()
 
     def _position_resize_grip(self):
         """Keep the bottom-right resize handle pinned to the corner, and tuck it
@@ -796,6 +826,11 @@ class GentleAdventuresApp(QMainWindow):
         # settled work-area geometry is stored, and so a collapse never persists
         # the thin hem strip as the window size.
         if not collapsing:
+            # Restore the size floor that the roll-up dropped to 0, then save —
+            # both deferred past the roll so the settled work-area geometry is
+            # stored and the floor is only re-imposed once the window is full
+            # again (never while it is the thin hem strip).
+            QTimer.singleShot(duration, lambda: self.setMinimumHeight(self._MIN_H))
             QTimer.singleShot(duration, self._save_window_state)
 
     def _reveal_body_content(self) -> None:
@@ -1629,6 +1664,11 @@ class GentleAdventuresApp(QMainWindow):
                 state = json.loads(self._window_state_path.read_text(encoding="utf-8"))
         except Exception as e:
             logger.warning(f"window state load failed: {e}")
+        # Remember the configured default — _save_window_state falls back to it
+        # when the live geometry is degenerate (below the floor), so a corrupt
+        # pre-maximize size can never be persisted or self-perpetuate.
+        self._default_win_size = (int(win_cfg.get("width", 960)),
+                                  int(win_cfg.get("height", 1080)))
         w = int(state.get("width", win_cfg.get("width", 960)))
         h = int(state.get("height", win_cfg.get("height", 1080)))
         self.resize(w, h)
@@ -1651,9 +1691,23 @@ class GentleAdventuresApp(QMainWindow):
             geom = self._restore_geom_max
         else:
             geom = self.geometry()
+        # Keystone guard: never persist a sub-floor (degenerate) size. The window
+        # is "always maximized", so the stored width/height is a shadow pre-maximize
+        # geometry that is captured at fragile moments (a rolled-up strip, a min-
+        # clamped restore) and can rot down to the floor, then self-perpetuate
+        # (next launch re-captures it). If either dimension is below the floor, fall
+        # back to the configured default so a corrupt size can never be written.
+        w, h = geom.width(), geom.height()
+        if w < self._MIN_W or h < self._MIN_H:
+            dw, dh = getattr(self, "_default_win_size", (960, 1080))
+            logger.warning(f"window state: degenerate geom {w}x{h} below floor "
+                           f"{self._MIN_W}x{self._MIN_H} — saving default {dw}x{dh}")
+            x, y, w, h = geom.x(), geom.y(), dw, dh
+        else:
+            x, y = geom.x(), geom.y()
         state = {
-            "x": geom.x(), "y": geom.y(),
-            "width": geom.width(), "height": geom.height(),
+            "x": x, "y": y,
+            "width": w, "height": h,
             "maximized": maxed,
             "fullscreen": fullscreen,
         }
