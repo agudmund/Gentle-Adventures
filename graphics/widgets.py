@@ -209,10 +209,10 @@ class TitleBar(QWidget):
         self._fade_anim = None
 
         # ── right cluster: minimize / maximize / exid ──
-        self._btn_min = self._control("–", self._on_minimize, icon_name=Fam.iconTray, tooltip="Minimize")
+        self._btn_min = self._control("–", self._send_to_tray, icon_name=Fam.iconTray, tooltip="Minimize")
         self._btn_max = self._control("□", self._on_maximize, icon_name=Fam.iconMaximize, tooltip="Maximize")
         self._btn_close = self._control(
-            "✕", self._on_close, icon_name=Fam.iconClose, close=True,
+            "✕", self._send_to_tray, icon_name=Fam.iconClose, close=True,
             tooltip="Exid, not a typo.  It's an exit button named exid",
         )
         for b in (self._btn_min, self._btn_max, self._btn_close):
@@ -308,9 +308,13 @@ class TitleBar(QWidget):
         super().showEvent(event)
         self._reposition()
 
-    def _on_minimize(self):
-        # Minimize-to-tray (family behaviour): hide the window and surface the
-        # tray icon. It comes back via the tray icon click or its Show menu.
+    def _send_to_tray(self):
+        # Both – (minimize) and ✕ (exid) route here: family behaviour is that
+        # neither truly closes — they hide the window and surface the tray icon,
+        # which brings it back via click / Show. The full exit ritual + relaunch
+        # lives on the tray menu's Restart; true departure is the tray's Exit.
+        # (The two buttons exist for the conventional three-control titlebar look;
+        # only their tooltips differ.)
         self.window().minimize_to_tray()
 
     def _on_maximize(self):
@@ -327,11 +331,6 @@ class TitleBar(QWidget):
         """
         self._btn_max.setIcon(QIcon(Fam.icon(Fam.iconMaximize)))
 
-    def _on_close(self):
-        # Family behaviour (matches The Settlers): ✕ tucks the app into the
-        # tray rather than closing. The full exit ritual + relaunch moved to
-        # the tray menu's Restart; true departure is the tray's Exit.
-        self.window().minimize_to_tray()
 
     def _toggle_fullscreen(self):
         # Delegate to the window so it can capture the pre-fullscreen geometry and
