@@ -79,13 +79,15 @@ class ResizeGrip(QWidget):
             event.accept()
 
     def mouseMoveEvent(self, event) -> None:
-        if self._drag and self._press_global is not None:
+        # _press_size is checked too: it is set together with _drag in the press,
+        # so the guard is always true in practice, but the explicit check lets the
+        # type-checker narrow it (no Optional-member-access false positive below).
+        if self._drag and self._press_global is not None and self._press_size is not None:
             delta = event.globalPosition().toPoint() - self._press_global
-            # Absolute floors as well as the window minimum — the curtains roll
-            # zeroes setMinimumHeight() mid-gesture and doesn't restore it, so
-            # minimumHeight() alone could let the grip shrink the window to nothing.
-            floor_w = max(self._win.minimumWidth(), 320)
-            floor_h = max(self._win.minimumHeight(), 240)
+            # Floor at the window's own minimum (restored after every curtain
+            # expand), so the grip can never drag the window below it.
+            floor_w = self._win.minimumWidth()
+            floor_h = self._win.minimumHeight()
             new_w = max(floor_w, self._press_size.width()  + delta.x())
             new_h = max(floor_h, self._press_size.height() + delta.y())
             self._win.resize(new_w, new_h)
