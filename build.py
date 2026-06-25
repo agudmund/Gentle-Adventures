@@ -7,7 +7,7 @@
 """
 
 # Ported from The Settlers' build.py (the family's reference build pipeline):
-# OneDir + shared-runtime junction (_internal -> ../_runtime) + curated log
+# OneDir + shared-runtime junction (_internal -> the shared runtime) + curated log
 # filter + 3-slot archive rotation + version-stamped Build Version.md, then a
 # relaunch. Deltas vs Settlers: app name/icon, GA's hidden-import set (GA reads
 # settings via stdlib tomllib so NO tomli_w; GA DOES use shared_braincell's
@@ -15,8 +15,9 @@
 # --version-file is optional (passed only if Documents/version_info.txt exists).
 #
 # IMPORTANT — runtime dependency: this build junctions _internal to the shared
-# ../_runtime, so that runtime MUST already carry GA's deps. The shared runtime
-# is rebuilt by ../_runtime/build_runtime.py; if GA introduces a dep the
+# runtime (%LOCALAPPDATA%\SingleSharedBraincell\_runtime), so that runtime MUST
+# already carry GA's deps. The shared runtime is rebuilt by build_runtime.py
+# inside that folder; if GA introduces a dep the
 # collector there doesn't import yet (e.g. shared_braincell.gemini_image / .llm
 # / .winenv), add it to that collector and rebuild the runtime FIRST. See the
 # "Build pipeline split" rule — touch both for bundled deps.
@@ -39,11 +40,14 @@ iconsFolder  = "Images/Icons"
 appIconFile  = "playIcon.ico"               # GA's brand mark (matches main.py's window/taskbar icon)
 docsFolder   = str(Path("Documents") / "Build")
 
-# Shared runtime — built by _runtime/build_runtime.py
-_RUNTIME_DIR = Path(os.environ.get(
-    "SingleSharedBraincell_Runtime",
-    Path(__file__).parent.parent / "_runtime"
-))
+# Shared runtime — built by build_runtime.py inside the runtime folder itself.
+# Canonical home is %LOCALAPPDATA%\SingleSharedBraincell\_runtime (per-machine,
+# out of the Desktop / cloud-sync queue). Override with SingleSharedBraincell_Runtime,
+# which Intricate setx's on launch so this default rarely has to fire.
+_RUNTIME_DEFAULT = Path(
+    os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")
+) / "SingleSharedBraincell" / "_runtime"
+_RUNTIME_DIR = Path(os.environ.get("SingleSharedBraincell_Runtime", _RUNTIME_DEFAULT))
 
 
 # ─────────────────────────────────────────────────────────────────────────────
