@@ -650,6 +650,9 @@ class GentleAdventuresApp(QMainWindow):
         # delete the module + this wiring and the weather is simply gone.
         self._weather = WeatherOverlay(self._split)
         self._weather.setGeometry(self._split.rect())
+        # Keep the framed scene image dry — rain falls around it, not over it, so
+        # it reads as a cozy window: storming outside, snug inside the ship.
+        self._weather.set_dry_widget(self.scene_view.frame_widget())
         self._weather.raise_()
         self._weather.show()
         self._split.installEventFilter(self)  # keep it sized to the row

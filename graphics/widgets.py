@@ -483,6 +483,11 @@ class SceneView(QWidget):
 
         self._current_pixmap: QPixmap | None = None
 
+    def frame_widget(self) -> QLabel:
+        """The framed scene image. The weather overlay keeps this rect dry (rain
+        falls around it, not over it) so it reads as a cozy window onto the ship."""
+        return self._image_label
+
     def _frame_qss(self) -> str:
         """Intricate's node frame, drawn from the family Theme so it matches the
         canvas nodes (nodeBorder / nodeBorderWidth / nodeRoundRadius / nodeBg)

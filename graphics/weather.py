@@ -28,8 +28,8 @@ from __future__ import annotations
 
 import random
 
-from PySide6.QtCore import Qt, QTimer, QPointF
-from PySide6.QtGui import QColor, QPen, QPainter, QLinearGradient
+from PySide6.QtCore import Qt, QTimer, QPointF, QPoint, QRect
+from PySide6.QtGui import QColor, QPen, QPainter, QLinearGradient, QRegion
 from PySide6.QtWidgets import QWidget
 
 # ── tunables (kept gentle on purpose — this is ambience, not a storm window) ──
@@ -84,6 +84,12 @@ class WeatherOverlay(QWidget):
         self.setAttribute(Qt.WA_NoSystemBackground, True)
         self.setFocusPolicy(Qt.NoFocus)
 
+        # The scene image is a "dry" cozy window: rain and fog never paint over
+        # it, so the vibe reads as storming OUTSIDE while it's snug inside the ship
+        # looking out. The window hands us the framed image widget via
+        # set_dry_widget; paintEvent clips that rect out of every stroke.
+        self._dry_widget: QWidget | None = None
+
         self._tint = QColor(_DEFAULT_TINT)
         self._tint_target = QColor(self._tint)   # palette eases toward this
         self._level = 0.0          # current eased intensity
@@ -108,6 +114,12 @@ class WeatherOverlay(QWidget):
         self._target = max(0.0, min(1.0, float(value)))
         if self._target > 0.0 and not self._timer.isActive():
             self._timer.start()
+
+    def set_dry_widget(self, widget: QWidget | None) -> None:
+        """Mark a widget (the framed scene image) as a dry 'cozy window' — its
+        rect is clipped out of all weather painting, so rain falls around it, not
+        over it. Pass None to let weather cover everything again."""
+        self._dry_widget = widget
 
     def set_palette(self, color: QColor) -> None:
         """Tint the droplets/fog to match the current vibe (sun-pastel for high
@@ -213,6 +225,21 @@ class WeatherOverlay(QWidget):
         h = self.height()
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing, True)
+
+        # Keep the scene image dry — clip its rect out of every stroke below, so
+        # rain/fog fall AROUND the cozy window, never on it. Mapped via globals so
+        # it's correct regardless of the widget hierarchy between us, and recomputed
+        # each frame so it tracks resize/layout. Guarded: any hiccup just paints
+        # full-area as before.
+        dry = self._dry_widget
+        if dry is not None and dry.isVisible():
+            try:
+                gp = dry.mapToGlobal(QPoint(0, 0))
+                op = self.mapToGlobal(QPoint(0, 0))
+                ex = QRect(gp.x() - op.x(), gp.y() - op.y(), dry.width(), dry.height())
+                p.setClipRegion(QRegion(self.rect()).subtracted(QRegion(ex)))
+            except Exception:
+                pass
 
         # ── mist / fog: only above RainMistThreshold, opacity ramps with level²
         if self._level > _MIST_THRESHOLD:
