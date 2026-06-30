@@ -11,9 +11,20 @@ from __future__ import annotations
 import json
 import shutil
 import subprocess
+import sys
+from pathlib import Path
 
-from utils.logger import get_logger
-from utils.proc import CREATE_NO_WINDOW
+# Run-from-anywhere: put the project root (this file's parent's parent) on the
+# path so `utils.*` resolves no matter how hyworld is reached — imported as
+# `utils.hyworld` by the running app, run as `python hyworld.py`, or poked at as
+# a bare `import hyworld` in a console opened inside utils/. Idempotent: a no-op
+# once the app has already seeded root. Matches sanitize_sheets.py's idiom.
+_ROOT = Path(__file__).resolve().parent.parent
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+
+from utils.logger import get_logger          # noqa: E402
+from utils.proc import CREATE_NO_WINDOW       # noqa: E402
 
 logger = get_logger("gentle")
 
@@ -153,3 +164,42 @@ def wake_hyworld(settings: dict) -> str | None:
         return str(state)
     except (TypeError, KeyError, IndexError):
         return None
+
+
+# ── Console utility ───────────────────────────────────────────────────────────
+# `python hyworld.py [status|probe|wake|tuck]` — the same whispers the in-game
+# `hy` verbs send, runnable straight from a shell for an operator poke. Default
+# verb is read-only `status`; wake/tuck carry real AWS side effects (they start /
+# stop the paid GPU twin) so they're never the default — you have to name them.
+# Loads the live settings.toml exactly as main.py does, and stays contextual-
+# absence shaped: an unconfigured or unreachable twin just prints its quiet face.
+if __name__ == "__main__":
+    from utils.paths import app_root
+    from utils.settings import load_settings
+
+    verb = (sys.argv[1] if len(sys.argv) > 1 else "status").lower()
+    settings = load_settings(app_root() / "settings.toml")
+
+    if _cfg(settings) is None:
+        print("hyworld: the orbital twin isn't configured on this machine "
+              "([hyworld] instance_id missing from settings.toml).")
+        sys.exit(0)
+
+    if verb == "status":
+        res = status_hyworld(settings)
+        if res is None:
+            print("hyworld: twin unreachable (no aws CLI / creds / cloud).")
+        else:
+            state, ip = res
+            print(f"hyworld: {state}{' @ ' + ip if ip else ''}")
+    elif verb == "probe":
+        print(f"hyworld: {probe_hyworld(settings) or 'unreachable'}")
+    elif verb == "wake":
+        print(f"hyworld: wake -> {wake_hyworld(settings) or 'whisper lost'}")
+    elif verb == "tuck":
+        ok = tuck_in_hyworld(settings)
+        print("hyworld: tuck-in sent — the twin yawns back to sleep" if ok
+              else "hyworld: no tuck-in from here.")
+    else:
+        print(f"hyworld: unknown verb {verb!r} — try: status | probe | wake | tuck")
+        sys.exit(2)
