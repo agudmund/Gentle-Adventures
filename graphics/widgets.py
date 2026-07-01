@@ -214,7 +214,7 @@ class TitleBar(QWidget):
         self._btn_min = self._control("–", self._send_to_tray, icon_name=Fam.iconTray, tooltip="Minimize")
         self._btn_max = self._control("□", self._on_maximize, icon_name=Fam.iconMaximize, tooltip="Maximize")
         self._btn_close = self._control(
-            "✕", self._send_to_tray, icon_name=Fam.iconClose, close=True,
+            "✕", self._send_to_tray, icon_name=Fam.iconExid, close=True,
             tooltip="Exid, not a typo.  It's an exit button named exid",
         )
         for b in (self._btn_min, self._btn_max, self._btn_close):
