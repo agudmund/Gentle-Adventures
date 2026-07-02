@@ -10,10 +10,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-try:
-    import tomllib  # Python 3.11+
-except ImportError:
-    import tomli as tomllib  # type: ignore
+import tomllib
 
 
 def load_settings(path: Path) -> dict:
