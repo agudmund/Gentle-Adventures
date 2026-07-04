@@ -80,10 +80,14 @@ QUEST: list[dict] = [
             "warm gold and labeled XDNA 2. The captain leans in, curious, eyes wide."
         ),
         "narrative": (
-            "The captain stirs. The ship hums a new tune.\n\n"
-            "Three lights blink on the main console: one familiar, one known, one… new.\n"
-            "The new light pulses with a slow, patient rhythm. Waiting.\n"
-            "A small label glows beneath it: XDNA 2."
+            "You're waking, captain. Hear it? Your ship is humming something new this "
+            "morning — just for you.\n\n"
+            "Three lights on your console now. One you've always known. One you've come "
+            "to trust. And this last one… new. Yours to meet.\n\n"
+            "See how it pulses — slow, patient, in no hurry at all. It has been waiting "
+            "so kindly for you to notice.\n\n"
+            "Lean in close. A small label glows beneath it: XDNA 2. That's the one we "
+            "came here for, you and I."
         ),
         "choices": [
             {"label": "Examine the new light", "next": "discovery"},
@@ -100,11 +104,15 @@ QUEST: list[dict] = [
             "diagram of a grid of tiny tiles connected by glowing dataflow lines."
         ),
         "narrative": (
-            "The ship's friendly AI puffs into being above the console.\n\n"
-            "\"XDNA is a grid of small minds,\" it says. \"Not one big brain, but many\n"
-            "tiny ones, each doing a sliver of the math, passing the result to the\n"
-            "next. The original blueprints came from Xilinx. AMD brought them aboard.\"\n\n"
-            "\"It is not a CPU. It is not a GPU. It is a third kind of worker.\""
+            "Your ship's little mind puffs softly into being above the console… and "
+            "leans in close, just for you.\n\n"
+            "\"XDNA,\" it whispers, \"is a grid of small minds. Not one big brain, "
+            "captain — many tiny ones. Each takes a sliver of the math, does its gentle "
+            "part, and passes it kindly on to the next.\"\n\n"
+            "\"The first blueprints came from a house called Xilinx… and AMD carried "
+            "them aboard, all the way to you.\"\n\n"
+            "\"It isn't a CPU. It isn't a GPU. It's a third kind of worker… yours now, "
+            "and yours alone.\""
         ),
         "choices": [
             {"label": "Now examine the new light", "next": "discovery"},

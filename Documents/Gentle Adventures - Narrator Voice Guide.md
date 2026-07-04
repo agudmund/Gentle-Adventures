@@ -49,6 +49,22 @@ and the spine of System 2 Phase 3's narrative tone-morph.*
    fragments; "the ship sails just fine on the gentler winds." Never hurry the
    player, never manufacture stakes — peace is the resting tone, wonder is the peak.
 
+## Instructively personal — the spoken register (2026-07-04)
+
+Now that the narrator is *spoken aloud* in a whisper (the seed-pinned OmniVoice voice — `female, young adult, japanese accent, whisper`, seed 819571848), the prose tightens one degree further: from **observatory speculation** (watching the captain from outside — *"The captain stirs. Three lights blink."*) to **instructively personal** (in her company, at her shoulder — *"You're waking, captain. Hear it?"*). Same warmth, same worth, same hope — the camera just moves from across the room to beside her. This is principle 1 (*echo, not author; beside, never down*) taken all the way, and it exists so the words fit **her** voice, not the other way around.
+
+Concretely:
+- **Second person, not third.** *"You wake,"* never *"the captain stirs."* Address her — captain, you, yours.
+- **Invite the look, don't only state it.** *"See how it pulses…", "hear it?", "lean in close"* — the *instructive* half: gentle guidance that turns exposition into a shared noticing.
+- **Companionship close.** End on togetherness where it fits: *"that's the one we came here for, you and I."*
+- **Breath for the whisper.** The voice leans on held breath. Give it room with an occasional ellipsis at a point of anticipation (*"XDNA… it's a grid of small minds"*) — the pause is the inhale before a small reveal. Intermittent, never every line; a long breath now and then, not a stutter.
+
+Canonical exemplar — scene 01 (awakening), before → after:
+> *Observatory:* The captain stirs. The ship hums a new tune. Three lights blink on the main console…
+> *Instructively personal:* You're waking, captain. Hear it? Your ship is humming something new this morning — just for you. Three lights on your console now…
+
+Applies to every scene and to the scene-generation prompt, so hand-authored and on-the-go scenes share the same closeness. The narrative text is authored/generated (not the captain's own hand), so it is welcome to stay in gentle flux — reword freely toward this register.
+
 ## Vocabulary
 
 **Favour** — soft-agency verbs (waits, breathes, blooms, stirs, naps, dances,
