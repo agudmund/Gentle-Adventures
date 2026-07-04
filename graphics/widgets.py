@@ -760,17 +760,25 @@ class NarrativePanel(QWidget):
             cur.insertBlock()
             self._lit_from = cur.position()
 
-        # Weave a divider between paragraphs: text, sep, text, sep, … (empty
-        # paragraphs are skipped so two dividers never stack).
+        # Paragraph spacers are structural, not decorative. A sensibly-sized
+        # scene reads as clean stanzas separated by a gentle blank line; the
+        # play-sticker divider only returns when the body is large enough to
+        # scroll — the point where a wall of text actually needs breaking up
+        # (mirrors The Majestic, where the divider marks real boundaries, not
+        # every paragraph). "Large" = would overflow the story column here.
+        paras = [p for p in (body or "").split("\n\n") if p.strip()]
         self._segments = []
-        first = True
-        for para in (body or "").split("\n\n"):
-            if not para.strip():
-                continue
-            if not first:
-                self._segments.append(("sep", None))
-            self._segments.append(("text", para))
-            first = False
+        if self._body_overflows("\n\n".join(paras)):
+            first = True
+            for para in paras:
+                if not first:
+                    self._segments.append(("sep", None))
+                self._segments.append(("text", para))
+                first = False
+        elif paras:
+            # Fits without scrolling: reveal as one flowing passage, blank lines
+            # between paragraphs, no sticker dividers.
+            self._segments.append(("text", "\n\n".join(paras)))
 
         if verified is True:
             self._verified.setText("★ system confirmed")
@@ -837,6 +845,24 @@ class NarrativePanel(QWidget):
         # Keep the loop turning; the next tick pulls the following paragraph (and
         # any divider) once this one is spent, or settles the final spark if done.
         self._tw_timer.start(delay)
+
+    def _body_overflows(self, text: str) -> bool:
+        """True when *text*, laid out at the story column's width, would exceed
+        the visible viewport (i.e. the scene scrolls) — only then do the play-
+        sticker dividers earn their place. Falls back to a 'sensible amount of
+        text' char proxy before the widget has a real size (first paint), so a
+        scene can never misjudge itself. The 800 mirrors the family's notion of
+        a readable single chunk (cf. WarmNode's paragraph-aware split)."""
+        vp = self._text.viewport()
+        h = vp.height()
+        if h < 50:                       # not laid out yet — sensible char proxy
+            return len(text) > 800
+        from PySide6.QtGui import QTextDocument
+        doc = QTextDocument()
+        doc.setDefaultFont(self._text.font())
+        doc.setTextWidth(max(1, vp.width()))
+        doc.setPlainText(text)
+        return doc.size().height() > h
 
     def _insert_separator(self):
         """Drop GA's play-sticker divider between paragraphs. Settle any lingering
