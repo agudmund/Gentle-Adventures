@@ -45,7 +45,7 @@ from shared_braincell.gemini_image import (
 )
 from utils.identity import GEMINI_KEY_ENV, user_agent
 from utils.probe import probe_fastflowlm, probe_npu, raw_hardware_spec, resolve_flm
-from utils.oracle import Oracle
+from shared_braincell.llama import Llama
 from utils.scene_cache import SceneCache
 from utils.sheets import SheetsClient, SheetsError
 from utils.player_state import PlayerStateStore
@@ -406,8 +406,13 @@ class GentleAdventuresApp(QMainWindow):
         # a disconnect); flush/hydrate sync against the cloud off the UI thread.
         self.player_state = PlayerStateStore(self.sheets, app_dir)
         # The on-device oracle (flm's local llama) for "ask the ship" — built lazily;
-        # nothing starts until the first question wakes the server. See utils/oracle.py.
-        self.oracle = Oracle()
+        # nothing starts until the first question wakes the server. The client now
+        # lives in shared_braincell (llama.py); we point its single transcript export
+        # at Documents/Data/Llama and sign its traffic with our own user_agent.
+        self.oracle = Llama(
+            transcript_dir=app_dir / "Documents" / "Data" / "Llama",
+            user_agent=user_agent,
+        )
         # Swappable text backend (Claude default, Gemini on demand) for the ship's
         # voice — Oracle, vibe, ghost-repair, missions. Built once; None silently
         # if misconfigured (contextual absence). Calls run via the worker registry.
