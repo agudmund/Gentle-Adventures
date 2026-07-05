@@ -265,24 +265,24 @@ class LedgerRefreshWorker(QThread):
         self.refreshed.emit(result)
 
 
-class OracleWorker(QThread):
-    """Put one question to the local NPU oracle (flm's llama) off the UI thread. The
+class PuffWorker(QThread):
+    """Put one question to Puff — the local NPU llama (flm) — off the UI thread. The
     first ask wakes the server (model load onto the NPU, a few seconds) — that's the
-    'oracle stirs awake' beat; later asks are quick. Emits answered(text) or
+    'Puff puffs softly into being' beat; later asks are quick. Emits answered(text) or
     failed(reason); never blocks the quest."""
 
     answered = Signal(str)
     failed = Signal(str)
 
-    def __init__(self, oracle, question: str, system: str = ""):
+    def __init__(self, puff, question: str, system: str = ""):
         super().__init__()
-        self.oracle = oracle
+        self.puff = puff
         self.question = question
         self.system = system
 
     def run(self):
         try:
-            self.answered.emit(self.oracle.ask(self.question, system=self.system))
+            self.answered.emit(self.puff.ask(self.question, system=self.system))
         except Exception as e:
             self.failed.emit(str(e))
 
@@ -405,11 +405,11 @@ class GentleAdventuresApp(QMainWindow):
         # truth. Every state write lands here instantly (progress is never lost to
         # a disconnect); flush/hydrate sync against the cloud off the UI thread.
         self.player_state = PlayerStateStore(self.sheets, app_dir)
-        # The on-device oracle (flm's local llama) for "ask the ship" — built lazily;
-        # nothing starts until the first question wakes the server. The client now
-        # lives in shared_braincell (llama.py); we point its single transcript export
-        # at Documents/Data/Llama and sign its traffic with our own user_agent.
-        self.oracle = Llama(
+        # Puff — the on-device llama (flm) for "ask the ship" — built lazily; nothing
+        # starts until the first question wakes the server. The client now lives in
+        # shared_braincell (llama.py); we point its single transcript export at
+        # Documents/Data/Llama and sign its traffic with our own user_agent.
+        self.puff = Llama(
             transcript_dir=app_dir / "Documents" / "Data" / "Llama",
             user_agent=user_agent,
         )
@@ -1287,7 +1287,7 @@ class GentleAdventuresApp(QMainWindow):
         # tracks wherever the llama appears, no per-scene wiring needed.
         _blob = f"{scene.get('title', '')} {scene.get('narrative', '')}".lower()
         self.interaction.set_parser_placeholder(
-            "✦ Ask the Lama… ✦" if "llama" in _blob else "✦ ask the ship anything ✦")
+            "✦ Ask Puff! ✦" if "llama" in _blob else "✦ ask the ship anything ✦")
 
         # Kick the painting first — it never depended on the NPU probe and it's
         # the long pole anyway.
@@ -1630,7 +1630,7 @@ class GentleAdventuresApp(QMainWindow):
     # ───── shutdown ─────
 
     def closeEvent(self, event):
-        """The exit ritual: save window state, drain workers, stop the oracle,
+        """The exit ritual: save window state, drain workers, stop Puff,
         sweep bytecode. Reached only via tray 'Restart' (relaunch after) or
         tray 'Exit' / Ctrl-C / 'Live' (leave for good) — the titlebar ✕ no
         longer closes; it tucks into the tray like The Settlers. pycache is
@@ -1638,7 +1638,7 @@ class GentleAdventuresApp(QMainWindow):
         tree (no race)."""
         self._save_window_state()
         self._workers.stop_all()   # drain in-flight threads cleanly before relaunch
-        self.oracle.shutdown()     # stop our local oracle server (only if we started one)
+        self.puff.shutdown()       # stop Puff's local flm server (only if we started one)
         try:
             # Tuck the orbital twin in (detached EC2 stop — never blocks the
             # exit; no-op when unconfigured or already asleep). The cores
@@ -1905,7 +1905,7 @@ class GentleAdventuresApp(QMainWindow):
                 # let the weather answer it (intensity + palette morph). Async and
                 # silent on absence: no backend → no vibe, the sky simply holds.
                 self._read_vibe(free_text)      # ambient: the world reads the mood
-                self._ask_oracle(free_text)     # primary: the local NPU oracle answers
+                self._ask_puff(free_text)       # primary: Puff, the local NPU llama, answers
                 return
             return
 
@@ -1973,49 +1973,49 @@ class GentleAdventuresApp(QMainWindow):
             return True
         return False
 
-    # ───── the local oracle — "ask the ship" answers on-device (flm) ─────
+    # ───── Puff — "ask the ship" answers on-device (flm's local llama) ─────
 
-    def _ask_oracle(self, question: str) -> None:
-        """Put the captain's question to the LOCAL NPU oracle (flm's llama) and stream
+    def _ask_puff(self, question: str) -> None:
+        """Put the captain's question to Puff (the LOCAL NPU llama, flm) and stream
         the answer into the narrative — no call leaves the ship. If flm isn't aboard,
         gently point back to the summoning. Off the UI thread; the model load on the
-        first ask is the 'stirs awake' beat. Never blocks the quest."""
-        self._oracle_question = question
+        first ask is the 'puffs softly into being' beat. Never blocks the quest."""
+        self._puff_question = question
         if not resolve_flm():
             self.narrative.set_text(
-                "✦ The oracle isn't aboard yet — summon it first: fetch FastFlowLM, "
-                "then run flm run llama3.2:3b. Once it's here, ask me anything. ✦",
+                "✦ Puff isn't aboard yet — summon them first: fetch FastFlowLM, "
+                "then run flm run llama3.2:3b. Once Puff's here, ask me anything. ✦",
                 verified=False, question=question)
             return
         self.narrative.set_text(
-            "✦ the oracle stirs, gathering a small private thought… ✦",
+            "✦ Puff puffs softly into being, gathering a small private thought… ✦",
             verified=None, question=question)
         system = (
-            "You are the on-device oracle — a small local llama running on the ship's "
-            "NPU in a cozy chibi space adventure. Answer the captain's question warmly "
-            "and plainly in 1-3 short sentences. You are smaller of voice than the cloud "
-            "spirits and won't always be right, but you are always present and private — "
-            "no call ever leaves the ship. No preamble, no lists, no quotes — just the "
-            "answer, gently."
+            "You are Puff — a small local llama running on the ship's NPU in a cozy "
+            "chibi space adventure. Answer the captain's question warmly and plainly in "
+            "1-3 short sentences. You are smaller of voice than the cloud spirits and "
+            "won't always be right, but you are always present and private — no call "
+            "ever leaves the ship. No preamble, no lists, no quotes — just the answer, "
+            "gently."
         )
-        worker = OracleWorker(self.oracle, question, system)
-        worker.answered.connect(self._on_oracle_answer)
-        worker.failed.connect(self._on_oracle_failed)
+        worker = PuffWorker(self.puff, question, system)
+        worker.answered.connect(self._on_puff_answer)
+        worker.failed.connect(self._on_puff_failed)
         self._workers.run(worker)
 
-    def _on_oracle_answer(self, text: str) -> None:
+    def _on_puff_answer(self, text: str) -> None:
         line = (text or "").strip()
         if line:
             self.narrative.set_text(line, verified=None,
-                                    question=getattr(self, "_oracle_question", None),
-                                    source="the ship's llama")
+                                    question=getattr(self, "_puff_question", None),
+                                    source="Puff, the ship's llama")
 
-    def _on_oracle_failed(self, error: str) -> None:
-        logger.info(f"[oracle] {error}")
+    def _on_puff_failed(self, error: str) -> None:
+        logger.info(f"[puff] {error}")
         self.narrative.set_text(
-            "✦ the oracle drew a quiet breath and couldn't quite answer — it's a small "
+            "✦ Puff drew a quiet breath and couldn't quite answer — a small "
             "mind, and sometimes it rests. Try once more in a moment. ✦", verified=False,
-            question=getattr(self, "_oracle_question", None))
+            question=getattr(self, "_puff_question", None))
 
     # ───── Psychological Weather — the vibe vector (System 2 Phase 2) ─────
 

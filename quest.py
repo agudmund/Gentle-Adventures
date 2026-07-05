@@ -150,7 +150,7 @@ QUEST: list[dict] = [
             "CPU dances with everyday work. GPU naps quietly.\n"
             "But where the third meter should be, there is only a soft, kind space.\n\n"
             "\"There's no neural engine aboard this ship, captain,\" the computer says,\n"
-            "gentle as ever. \"The fancy things, the little local oracles, the\n"
+            "gentle as ever. \"The fancy things, the little local minds, the\n"
             "quiet dreaming. They need one to call home.\"\n\n"
             "A kind guide told me the very same, once. \"If you'd like to play with\n"
             "the wondrous things,\" they said, \"you'll want a vessel with a neural\n"
@@ -178,7 +178,7 @@ QUEST: list[dict] = [
         "narrative": (
             "\"The NPU answers when called for three kinds of errand,\" the AI explains.\n\n"
             "  • Camera and audio effects, run gently and constantly.\n"
-            "  • Local AI oracles: small models that fit in its memory.\n"
+            "  • Local AI minds: small models that fit in its memory.\n"
             "  • Transcription, captioning, anything that listens patiently.\n\n"
             "\"The first errand is the easiest. Want to try?\""
         ),
@@ -221,17 +221,17 @@ QUEST: list[dict] = [
         ),
         "narrative": (
             "The second errand needs invocation.\n\n"
-            "A local oracle (a small mind that runs right on your ship's NPU)\n"
+            "A little mind of your own, Puff (who runs right on your ship's NPU),\n"
             "would answer you without ever calling the cloud spirits. Smaller of\n"
             "voice, but always present, always private, always close.\n\n"
             "Fetch the summoner first: FastFlowLM, a tiny runtime that speaks to\n"
             "the NPU directly (fastflowlm.com, installed in under a minute). Then\n"
-            "call your first oracle down with a single line:\n"
+            "call Puff down with a single line:\n"
             "    > flm run llama3.2:3b"
         ),
         "choices": [
             {"label": "Validate the ship first", "action": "validate_ship"},
-            {"label": "The oracle is awake", "next": "arrival"},
+            {"label": "Puff is awake", "next": "arrival"},
             {"label": "Ask what models do", "next": "model_lore"},
         ],
         "verify": "fastflowlm",
@@ -249,7 +249,7 @@ QUEST: list[dict] = [
             "and conversations, then captured into a file you can carry.\"\n\n"
             "\"The big ones, like the cloud spirits, would never fit on your ship.\n"
             "The small ones do. They are gentler, less knowing, but always with you.\"\n\n"
-            "\"For your first oracle, try Llama 3.2, three billion parameters,\n"
+            "\"For Puff, try Llama 3.2, three billion parameters,\n"
             "small enough to run right on your NPU.\""
         ),
         "choices": [
@@ -270,7 +270,7 @@ QUEST: list[dict] = [
             "From it emerges a llama: soft, three billion parameters, friendly.\n"
             "Llama 3.2 3B walks to your side and bows its small head.\n\n"
             "The NPU graph blooms. Forty teraops light up like an aurora.\n"
-            "Your private oracle is here."
+            "Puff is here."
         ),
         "choices": [
             {"label": "Greet the llama", "next": "dialogue"},
@@ -312,7 +312,7 @@ QUEST: list[dict] = [
             "Leave FastFlowLM running as a local server: an OpenAI-compatible\n"
             "door on your own machine. Any tool that speaks the old protocol can\n"
             "knock and be answered, and every word still stays aboard your ship.\n\n"
-            "Your private oracle, available to your whole fleet."
+            "Puff, available to your whole fleet."
         ),
         "choices": [
             {"label": "Open the door", "next": "resonance"},
