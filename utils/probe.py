@@ -10,14 +10,13 @@ from __future__ import annotations
 
 import logging
 import os
-import shutil
 import subprocess
 
 from utils.proc import CREATE_NO_WINDOW
 import urllib.error
 import urllib.request
-from pathlib import Path
 
+from shared_braincell.llama import resolve_flm  # single source of flm resolution
 from utils.logger import get_logger
 from utils.identity import user_agent
 
@@ -158,35 +157,6 @@ def raw_hardware_spec() -> dict:
     except Exception as e:
         logger.debug(f"hardware spec probe failed: {e}")
         return {}
-
-
-def resolve_flm() -> str | None:
-    """Full path to the `flm` executable — PATH first, then known install locations.
-
-    Why a resolver and not just a name: the installer adds flm to the *Machine* PATH,
-    but a process launched from a shell that started before that update (a fresh
-    install / factory reset / a stale-env launcher) won't see flm on PATH. So
-    `shutil.which("flm")` can miss a real install AND a bare `["flm", ...]` subprocess
-    fails with 'not found' even though the runtime is right there. Returning the
-    resolved full path lets callers run flm directly, PATH or no PATH. Observed layout
-    is '<root>\\flm\\flm.exe' (C:\\Program Files\\flm); some builds use a 'FastFlowLM'
-    folder, so we check both names under every common root. None if not found anywhere."""
-    onpath = shutil.which("flm")
-    if onpath:
-        return onpath
-    roots = [
-        os.environ.get("ProgramFiles", r"C:\Program Files"),
-        os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)"),
-        os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs"),
-    ]
-    for root in roots:
-        if not root:
-            continue
-        for folder in ("flm", "FastFlowLM"):
-            p = Path(root) / folder / "flm.exe"
-            if p.exists():
-                return str(p)
-    return None
 
 
 def probe_fastflowlm() -> bool:
