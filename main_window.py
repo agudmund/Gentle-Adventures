@@ -1311,16 +1311,16 @@ class GentleAdventuresApp(QMainWindow):
 
     def _enter_quest(self):
         self.phase = "quest"
-        # Resume where the captain left off. PlayerStateStore tracks current_scene
-        # (local-first, synced to the Sheet), so it's the live last-position — the
-        # legacy [game].last_scene was read here but never written, so resume always
-        # fell through to the opening. Fall back: current_scene -> last_scene -> start.
-        start_id = (self.player_state.get("current_scene")
-                    or self.settings.get("game", {}).get("last_scene")
-                    or first_scene_id())
-        if get_scene(start_id) is None:   # saved id no longer in the quest -> open
-            start_id = first_scene_id()
-        self._load_scene(start_id)
+        # Every launch opens at the TOP — starting fresh is the chosen ritual (and on
+        # the wake box it's the "all loaded up for fun times" cue). We deliberately do
+        # NOT resume the last position anymore; instead the MAP remembers everywhere
+        # you've been, rehydrated here, so fast-travel survives a restart even though
+        # the opening always replays. (current_scene is still written to the Ledger as
+        # a journey record; it's simply no longer read back to reopen there.)
+        saved = self.player_state.get("visited_scenes")
+        if isinstance(saved, (list, tuple)):
+            self._visited.update(str(s) for s in saved if get_scene(str(s)) is not None)
+        self._load_scene(first_scene_id())
 
     def _load_scene(self, scene_id: str):
         scene = get_scene(scene_id)
@@ -1444,7 +1444,10 @@ class GentleAdventuresApp(QMainWindow):
 
         # Heartbeat: push our position up to the Ledger (Player_State). The
         # round-trip confirmation arrives as a passive gold spectral pulse.
-        updates = {"current_scene": scene_id}
+        # visited_scenes rides along so the map's travelled-set survives a restart
+        # (the opening replays, but fast-travel remembers). _visited already holds
+        # this scene — _apply_scene added it before we resolved.
+        updates = {"current_scene": scene_id, "visited_scenes": sorted(self._visited)}
         if verify_kind == "npu":
             updates["npu_active"] = 1 if verified else 0
         self._sync_player_state(updates)
