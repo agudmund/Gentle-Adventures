@@ -60,16 +60,12 @@ class ResizeGrip(QWidget):
         self.setToolTip("Drag to resize the window")
 
     def paintEvent(self, _event) -> None:
-        p = QPainter(self)
-        p.setRenderHint(QPainter.Antialiasing)
-        col = QColor(Fam.textPrimary)
-        col.setAlpha(140)
-        p.setPen(QPen(col, 2))
-        w, h = self.width(), self.height()
-        # Three nested diagonal ticks — the universal resize-corner glyph.
-        for off in (4, 9, 14):
-            p.drawLine(w - off, h - 4, w - 4, h - off)
-        p.end()
+        # Invisible on purpose — the corner grab is an established enough gesture
+        # not to need a visual cue, matching the family's raw unpainted grips.
+        # (The three-tick glyph this used to draw was an early main-window test.)
+        # The widget still fills its footprint for hit-testing; only the paint
+        # is silent.
+        pass
 
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.LeftButton:

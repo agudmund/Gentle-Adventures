@@ -1021,6 +1021,34 @@ class GentleAdventuresApp(QMainWindow):
         except OSError:
             pass
 
+    def claim_foreground(self) -> None:
+        """Decisively take foreground focus — the wake-display path's answer to
+        the login taskbar: on a fresh interactive logon the shell's Start button
+        holds focus, and an auto-hide taskbar stays raised while focused. Qt's
+        raise_/activateWindow alone is often refused for a background-launched
+        process (Windows anti-focus-stealing), so when another window holds the
+        foreground we attach to its thread's input state for the handoff — the
+        documented escape hatch. Best-effort and idempotent; called again on a
+        short delay after boot since the shell can finish (and grab focus)
+        after we first showed."""
+        self.raise_()
+        self.activateWindow()
+        try:
+            import ctypes
+            u32 = ctypes.windll.user32
+            hwnd = int(self.winId())
+            fg = u32.GetForegroundWindow()
+            if fg and fg != hwnd:
+                fg_tid = u32.GetWindowThreadProcessId(fg, None)
+                our_tid = ctypes.windll.kernel32.GetCurrentThreadId()
+                u32.AttachThreadInput(our_tid, fg_tid, True)
+                u32.SetForegroundWindow(hwnd)
+                u32.AttachThreadInput(our_tid, fg_tid, False)
+            else:
+                u32.SetForegroundWindow(hwnd)
+        except Exception:
+            pass   # best-effort: worst case the taskbar needs one manual click
+
     def minimize_to_tray(self) -> None:
         """Hide the window into the system tray (the titlebar – button)."""
         self._tray_icon.show()
@@ -1352,11 +1380,48 @@ class GentleAdventuresApp(QMainWindow):
             self.sidebar.set_working(True)
             QTimer.singleShot(0, lambda: self._apply_scene(scene))
 
+    # Narrator takes on disk (Audio/<file>) by scene id. Only scenes 1 and 1.5
+    # have generated narration so far; their TEXT is therefore load-bearing
+    # against these recordings — a phrasing change requires an audio re-render.
+    _NARRATION = {
+        "awakening": "Scene 01 - The Awakening.wav",
+    }
+
+    def _play_narration(self, scene_id: str) -> None:
+        """Voice a scene when a narrator take exists for it. Presence-gated
+        (no file, no player, no fuss — contextual absence), and it follows
+        scene landings: entering any scene stops the previous take, the same
+        way narrative.cut() ends the old text reveal. On the wake box this is
+        the audible half of 'the ship is up': scene one is HEARD landing even
+        when nobody is looking at the screen."""
+        fx = getattr(self, "_narrator", None)
+        if fx is not None:
+            fx.stop()
+        fname = self._NARRATION.get(scene_id)
+        if not fname:
+            return
+        path = self.app_dir / "Audio" / fname
+        if not path.exists():
+            return
+        try:
+            from PySide6.QtCore import QUrl          # departmental: lazy
+            from PySide6.QtMultimedia import QSoundEffect
+            if fx is None:
+                fx = QSoundEffect(self)
+                self._narrator = fx
+            fx.setSource(QUrl.fromLocalFile(str(path)))
+            fx.setVolume(1.0)
+            fx.play()
+            logger.info(f"[narrator] voicing '{scene_id}' ({fname})")
+        except Exception as e:
+            logger.warning(f"[narrator] could not voice '{scene_id}': {e}")
+
     def _apply_scene(self, scene: dict):
         scene_id = scene["id"]
         self._visited.add(scene_id)   # unlocks this scene in the map
 
         logger.info(f"Loading scene: {scene_id}")
+        self._play_narration(scene_id)
         # The scene we're leaving — its cached image seeds the next render so
         # palette, lighting, and character design carry forward (image-to-image).
         prev_scene_id = self.current_scene["id"] if self.current_scene else None

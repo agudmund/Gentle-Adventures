@@ -100,6 +100,13 @@ def main() -> int:
     elif wake_display:
         window.show()
         window.maximize_window()   # the wake spectacle, front and centre
+        # Pull focus off the login taskbar so it can auto-hide again — claimed
+        # now and re-claimed shortly after, since the shell can finish booting
+        # (and grab focus for the Start button) after we first showed.
+        from PySide6.QtCore import QTimer
+        window.claim_foreground()
+        QTimer.singleShot(1500, window.claim_foreground)
+        QTimer.singleShot(6000, window.claim_foreground)
     else:
         window.show()
     return app.exec()
