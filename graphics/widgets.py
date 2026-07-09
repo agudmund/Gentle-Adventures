@@ -648,17 +648,23 @@ class NarrativePanel(QWidget):
         self._scroll_slider = pretty_slider(
             Qt.Orientation.Vertical,
             handle_icon="slider_handle_vertical.png",
+            handle_size=56,          # ~2x — nicely huge, unmistakably a grab-for-more button
             range=(0, 100),
             value=0,
             invertedAppearance=True,
         )
         _slider_col = QWidget()
-        _slider_col.setFixedWidth(30)
+        _slider_col.setFixedWidth(60)   # 2x the old 30 so the bigger handle isn't clipped
         _slider_col.setStyleSheet("background: transparent;")
         _slider_v = QVBoxLayout(_slider_col)
         _slider_v.setContentsMargins(0, 0, 0, 0)
         _slider_v.setSpacing(0)
         _slider_v.addWidget(self._scroll_slider)
+        # Hidden until a scene's text actually overflows the viewport — the rail
+        # only appears when there's something to scroll (toggled by the scrollbar's
+        # range below), then the big handle reads clearly as "grab me for more".
+        _slider_col.setVisible(False)
+        self._slider_col = _slider_col
 
         _body_row = QWidget()
         _body_row.setStyleSheet("background: transparent;")
@@ -669,7 +675,7 @@ class NarrativePanel(QWidget):
         _body_h.addWidget(_slider_col, 0)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(40, 32, 28, 20)
+        layout.setContentsMargins(40, 32, 8, 20)   # tight right margin so the rail hugs the image-frame's left edge, not the text gutter
         layout.setSpacing(6)
         layout.addWidget(_body_row, 1)
         layout.addWidget(self._verified)
@@ -678,6 +684,9 @@ class NarrativePanel(QWidget):
         _vsb.rangeChanged.connect(self._scroll_slider.setRange)
         _vsb.valueChanged.connect(self._scroll_slider.setValue)
         self._scroll_slider.valueChanged.connect(_vsb.setValue)
+        # Show the rail only when the text overflows (scrollbar has real range).
+        # No overflow -> no rail; the story sits clean, full-width, uninterrupted.
+        _vsb.rangeChanged.connect(lambda mn, mx: self._slider_col.setVisible(mx > mn))
 
         # Paragraph divider asset: GA's own play sticker (the app logo), with a
         # 2px white rule out from its centre — the Majestic's "lines and stickers"
