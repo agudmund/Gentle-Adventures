@@ -48,6 +48,8 @@ utils/                     Fail-able features, lazy-imported so a fault stays
                            NPU probe, oracle, text backends, sticker loot
 Images/                    Icons (brand mark, stickers) and cached
                            Gemini-rendered scene art
+Audio/                     Narrator takes, played when their scene lands
+                           (scene text is coupled to these recordings)
 Documents/                 Design briefs, the narrator voice guide, build
                            manifest, oracle transcripts
 settings.toml              Live-read window, theme, model, and game values
