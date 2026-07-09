@@ -81,7 +81,14 @@ def main() -> int:
     _watcher = init_watcher()
     _watcher.changed.connect(FamTheme.reload)
 
-    start_in_tray = "--minimized" in sys.argv
+    # Per-machine wake. The TV-role box (Sakura) autologins to a chromeless
+    # desktop with no taskbar, so it has no visual "is it up yet?" cue — there
+    # GA starts MAXIMIZED and its sleeping-captain wake scene IS the boot
+    # heartbeat, overriding any --minimized the login shortcut still passes.
+    # Machine awareness drives this now, not the flag (see identity.is_wake_display).
+    from utils.identity import is_wake_display
+    wake_display = is_wake_display()
+    start_in_tray = ("--minimized" in sys.argv) and not wake_display
     window = GentleAdventuresApp(settings=settings, app_dir=app_dir,
                                  start_in_tray=start_in_tray)
     _watcher.changed.connect(window._reapply_theme)  # live palette ripple from The Settlers
@@ -90,6 +97,9 @@ def main() -> int:
     # the window comes back via the tray icon's click / Show.
     if start_in_tray:
         window.minimize_to_tray()
+    elif wake_display:
+        window.show()
+        window.maximize_window()   # the wake spectacle, front and centre
     else:
         window.show()
     return app.exec()

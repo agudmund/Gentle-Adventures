@@ -8,6 +8,9 @@
 
 from __future__ import annotations
 
+import os
+import socket
+
 __version__ = "0.1.0"
 _APP_NAME = "GentleAdventures"
 
@@ -27,3 +30,21 @@ def user_agent(feature: str = "") -> str:
     """
     segment = f"/{feature}" if feature else ""
     return f"{_APP_NAME}{segment}/{__version__} (SingleSharedBraincell)"
+
+
+def is_wake_display() -> bool:
+    """True on the TV-role machine (Sakura) that autologins straight to a
+    chromeless desktop with a hidden taskbar — a screen with no visual "is it
+    up yet?" cue. There GA starts MAXIMIZED and its sleeping-captain wake scene
+    IS the boot heartbeat (offline while the antenna warms, waking into scene
+    one the moment it connects), instead of minimizing to tray. Every other
+    machine keeps the tray autostart.
+
+    Mirrors Compass's hostname->role derivation ('tv' for Sakura). An explicit
+    ``GA_WAKE_DISPLAY`` env var (1/0) overrides the hostname guess, so the role
+    never has to be hardcoded to one machine when the fleet grows a second TV.
+    """
+    override = os.environ.get("GA_WAKE_DISPLAY")
+    if override is not None:
+        return override.strip().lower() in ("1", "true", "yes", "on")
+    return socket.gethostname().strip().lower() == "sakura"

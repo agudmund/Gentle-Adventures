@@ -1069,6 +1069,7 @@ class GentleAdventuresApp(QMainWindow):
     # ───── setup: key entry ─────
 
     def _enter_setup_key(self, error: str | None = None):
+        self._await_stop()
         self.phase = "setup_key"
         self.title_bar.set_title("GENTLE ADVENTURES, 00 — COMMISSIONING THE PAINTER")
         body = (
@@ -1109,6 +1110,7 @@ class GentleAdventuresApp(QMainWindow):
         self._pending_key = api_key
 
     def _on_validation_success(self, models: list):
+        self._await_stop()
         self.available_models = models
         if not load_api_key(self.app_dir, env_var=GEMINI_KEY_ENV):
             save_api_key(self.app_dir, self._pending_key, env_var=GEMINI_KEY_ENV)
@@ -1136,7 +1138,87 @@ class GentleAdventuresApp(QMainWindow):
                     pass
             self._enter_setup_key(error="that key didn't open the door. try another one?")
         else:
-            self._enter_setup_key(error=f"the studio's offline — {error}")
+            # Not the key — the network itself is unreachable (autostart raced
+            # ahead of the WiFi; on the TV box the antenna can lag 5+ minutes).
+            # A valid cached key must NOT be re-demanded over a transient outage,
+            # so wait for the antenna instead of dropping to the key screen. The
+            # retry IS the connectivity probe: the moment DNS resolves,
+            # validation succeeds and the captain wakes into scene one.
+            logger.info(f"[painter] network unreachable ({error}); entering the waiting room")
+            self._enter_awaiting_network()
+
+    # ───── setup: awaiting the network (the patient wake) ─────
+
+    _AWAIT_POLL_MS = 6000          # retry cadence while waiting for the antenna
+    _AWAIT_CONCERN_MS = 600_000    # 10 min of silence -> add the "check the ship" line
+    _AWAIT_LINE = "Before the ship wakes up we need to get in contact with the painter first."
+    _AWAIT_CONCERN_LINE = "We should probably check the ship..."
+
+    def _enter_awaiting_network(self):
+        """We hold a valid key but the network isn't up yet (Sakura's antenna
+        can lag minutes past autologin). Hold the sleeping-captain frame and
+        retry validation patiently — the moment the antenna connects, the normal
+        success path wakes the captain into scene one. Same art as the
+        commission scene; only the words differ. No studio button, no key prompt
+        (the key isn't missing), just a gentle 'Ask Puff!' by the parser.
+
+        Idempotent on re-entry: each failed retry re-enters to schedule the next
+        poll, but the scene, the concern timer, and the concern line are set up
+        exactly once."""
+        first = self.phase != "awaiting_network"
+        self.phase = "awaiting_network"
+        if first:
+            self.title_bar.set_title("GENTLE ADVENTURES, 00 — REACHING THE PAINTER")
+            self._await_concerned = False
+            if self.scene_cache.has("commissioning"):
+                self.scene_view.show_image(QPixmap(str(self.scene_cache.path("commissioning"))))
+            else:
+                self.scene_view.show_placeholder("✦ awaiting the painter ✦")
+            self.interaction.set_choices([])          # no "Open the studio"
+            self.interaction.set_parser_mode("free")
+            self.interaction.set_parser_placeholder("✦ Ask Puff! ✦")
+            self._render_await()
+            concern = QTimer(self)
+            concern.setSingleShot(True)
+            concern.timeout.connect(self._await_concern)
+            concern.start(self._AWAIT_CONCERN_MS)
+            self._await_concern_timer = concern
+        # (re)schedule the next patient poll — exactly one is ever in flight.
+        QTimer.singleShot(self._AWAIT_POLL_MS, self._await_retry)
+
+    def _render_await(self):
+        body = self._AWAIT_LINE
+        if getattr(self, "_await_concerned", False):
+            body = f"{body}\n\n{self._AWAIT_CONCERN_LINE}"
+        self.narrative.set_text(body, verified=None)
+
+    def _await_concern(self):
+        if self.phase != "awaiting_network":
+            return
+        self._await_concerned = True
+        self._render_await()
+
+    def _await_retry(self):
+        if self.phase != "awaiting_network":
+            return   # already woke, or moved on — this poll is stale
+        key = load_api_key(self.app_dir, env_var=GEMINI_KEY_ENV)
+        if not key:
+            # The key went missing while we waited — now it really is a setup.
+            self._await_stop()
+            self._enter_setup_key()
+            return
+        self._run_validation(key)   # success -> _on_validation_success -> scene 1;
+                                    # still offline -> _on_validation_failure -> re-enter
+
+    def _await_stop(self):
+        """Silence the concern timer on the way out of the waiting room."""
+        t = getattr(self, "_await_concern_timer", None)
+        if t is not None:
+            try:
+                t.stop()
+            except (RuntimeError, AttributeError):
+                pass
+            self._await_concern_timer = None
 
     # ───── setup: model picker (confirm or override) ─────
 
