@@ -34,6 +34,18 @@ The active choice persists in `active_narrative.txt`, and each narrative keeps i
 
 Needs Python 3.11+ with the family packages installed editable (`pretty_widgets`, `shared_braincell`, `leopold`). Credentials live in environment variables only, never on disk: `GEMINI_GENTLE_KEY` for scene images (GA's own key slot; the generic `GEMINI_API_KEY` / `SingleSharedBraincell_GeminiKey` remain as fallbacks), `SingleSharedBraincell_ApiKey` for Claude text, `GA_WebApp` and `GA_Ledger` for the Sheet proxy. A first-run wizard handles the Gemini key and stores it straight into the environment.
 
+## Autostart (login)
+
+Gentle Adventures comes up on every login. The canonical rail is a Windows Scheduled Task, registered declaratively: the repo ships `autostart_task.xml`, and Compass's install pass (`_util\install.bat` via `Compass.setup`, the `step_app_autostart` step) wires it on any machine the app is present on. No Startup-folder shortcut; the task supersedes it.
+
+The task passes `--minimized` everywhere. Per-machine startup behaviour is the app's own decision, not the launcher's: on the TV-role machine (Sakura) `utils/identity.is_wake_display()` overrides the flag and GA wakes maximized as the boot heartbeat, while every other machine keeps the tray autostart. One task definition, one flag; the fleet's differences live in code that can explain itself. The trigger carries no delay, so login behaviour matches the old immediate shortcut on both machines.
+
+GA carries no singleton port guard, so keep exactly one autostart rail per machine: the moment the task registers, any old Startup-folder `.lnk` must retire, or login double-launches her.
+
+```powershell
+Get-ScheduledTask -TaskName 'Gentle Adventures Autostart'   # State -> Ready
+```
+
 ## How it's built
 
 ```
