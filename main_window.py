@@ -1179,7 +1179,7 @@ class GentleAdventuresApp(QMainWindow):
 
     _AWAIT_POLL_MS = 6000          # retry cadence while waiting for the antenna
     _AWAIT_CONCERN_MS = 600_000    # 10 min of silence -> add the "check the ship" line
-    _AWAIT_LINE = "Before the ship wakes up we need to get in contact with the painter first."
+    _AWAIT_LINE = "Before the ship wakes up we need to get in contact with the painter."
     _AWAIT_CONCERN_LINE = "We should probably check the ship..."
 
     def _enter_awaiting_network(self):
