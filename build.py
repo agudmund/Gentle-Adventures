@@ -36,8 +36,7 @@ from send2trash import send2trash
 # --- Configuration ---
 appName      = "Gentle Adventures"
 entryPoint   = "main.py"
-iconsFolder  = "Images/Icons"
-appIconFile  = "playIcon.ico"               # GA's brand mark (matches main.py's window/taskbar icon)
+appIconFile  = "Play.ico"   # GA's brand mark (the Play sticker), sourced from Iconic (Images/Icons retired)
 docsFolder   = str(Path("Documents") / "Build")
 
 # Shared runtime — built by build_runtime.py inside the runtime folder itself.
@@ -319,7 +318,8 @@ def buildApp(launch: bool = True):
     # ── [4/6] Build via PyInstaller ──────────────────────────────────────
     print("[4/6] Build via PyInstaller")
     print(f"      streaming - full log at {pyinstaller_log.relative_to(projectRoot)}")
-    appIcon     = projectRoot / iconsFolder / appIconFile
+    # App icon from the Iconic single-source sticker set (GA Images/Icons retired).
+    appIcon     = Path.home() / "Desktop" / "Iconic" / "Images" / "Stickers" / "Intricate" / appIconFile
     versionInfo = projectRoot / "Documents" / "version_info.txt"
     pyinstaller_args = [
         entryPoint,

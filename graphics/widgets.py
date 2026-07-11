@@ -149,7 +149,7 @@ class TitleBar(QWidget):
     _INFO_FONT_PX = max(6, round(Fam.handleHeightTop * 9 / 25))
     # Curtains brand: the colourful share-arrow sticker (Family-3), copied from
     # intricate/icons/Stickers — the bright version of the iconic.png fallback.
-    _CURTAINS_ICON = "Stickers/Intricate.ico"
+    _CURTAINS_ICON = "Intricate/Intricate Official Icon.ico"
     # Title display: announce, hold, then fade off (Majestic infobar timing).
     _TITLE_HOLD_MS = 3500
     _TITLE_FADE_MS = 700
@@ -208,9 +208,9 @@ class TitleBar(QWidget):
 
         # ── right cluster: minimize / maximize / exid ──
         self._btn_min = self._control("–", self._send_to_tray, icon_name=Fam.iconTray, tooltip="Minimize")
-        self._btn_max = self._control("□", self._on_maximize, icon_name=Fam.iconMaximize, tooltip="Maximize")
+        self._btn_max = self._control("□", self._on_maximize, icon_name="Intricate/Maximize.ico", tooltip="Maximize")
         self._btn_close = self._control(
-            "✕", self._send_to_tray, icon_name=Fam.iconExid, close=True,
+            "✕", self._send_to_tray, icon_name="Intricate/Exid.ico", close=True,
             tooltip="Exid, not a typo.  It's an exit button named exid",
         )
         for b in (self._btn_min, self._btn_max, self._btn_close):
@@ -643,7 +643,7 @@ class NarrativePanel(QWidget):
         # (whose object + range still track content even while the policy is off).
         self._scroll_slider = pretty_slider(
             Qt.Orientation.Vertical,
-            handle_icon="slider_handle_vertical.png",
+            handle_icon="Intricate/Slider - Vertical.png",
             handle_size=56,          # ~2x — nicely huge, unmistakably a grab-for-more button
             range=(0, 100),
             value=0,
@@ -688,7 +688,7 @@ class NarrativePanel(QWidget):
         # 2px white rule out from its centre — the Majestic's "lines and stickers"
         # treatment, dropped between paragraphs as the reveal crosses them.
         from utils.paths import app_root
-        _play = app_root() / "Images" / "Icons" / "playIcon.png"
+        _play = Path.home() / "Desktop" / "Iconic" / "Images" / "Stickers" / "Intricate" / "Play.png"
         self._play_url = _play.as_uri() if _play.exists() else ""
 
         # ── typewriter state ─────────────────────────────────────────────────

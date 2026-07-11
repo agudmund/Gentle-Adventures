@@ -918,7 +918,7 @@ class GentleAdventuresApp(QMainWindow):
         """System tray icon with a Show / Exit menu. The icon is playIcon —
         Gentle Adventures' brand mark, copied into Images/Icons/ from the family set."""
         self._tray_icon = QSystemTrayIcon(self)
-        icon_path = self.app_dir / "Images" / "Icons" / "playIcon.ico"
+        icon_path = Path.home() / "Desktop" / "Iconic" / "Images" / "Stickers" / "Intricate" / "Play.ico"
         if icon_path.exists():
             self._tray_icon.setIcon(QIcon(str(icon_path)))
         else:
@@ -966,7 +966,7 @@ class GentleAdventuresApp(QMainWindow):
         import winreg
         from PySide6.QtCore import QBuffer, QIODevice
 
-        icon_path = self.app_dir / "Images" / "Icons" / "playIcon.ico"
+        icon_path = Path.home() / "Desktop" / "Iconic" / "Images" / "Stickers" / "Intricate" / "Play.ico"
         if not icon_path.exists():
             return
 
