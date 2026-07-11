@@ -232,10 +232,11 @@ class TitleBar(QWidget):
         # gently touching them; no hand-pointer swap on hover.
         btn.setFocusPolicy(Qt.NoFocus)
         if icon_name:
-            # Family icons resolve via Theme.icon() → app Images/Icons/, then the asset
-            # vault ($SingleSharedBraincell_AssetVault/Icons), then the Iconic collection
-            # (the finalized-icon source). Missing → honest circle, no crash. main.py's
-            # FamTheme.reload() loads the mappings.
+            # Family icons resolve via Theme.icon() → the asset vault
+            # ($SingleSharedBraincell_AssetVault/Icons), then the Iconic collection
+            # (the finalized single-source; GA has no repo-local icon folder). App-
+            # qualified refs like "Intricate/Exid.ico" hit the Iconic Stickers tier.
+            # Missing → honest circle, no crash. main.py's FamTheme.reload() loads them.
             btn.setIcon(QIcon(Fam.icon(icon_name)))
             btn.setIconSize(QSize(Fam.toolbarBtnIconSize, Fam.toolbarBtnIconSize))
         elif glyph:

@@ -915,8 +915,8 @@ class GentleAdventuresApp(QMainWindow):
     # ───── system tray ─────
 
     def _setup_system_tray(self) -> None:
-        """System tray icon with a Show / Exit menu. The icon is playIcon —
-        Gentle Adventures' brand mark, copied into Images/Icons/ from the family set."""
+        """System tray icon with a Show / Exit menu. The icon is the Play sticker —
+        Gentle Adventures' brand mark, sourced from Iconic's single-source set."""
         self._tray_icon = QSystemTrayIcon(self)
         icon_path = Path.home() / "Desktop" / "Iconic" / "Images" / "Stickers" / "Intricate" / "Play.ico"
         if icon_path.exists():
