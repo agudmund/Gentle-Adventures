@@ -1391,14 +1391,27 @@ class GentleAdventuresApp(QMainWindow):
         """Voice a scene when a narrator take exists for it. Presence-gated
         (no file, no player, no fuss — contextual absence), and it follows
         scene landings: entering any scene stops the previous take, the same
-        way narrative.cut() ends the old text reveal. On the wake box this is
-        the audible half of 'the ship is up': scene one is HEARD landing even
-        when nobody is looking at the screen."""
+        way narrative.cut() ends the old text reveal.
+
+        Visibility-gated too. On the WAKE BOX (Sakura's chromeless TV) the
+        narrator IS the audible half of 'the ship is up' — scene one is heard
+        landing across the room even when nobody is looking. But on a normal
+        desk (the Majestic's --minimized systray autostart), a scene that
+        auto-advances in the background — 0→1 on network-connect — must stay
+        SILENT: the voice belongs to a session the user actually opened, not to
+        a tray icon nobody asked to hear. So play only if this is the wake box
+        OR the window is visible; a passive tray landing is heard by no one, on
+        purpose ([[project_contextual_absence]] — the same gesture as the tray
+        vs splash window itself)."""
         fx = getattr(self, "_narrator", None)
         if fx is not None:
             fx.stop()
         fname = self._NARRATION.get(scene_id)
         if not fname:
+            return
+        from utils.identity import is_wake_display
+        if not is_wake_display() and not self.isVisible():
+            logger.info(f"[narrator] '{scene_id}' held silent — passive tray autostart, not the wake box")
             return
         path = self.app_dir / "Audio" / fname
         if not path.exists():
