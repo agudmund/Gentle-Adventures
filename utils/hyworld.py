@@ -148,6 +148,33 @@ def tuck_in_hyworld(settings: dict) -> bool:
         return False
 
 
+def _raise_tunnel_detached() -> None:
+    """The wake ripple (2026-07-13): after a successful wake whisper, fire the
+    family `twin` wrapper detached to raise the SSM tunnel once the box reaches
+    running (--wait polls for it), so a GA wake ends with https://the-twin/
+    answering — same destination as `twin wake` from a console. Best-effort and
+    fully detached: WorldMirror itself rides the twin's own systemd unit, this
+    only adds the machine-local tunnel; absence of the wrapper is contextual
+    absence, never an error."""
+    twin_cmd = shutil.which("twin")
+    if not twin_cmd:
+        logger.debug("[hyworld] no `twin` wrapper on PATH — tunnel stays a console act")
+        return
+    try:
+        import os
+        flags = 0
+        if os.name == "nt":
+            flags = (subprocess.DETACHED_PROCESS
+                     | subprocess.CREATE_NEW_PROCESS_GROUP
+                     | CREATE_NO_WINDOW)
+        subprocess.Popen([twin_cmd, "tunnel", "start", "--wait"],
+                         creationflags=flags, stdin=subprocess.DEVNULL,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        logger.info("[hyworld] tunnel ripple sent — https://the-twin/ once she's up")
+    except Exception as e:
+        logger.debug(f"[hyworld] tunnel ripple stumbled: {e}")
+
+
 def wake_hyworld(settings: dict) -> str | None:
     """Ask AWS to start the twin. Returns the state it reports ('pending' on a
     fresh wake, 'running' if it was already up — start-instances is idempotent),
@@ -161,6 +188,8 @@ def wake_hyworld(settings: dict) -> str | None:
     try:
         state = payload["StartingInstances"][0]["CurrentState"]["Name"]
         logger.info(f"[hyworld] wake requested — twin now: {state}")
+        if state in ("pending", "running"):
+            _raise_tunnel_detached()
         return str(state)
     except (TypeError, KeyError, IndexError):
         return None
