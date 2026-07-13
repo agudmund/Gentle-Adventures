@@ -43,6 +43,12 @@ from utils.settings import load_settings
 from pretty_widgets.utils.fonts import register_app_fonts
 from pretty_widgets.graphics.Theme import Theme as FamTheme
 from pretty_widgets.utils.settings import init_watcher
+from shared_braincell import is_singleton
+
+# Singleton knock port — the suite convention (Intricate 47321, The Settlers
+# 47322, Gentle Adventures 47323; instance_lock walks upward if taken). The
+# port is accounted for in the edge port-surfaces registry (Compass.edge).
+_INSTANCE_START_PORT = 47323
 
 
 def main() -> int:
@@ -55,6 +61,12 @@ def main() -> int:
     app_dir = app_root()   # frozen-aware: next to the .exe, not inside _internal/
     init_logger(app_dir)
     settings = load_settings(app_dir / "settings.toml")
+
+    # Singleton guard — handshake-validated, port-range fallback (the family
+    # primitive; mirrors The Settlers). Silent exit if a Gentle Adventures is
+    # already running, so a double/quintuple-clicked launcher opens one app.
+    if not is_singleton("Gentle Adventures", start_port=_INSTANCE_START_PORT):
+        return 0
 
     # Windows taskbar identity — bind the taskbar / jumplist / systray to our
     # own AUMID instead of the generic "Python" launcher. Mirrors The Majestic.
