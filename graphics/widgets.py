@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - widgets.py the Sierra chrome — title bar, scene view, narrative, interaction
--The chrome that holds the wonder, for Enjoying
+-The chrome that holds the wonder, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

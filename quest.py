@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - quest.py the NPU adventure beats, scene by scene
--Every beat was written before you knew you needed it, for Enjoying
+-Every beat was written before you knew you needed it, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

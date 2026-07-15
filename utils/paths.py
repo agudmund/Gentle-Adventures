@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - paths.py the frozen-aware home finder
--Wherever the ship sails, it always knows the way home, for Enjoying
+-Wherever the ship sails, it always knows the way home, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

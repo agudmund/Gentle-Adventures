@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - main_window.py top-level window, setup wizard, and scene orchestrator
--We frame the new world and welcome the player home, for Enjoying
+-We frame the new world and welcome the player home, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

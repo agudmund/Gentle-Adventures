@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - logger.py family Rust-logger wiring (intricate_log) with a stdlib fallback
--Every step is remembered, none for shame, for Enjoying
+-Every step is remembered, none for shame, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

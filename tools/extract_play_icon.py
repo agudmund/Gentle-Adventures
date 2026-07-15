@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - extract_play_icon.py app-icon extraction
--The play sticker became our face, and the window learnt to wear it For Enjoying
+-The play sticker became our face, and the window learnt to wear it, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

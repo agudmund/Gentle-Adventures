@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - text.py the ship's voice, a swappable Claude/Gemini text client
--One doorway to the oracles; Claude answers by default, Gemini on a whim, for Enjoying
+-One doorway to the oracles; Claude answers by default, Gemini on a whim, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

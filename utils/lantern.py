@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - lantern.py the Lantern, a companion that lights a tangle when a tool stumbles
--No wall of red; when something snags, a friend beside you holds up a light, for Enjoying
+-No wall of red; when something snags, a friend beside you holds up a light, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

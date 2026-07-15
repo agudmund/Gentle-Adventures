@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - settings.py TOML loader
--The dials live in one place, by one hand, for Enjoying
+-The dials live in one place, by one hand, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

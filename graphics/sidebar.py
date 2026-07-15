@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - sidebar.py the left rail, home of the lower-corner control grid
--A quiet console of faders and meters, family-signature, for Enjoying
+-A quiet console of faders and meters, family-signature, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - main.py application bootstrap
--The captain wakes and the bridge hums anew, for Enjoying
+-The captain wakes and the bridge hums anew, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

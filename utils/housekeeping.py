@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - housekeeping.py sweep Python bytecode on exit
--She tidies her room before the lights go out, for Enjoying
+-She tidies her room before the lights go out, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

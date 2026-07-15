@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - scene_cache.py the image-state manager
--Once painted, a scene is remembered, not repainted, for Enjoying
+-Once painted, a scene is remembered, not repainted, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

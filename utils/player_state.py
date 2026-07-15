@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - player_state.py the ship's logbook, a local-first cache over the cloud Ledger
--Progress kept close to home, whispered up to the stars whenever the line is clear, for Enjoying
+-Progress kept close to home, whispered up to the stars whenever the line is clear, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

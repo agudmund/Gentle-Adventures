@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - sticker_loot.py reward stickers, awarded from the iconic library
--Reach a true beat, earn a real sticker; the ship hands you a keepsake, for Enjoying
+-Reach a true beat, earn a real sticker; the ship hands you a keepsake, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

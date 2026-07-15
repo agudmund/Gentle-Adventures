@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - scene_map.py the scene navigator, a plug-and-play jump map
--A first-class module the window calls and the scene yields to, for Enjoying
+-A first-class module the window calls and the scene yields to, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

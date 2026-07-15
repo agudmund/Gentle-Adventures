@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - build.py build automation
--OneDir build with shared runtime junction and curated log output For Enjoying
+-OneDir build with shared runtime junction and curated log output, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

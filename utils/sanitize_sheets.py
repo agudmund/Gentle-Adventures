@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - sanitize_sheets.py the Ledger's lint, a value-grep over the live Sheet
--We sweep the cloud grid for words the canon has long since outgrown, for Enjoying
+-We sweep the cloud grid for words the canon has long since outgrown, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - resync_floor.py refresh the committed offline floor from the live Sheet
--So a fresh clone with no network still opens on current canon, not a stale ghost, for Enjoying
+-So a fresh clone with no network still opens on current canon, not a stale ghost, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

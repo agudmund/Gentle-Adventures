@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - sheet_edit.py a surgical, clobber-safe single-cell sheet editor
--Change one true word in the Ledger without disturbing its neighbours, for Enjoying
+-Change one true word in the Ledger without disturbing its neighbours, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

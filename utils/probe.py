@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - probe.py system-state checks the game uses to verify real-world steps
--The ship feels its own pulse and reports back, for Enjoying
+-The ship feels its own pulse and reports back, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

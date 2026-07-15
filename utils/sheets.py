@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - sheets.py the Ledger's courier, a raw-urllib Sheets proxy client
--We whisper the ship's state up to the cloud grid and read the quest home, for Enjoying
+-We whisper the ship's state up to the cloud grid and read the quest home, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

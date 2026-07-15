@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - identity.py the ship's signature on every outbound call
--One name, one version, so our traffic is never anonymous noise in another's log, for Enjoying
+-One name, one version, so our traffic is never anonymous noise in another's log, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 

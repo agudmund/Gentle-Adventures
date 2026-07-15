@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 -Gentle Adventures - weather.py the psychological-weather overlay
--Soft rain that reads the room and drifts on a wind that keeps changing its mind, for Enjoying
+-Soft rain that reads the room and drifts on a wind that keeps changing its mind, For Enjoying
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 
