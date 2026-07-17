@@ -32,6 +32,9 @@ from quest import all_scenes, first_scene_id, get_scene, reload_quest, switch_na
 from pretty_widgets.graphics.Theme import Theme as Fam
 from graphics.widgets import BottomToolbar, InteractionBar, NarrativePanel, ResizeGrip, SceneView, TitleBar
 from graphics.scene_map import SceneMap
+from graphics.inventory import KeepsakeShelf
+from graphics.journal import CaptainsLog
+from graphics.codex import ShipsCodex
 from graphics.sidebar import Sidebar
 from graphics.weather import WeatherOverlay
 from shared_braincell.gemini_image import (
@@ -384,6 +387,11 @@ class GentleAdventuresApp(QMainWindow):
         self._npu_probed = False          # NPU probe is cached (it can't change mid-session)
         self._npu_engine: str | None = None
         self._earned_stickers: set[str] = set()   # scene ids already rewarded (session dedupe)
+        # Lifetime keepsakes — the shelf's memory, persisted via Player_State
+        # (stickers_earned) and hydrated in _enter_quest. Deliberately a SECOND
+        # set: _earned_stickers stays session-scoped so the bloom celebration
+        # replays each session, while the shelf remembers forever.
+        self._keepsakes: set[str] = set()
         # Ledger write-back: push Player_State up as the captain plays. Built
         # once; None (silently) when the proxy isn't configured — contextual
         # absence, never an error banner. The sync runs off the UI thread.
@@ -509,6 +517,12 @@ class GentleAdventuresApp(QMainWindow):
             self.scene_view.restyle()
         if hasattr(self, "scene_map"):
             self.scene_map.restyle()
+        if hasattr(self, "inventory"):
+            self.inventory.restyle()
+        if hasattr(self, "journal"):
+            self.journal.restyle()
+        if hasattr(self, "codex"):
+            self.codex.restyle()
         if hasattr(self, "sidebar"):
             self.sidebar.restyle()
         if hasattr(self, "narrative"):
@@ -609,9 +623,17 @@ class GentleAdventuresApp(QMainWindow):
         # Populated lazily when the map is first opened (_toggle_map), so window
         # construction never blocks on a live Quest_Log fetch.
         self.scene_map.scene_picked.connect(self._on_map_pick)
+        # The other three feature panels follow the map's plug-and-play shape:
+        # standalone modules the stack flips to, populated lazily on open.
+        self.inventory = KeepsakeShelf()
+        self.journal = CaptainsLog()
+        self.codex = ShipsCodex()
         self._right_stack = QStackedWidget()
         self._right_stack.addWidget(self.scene_view)   # index 0 — the painted scene
         self._right_stack.addWidget(self.scene_map)    # index 1 — the jump map
+        self._right_stack.addWidget(self.inventory)    # index 2 — the keepsake shelf
+        self._right_stack.addWidget(self.journal)      # index 3 — the captain's log
+        self._right_stack.addWidget(self.codex)        # index 4 — the ship's codex
 
         self.narrative = NarrativePanel()
         self.interaction = InteractionBar()
@@ -1348,6 +1370,10 @@ class GentleAdventuresApp(QMainWindow):
         saved = self.player_state.get("visited_scenes")
         if isinstance(saved, (list, tuple)):
             self._visited.update(str(s) for s in saved if get_scene(str(s)) is not None)
+        # The keepsake shelf's lifetime memory rides the same hydration moment.
+        shelf = self.player_state.get("stickers_earned")
+        if isinstance(shelf, (list, tuple)):
+            self._keepsakes.update(str(s) for s in shelf)
         self._load_scene(first_scene_id())
 
     def _load_scene(self, scene_id: str):
@@ -1715,6 +1741,11 @@ class GentleAdventuresApp(QMainWindow):
         self._earned_stickers.add(scene_id)
         self.scene_view.flash_sticker(str(path))
         self.bottom_toolbar.set_info(f"✦ sticker earned — {name} ✦")
+        # The shelf remembers forever: persist the lifetime keepsake set the
+        # moment it grows (local-first, so the memory survives any disconnect).
+        if scene_id not in self._keepsakes:
+            self._keepsakes.add(scene_id)
+            self._sync_player_state({"stickers_earned": sorted(self._keepsakes)})
 
     # ───── The Lantern (gentle real-tool runner) ─────
 
@@ -1987,12 +2018,81 @@ class GentleAdventuresApp(QMainWindow):
         return [(s["id"], s.get("title", s["id"])) for s in all_scenes()]
 
     def _on_feature(self, name: str):
-        """Bottom-toolbar feature buttons. 'map' is wired (scene navigator);
-        the others still whisper 'not wired up yet' until they land."""
+        """Bottom-toolbar feature buttons — all four wired (2026-07-17): the
+        scene navigator, the keepsake shelf, the captain's log, and the ship's
+        codex. The whisper fallback survives only as a guard for names that
+        don't exist yet."""
         if name == "map":
             self._toggle_map()
+        elif name == "inventory":
+            self._toggle_inventory()
+        elif name == "journal":
+            self._toggle_journal()
+        elif name == "codex":
+            self._toggle_codex()
+        else:
+            self.bottom_toolbar.set_info(f"✦ {name} — not wired up yet ✦")
+
+    def _toggle_panel(self, panel, populate, open_whisper: str, gate_whisper: str):
+        """The shared flip: every feature panel shares the map's rhythm — quest
+        phase only, toggle off if already showing, populate lazily on open."""
+        if self.phase != "quest":
+            self.bottom_toolbar.set_info(gate_whisper)
             return
-        self.bottom_toolbar.set_info(f"✦ {name} — not wired up yet ✦")
+        if self._right_stack.currentWidget() is panel:
+            self._right_stack.setCurrentWidget(self.scene_view)
+            self.bottom_toolbar.set_info("")
+        else:
+            if populate is not None:
+                populate()
+            self._right_stack.setCurrentWidget(panel)
+            self.bottom_toolbar.set_info(open_whisper)
+
+    def _toggle_inventory(self):
+        self._toggle_panel(
+            self.inventory,
+            lambda: self.inventory.set_stickers(self._keepsake_entries()),
+            "✦ inventory — the keepsake shelf ✦",
+            "✦ the shelf opens once the log begins ✦")
+
+    def _toggle_journal(self):
+        self._toggle_panel(
+            self.journal,
+            lambda: self.journal.set_entries(self._journal_entries()),
+            "✦ journal — the captain's log ✦",
+            "✦ the log opens once the log begins, fittingly ✦")
+
+    def _toggle_codex(self):
+        self._toggle_panel(
+            self.codex, None,
+            "✦ codex — the ship's recovered pages ✦",
+            "✦ the codex opens once the log begins ✦")
+
+    def _keepsake_entries(self) -> list[tuple[str, str]]:
+        """(png_path, achievement_name) for every keepsake — the persisted
+        lifetime set unioned with this session's earns, resolved through the
+        same award map that granted them (silent absence per sticker: an entry
+        whose asset went missing simply doesn't make the shelf)."""
+        entries = []
+        for scene_id in sorted(self._keepsakes | self._earned_stickers):
+            award = award_for_scene(scene_id, self.app_dir)
+            if award:
+                entries.append((str(award[0]), award[1]))
+        return entries
+
+    def _journal_entries(self) -> list[tuple[str, object]]:
+        """(title, path) for every Puff transcript on disk, newest first. The
+        filename IS the timestamp (llama_YYYYMMDD-HH.MM.SS.md), so a reverse
+        name sort is a reverse time sort; titles render it gently."""
+        log_dir = self.app_dir / "Documents" / "Data" / "Llama"
+        entries = []
+        for p in sorted(log_dir.glob("llama_*.md"), reverse=True):
+            stem = p.stem.removeprefix("llama_")            # 20260603-06.54.26
+            m = re.match(r"(\d{4})(\d{2})(\d{2})-(\d{2})\.(\d{2})", stem)
+            title = (f"{m.group(1)}-{m.group(2)}-{m.group(3)}  ·  "
+                     f"{m.group(4)}:{m.group(5)}") if m else p.stem
+            entries.append((title, p))
+        return entries
 
     def _toggle_map(self):
         """Flip the right pane between the painted scene and the jump map — a
