@@ -54,6 +54,7 @@ main.py / main_window.py   App shell and orchestrator; worker threads for
 quest.py                   The quest itself: scenes, choices, verify rules,
                            and the style preamble that keeps the art consistent
 graphics/                  Self-contained UI citizens: widgets, scene map,
+                           keepsake shelf, captain's log, ship's codex,
                            sidebar, psychological weather
 utils/                     Fail-able features, lazy-imported so a fault stays
                            scoped to one file: sheets client, player state,
