@@ -1124,9 +1124,11 @@ class GentleAdventuresApp(QMainWindow):
         self.title_bar.set_title("GENTLE ADVENTURES, 00 — COMMISSIONING THE PAINTER")
         body = (
             "Before the ship wakes up, we commission the painter.\n\n"
-            "Paste the key the Gem handed you below, then press Enter.\n\n"
+            "Paste the Gemini key the Gem handed you below, then press Enter.\n\n"
             "Pro accounts get the stronger painters.  The studio will provide you with keys.\n"
-            "Press the button if you need one."
+            "Press the button if you need one.\n\n"
+            "The painter's door only ever takes the Gemini key — the ship's voice keeps "
+            "its Anthropic key in the family keychain, and it is never asked for here."
         )
         if error:
             body = f"{body}\n\n✦ painter says: {error}"
@@ -1186,7 +1188,7 @@ class GentleAdventuresApp(QMainWindow):
                     kf.unlink()
                 except OSError:
                     pass
-            self._enter_setup_key(error="that key didn't open the door. try another one?")
+            self._enter_setup_key(error="that Gemini key didn't open the studio door. try another one?")
         else:
             # Not the key — the network itself is unreachable (autostart raced
             # ahead of the WiFi; on the TV box the antenna can lag 5+ minutes).
