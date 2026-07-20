@@ -33,8 +33,9 @@ def build_text_backend(settings: dict, app_dir: Path) -> Backend:
 
     Reads the [llm] block from settings. For the gemini case we inject GA's own
     resolved key (GEMINI_GENTLE_KEY env first, then legacy fallbacks the shared module
-    can't see); Claude reads the family env key (SingleSharedBraincell_ApiKey)
-    itself. Construction never hits the network — a missing key only surfaces as
+    can't see); Claude resolves the family key itself (keychain-first via
+    resolve_anthropic_key; ANTHROPIC_API_KEY env as per-process fallback).
+    Construction never hits the network — a missing key only surfaces as
     an LLMAuthError when complete() is actually called.
     """
     cfg = {**_DEFAULTS, **(settings.get("llm", {}) or {})}

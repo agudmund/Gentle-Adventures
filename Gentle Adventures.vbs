@@ -22,7 +22,7 @@ Set procEnv = sh.Environment("PROCESS")
 
 Dim k
 For Each k In Array("GA_WebApp", "GA_Ledger", _
-                    "SingleSharedBraincell_ApiKey", "SingleSharedBraincell_SettingsFile", _
+                    "SingleSharedBraincell_SettingsFile", _
                     "SingleSharedBraincell_AssetVault", "SingleSharedBraincell_ChatHistory", _
                     "GEMINI_API_KEY")
     If userEnv.Item(k) <> "" Then procEnv.Item(k) = userEnv.Item(k)
