@@ -83,6 +83,14 @@ class KeyValidationWorker(QThread):
             self.failed.emit(str(e), True)
         except GeminiAPIError as e:
             self.failed.emit(str(e), False)
+        except Exception as e:
+            # The retry chain is failure-DRIVEN: the next awaiting-network poll
+            # is only armed from _on_validation_failure, so a worker dying with
+            # neither signal (captive-portal JSON garbage, an SSL edge) severed
+            # it forever and the ship sat on the loading screen for hours
+            # (2026-07-20 lifecycle review). Any surprise now reports as a
+            # non-auth failure and keeps the state machine breathing.
+            self.failed.emit(f"{type(e).__name__}: {e}", False)
 
 
 class HyWorldWakeWorker(QThread):
@@ -970,6 +978,15 @@ class GentleAdventuresApp(QMainWindow):
         self._tray_icon.setContextMenu(tray_menu)
         self._tray_icon.activated.connect(self._on_tray_activated)
 
+        # Summons channel: a duplicate launch (second `python main.py`, a
+        # re-clicked launcher) send_command's {"cmd": "show"} before exiting —
+        # drain it here so the summons actually wakes a tray-hidden ship.
+        # 250 ms, never blocks; the drain side of the instance_lock pattern
+        # its docstring describes (wired 2026-07-20 after the wake mystery).
+        self._summons_timer = QTimer(self)
+        self._summons_timer.timeout.connect(self._drain_summons)
+        self._summons_timer.start(250)
+
         # Self-heal the Personalization > Taskbar panel so the entry reads
         # "Gentle Adventures" with the playIcon mark instead of "Python" with
         # a stale snapshot. Silent no-op on failure — see Intricate's
@@ -1081,6 +1098,7 @@ class GentleAdventuresApp(QMainWindow):
 
     def _restore_from_tray(self) -> None:
         """Bring the window back from the tray."""
+        logger.info("[tray] restore requested — showing the window")
         self.show()
         self.raise_()
         self.activateWindow()
@@ -1099,7 +1117,18 @@ class GentleAdventuresApp(QMainWindow):
             elif self._restore_maximized:
                 QTimer.singleShot(0, self.maximize_window)
 
+    def _drain_summons(self) -> None:
+        from shared_braincell import drain_commands
+        for cmd in drain_commands("Gentle Adventures"):
+            if cmd.get("cmd") == "show":
+                logger.info("[singleton] summons received — restoring from tray")
+                self._restore_from_tray()
+
     def _on_tray_activated(self, reason) -> None:
+        # The log line is the forensic breadcrumb the 2026-07-20 wake mystery
+        # lacked: tray silence in the log now distinguishes "the event loop
+        # never saw the click" from "a ghost icon of a dead process".
+        logger.info(f"[tray] activated (reason={reason})")
         if reason in (QSystemTrayIcon.ActivationReason.Trigger,
                       QSystemTrayIcon.ActivationReason.DoubleClick):
             self._restore_from_tray()
@@ -1122,16 +1151,33 @@ class GentleAdventuresApp(QMainWindow):
         self._await_stop()
         self.phase = "setup_key"
         self.title_bar.set_title("GENTLE ADVENTURES, 00 — COMMISSIONING THE PAINTER")
-        body = (
-            "Before the ship wakes up, we commission the painter.\n\n"
-            "Paste the Gemini key the Gem handed you below, then press Enter.\n\n"
-            "Pro accounts get the stronger painters.  The studio will provide you with keys.\n"
-            "Press the button if you need one.\n\n"
-            "The painter's door only ever takes the Gemini key — the ship's voice keeps "
-            "its Anthropic key in the family keychain, and it is never asked for here."
-        )
         if error:
-            body = f"{body}\n\n✦ painter says: {error}"
+            # A key EXISTS and the studio refused it — a different situation
+            # from holding none at all, so it gets its own text (the mint-a-key
+            # walkthrough only appears when keys are genuinely absent, the same
+            # split the awaiting-network room already honours). The studio has
+            # transient moods; a same-key knock is a real first option.
+            body = (
+                "The painter stands ready, but the studio door stayed shut.\n\n"
+                f"✦ painter says: {error}\n\n"
+                "If the studio is just having a moment, knock again with the same key.\n"
+                "If the key has truly retired, paste a fresh Gemini key below and press "
+                "Enter — the studio button mints one."
+            )
+            choices = [
+                {"label": "Knock again with the same key", "action": "retry_door"},
+                {"label": "Open the studio", "action": "open_studio"},
+            ]
+        else:
+            body = (
+                "Before the ship wakes up, we commission the painter.\n\n"
+                "Paste the Gemini key the Gem handed you below, then press Enter.\n\n"
+                "Pro accounts get the stronger painters.  The studio will provide you with keys.\n"
+                "Press the button if you need one.\n\n"
+                "The painter's door only ever takes the Gemini key — the ship's voice keeps "
+                "its Anthropic key in the family keychain, and it is never asked for here."
+            )
+            choices = [{"label": "Open the studio", "action": "open_studio"}]
         self.narrative.set_text(body, verified=None)
         # Scene 0 is the one frame the painter can't paint for itself — it shows
         # BEFORE a key is connected, so it ships pre-rendered in Images/Scenes/. Show it
@@ -1141,7 +1187,7 @@ class GentleAdventuresApp(QMainWindow):
             self.scene_view.show_image(QPixmap(str(self.scene_cache.path("commissioning"))))
         else:
             self.scene_view.show_placeholder("✦ awaiting commission ✦")
-        self.interaction.set_choices([{"label": "Open the studio", "action": "open_studio"}])
+        self.interaction.set_choices(choices)
         self.interaction.set_parser_mode("key")
 
     # ───── setup: validation in flight ─────
@@ -1853,6 +1899,12 @@ class GentleAdventuresApp(QMainWindow):
         if hasattr(self, "_tray_icon"):
             self._tray_icon.hide()
         if self._restarting:
+            # Release the singleton lock BEFORE spawning the child — its own
+            # docstring warns that otherwise the child's probe finds this
+            # instance still holding the port and exits silently ("the restart
+            # stopped working"). Idempotent; the atexit hook stays the net.
+            from shared_braincell import release_singleton
+            release_singleton("Gentle Adventures")
             self._spawn_restart()
         super().closeEvent(event)
 
@@ -2181,6 +2233,12 @@ class GentleAdventuresApp(QMainWindow):
         action = choice.get("action")
         if action == "open_studio":
             webbrowser.open(STUDIO_URL)
+            return
+        if action == "retry_door":
+            # Same-key knock: rerun the boot resolution (env slot / registry /
+            # key file) and revalidate — a transient studio mood clears here
+            # without a fresh key ever being demanded.
+            self._start()
             return
         if action == "begin_quest":
             self._after_painter()

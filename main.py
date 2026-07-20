@@ -63,9 +63,16 @@ def main() -> int:
     settings = load_settings(app_dir / "settings.toml")
 
     # Singleton guard — handshake-validated, port-range fallback (the family
-    # primitive; mirrors The Settlers). Silent exit if a Gentle Adventures is
-    # already running, so a double/quintuple-clicked launcher opens one app.
+    # primitive; mirrors The Settlers). A duplicate launch is a SUMMONS, not a
+    # no-op: it asks the primary to show itself (drained by a QTimer in the
+    # window), so a second `python main.py` wakes a tray-hidden instance
+    # instead of vanishing without a trace (2026-07-20 lifecycle review).
     if not is_singleton("Gentle Adventures", start_port=_INSTANCE_START_PORT):
+        from shared_braincell import send_command
+        delivered = send_command("Gentle Adventures", {"cmd": "show"},
+                                 _INSTANCE_START_PORT)
+        print("Gentle Adventures is already sailing — asked her to come to the "
+              f"window ({'heard' if delivered else 'no reply'}).")
         return 0
 
     # Windows taskbar identity — bind the taskbar / jumplist / systray to our
