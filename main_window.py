@@ -465,7 +465,7 @@ class GentleAdventuresApp(QMainWindow):
         # overlap headache: each app's titlebar is the only persistent chrome,
         # and the curtains gesture rolls the window down to a thin strip when
         # it needs to get out of the way.
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.WindowStaysOnTopHint)
 
         self._build_layout()
         # Resizable from the bottom-right (ported from Intricate's grip): a
@@ -722,7 +722,7 @@ class GentleAdventuresApp(QMainWindow):
 
     def eventFilter(self, obj, event):
         # Keep the weather overlay covering the narrative+scene row as it resizes.
-        if obj is getattr(self, "_split", None) and event.type() == QEvent.Resize:
+        if obj is getattr(self, "_split", None) and event.type() == QEvent.Type.Resize:
             if hasattr(self, "_weather"):
                 self._weather.setGeometry(self._split.rect())
                 self._weather.raise_()
@@ -733,7 +733,7 @@ class GentleAdventuresApp(QMainWindow):
     def changeEvent(self, event):
         # Pause/resume the realtime heartbeat with focus + window state, so a long
         # idle (or sleeping) session doesn't quietly burn Apps Script quota.
-        if event.type() in (QEvent.ActivationChange, QEvent.WindowStateChange):
+        if event.type() in (QEvent.Type.ActivationChange, QEvent.Type.WindowStateChange):
             self._update_ledger_pulse()
         super().changeEvent(event)
 
@@ -822,7 +822,7 @@ class GentleAdventuresApp(QMainWindow):
         duration = Fam.windowRollTimingUp if collapsing else Fam.windowRollTimingDown
         anim = QPropertyAnimation(self, b"geometry", self)
         anim.setDuration(duration)
-        anim.setEasingCurve(getattr(QEasingCurve, Fam.windowRollEasing, QEasingCurve.OutExpo))
+        anim.setEasingCurve(getattr(QEasingCurve, Fam.windowRollEasing, QEasingCurve.Type.OutExpo))
         anim.setStartValue(start)
         anim.setEndValue(
             QRect(start.x(), start.y(), start.width(), bar_h) if collapsing

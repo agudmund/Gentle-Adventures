@@ -59,7 +59,7 @@ class SceneMap(QWidget):
         # A scroll area framed like the node-bordered scene image it sits beside.
         self._area = QScrollArea()
         self._area.setWidgetResizable(True)
-        self._area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._area.setStyleSheet(self._area_qss())
 
         layout = QVBoxLayout(self)
@@ -145,7 +145,7 @@ class SceneMap(QWidget):
         col.setSpacing(8)
 
         header = QLabel("✦ choose a scene ✦")
-        header.setAlignment(Qt.AlignCenter)
+        header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         hfont = QFont()
         hfont.setPointSize(11)
         hfont.setItalic(True)
@@ -158,13 +158,13 @@ class SceneMap(QWidget):
             visited = scene_id in self._visited
             btn.setStyleSheet(self._btn_qss(locked=not visited))
             if visited:
-                btn.setCursor(Qt.PointingHandCursor)
+                btn.setCursor(Qt.CursorShape.PointingHandCursor)
                 btn.clicked.connect(
                     lambda _checked=False, sid=scene_id: self.scene_picked.emit(sid))
             else:
                 # Locked: enabled (so the hover-driven pill fires) but never wired
                 # to a click, arrow cursor — unreachable, not dead.
-                btn.setCursor(Qt.ArrowCursor)
+                btn.setCursor(Qt.CursorShape.ArrowCursor)
                 btn.setToolTip("✦ reach this in the adventure to unlock ✦")
                 install_tooltip(btn)
 

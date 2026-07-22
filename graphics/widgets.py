@@ -68,7 +68,7 @@ class ResizeGrip(QWidget):
         pass
 
     def mousePressEvent(self, event) -> None:
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self._drag = True
             self._press_global = event.globalPosition().toPoint()
             self._press_size = self._win.size()
@@ -194,9 +194,9 @@ class TitleBar(QWidget):
         #    so a scene title reveals like a line of typewriter prose. Fills the
         #    central gap between the curtains button and the right cluster. ──
         self._label = QLabel("", self)
-        self._label.setAlignment(Qt.AlignCenter)
+        self._label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         # Click-through so a press over the title still drags the window.
-        self._label.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self._label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
         self._label.setFont(chandler42(size_px=self._INFO_FONT_PX))
         self._label.setStyleSheet(f"color: {Fam.textPrimary};")
         # The title announces, holds, then fades off. Opacity rides a graphics
@@ -230,7 +230,7 @@ class TitleBar(QWidget):
         btn.setFixedSize(self._BTN_W, self._BTN_W)   # square, suite-consistent (19px)
         # Default arrow cursor on the titlebar controls — the tactile feel of
         # gently touching them; no hand-pointer swap on hover.
-        btn.setFocusPolicy(Qt.NoFocus)
+        btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         if icon_name:
             # Family icons resolve via Theme.icon() → the asset vault
             # ($SingleSharedBraincell_AssetVault/Icons), then the Iconic collection
@@ -339,14 +339,14 @@ class TitleBar(QWidget):
     # ── window drag (frameless) — Intricate's globalPosition-delta move ───────
 
     def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self._drag_pos = event.globalPosition().toPoint()
             event.accept()
         else:
             super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
-        if self._drag_pos is not None and (event.buttons() & Qt.LeftButton):
+        if self._drag_pos is not None and (event.buttons() & Qt.MouseButton.LeftButton):
             w = self.window()
             if getattr(w, "is_window_maximized", None) and w.is_window_maximized():
                 # Dragging a maximized window restores it, then follows the cursor.
@@ -378,7 +378,7 @@ class TitleBar(QWidget):
 
     def mouseDoubleClickEvent(self, event):
         # Left half only → fullscreen toggle; right half is the control cluster.
-        if event.button() == Qt.LeftButton and event.position().x() < self.width() / 2:
+        if event.button() == Qt.MouseButton.LeftButton and event.position().x() < self.width() / 2:
             self._toggle_fullscreen()
             event.accept()
         else:
@@ -462,10 +462,10 @@ class SceneView(QWidget):
         super().__init__()
         self.setMinimumSize(360, 360)
         self.setStyleSheet(f"background-color: {Fam.windowBg};")
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self._image_label = QLabel()
-        self._image_label.setAlignment(Qt.AlignCenter)
+        self._image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._image_label.setStyleSheet(self._frame_qss())
         font = QFont()
         font.setPointSize(11)
@@ -476,7 +476,7 @@ class SceneView(QWidget):
         # dead side-matte), windowBg breathing around it in the column.
         layout = QVBoxLayout(self)
         layout.setContentsMargins(self._MARGIN, self._MARGIN, self._MARGIN, self._MARGIN)
-        layout.addWidget(self._image_label, alignment=Qt.AlignCenter)
+        layout.addWidget(self._image_label, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self._current_pixmap: QPixmap | None = None
 
@@ -535,9 +535,9 @@ class SceneView(QWidget):
             return
         box = max(120, int(min(self.width(), self.height()) * 0.5))
         lbl = QLabel(self)
-        lbl.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        lbl.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
         lbl.setStyleSheet("background: transparent;")
-        lbl.setPixmap(pm.scaled(box, box, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        lbl.setPixmap(pm.scaled(box, box, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         lbl.adjustSize()
         lbl.move((self.width() - lbl.width()) // 2, (self.height() - lbl.height()) // 2)
         lbl.show()
@@ -572,7 +572,7 @@ class SceneView(QWidget):
         if self._current_pixmap is not None and not self._current_pixmap.isNull():
             side = max(1, box - inset)
             scaled = self._current_pixmap.scaled(
-                QSize(side, side), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                QSize(side, side), Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation)
             self._image_label.setPixmap(scaled)
 
 
@@ -617,9 +617,9 @@ class NarrativePanel(QWidget):
         # like 'flm run llama3.2:3b' lifts straight off the page.
         self._text = QTextEdit()
         self._text.setReadOnly(True)
-        self._text.setFrameShape(QTextEdit.NoFrame)
-        self._text.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self._text.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._text.setFrameShape(QTextEdit.Shape.NoFrame)
+        self._text.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._text.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._text.document().setDocumentMargin(0)   # the layout owns the inset
         self._text.setStyleSheet(
             f"QTextEdit {{ background: transparent; color: {Fam.textPrimary};"
@@ -628,10 +628,10 @@ class NarrativePanel(QWidget):
         font = QFont()
         font.setPointSize(13)
         self._text.setFont(font)
-        self._text.viewport().setCursor(Qt.IBeamCursor)
+        self._text.viewport().setCursor(Qt.CursorShape.IBeamCursor)
 
         self._verified = QLabel()
-        self._verified.setAlignment(Qt.AlignRight)
+        self._verified.setAlignment(Qt.AlignmentFlag.AlignRight)
         vfont = QFont()
         vfont.setPointSize(10)
         vfont.setBold(True)
@@ -973,7 +973,7 @@ class InteractionBar(QWidget):
 
         for idx, choice in enumerate(choices):
             btn = QPushButton(choice["label"])
-            btn.setCursor(Qt.PointingHandCursor)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setStyleSheet(
                 f"QPushButton {{ "
                 f"background-color: {Fam.buttonBg}; "
@@ -1005,10 +1005,10 @@ class InteractionBar(QWidget):
             self.set_parser_visible(False)
             return
         if mode == "key":
-            self._parser.setEchoMode(QLineEdit.Password)
+            self._parser.setEchoMode(QLineEdit.EchoMode.Password)
             self.set_parser_placeholder("✦ paste your Gemini key here ✦")
         else:
-            self._parser.setEchoMode(QLineEdit.Normal)
+            self._parser.setEchoMode(QLineEdit.EchoMode.Normal)
             self.set_parser_placeholder("✦ ask the ship anything ✦")
         self.set_parser_visible(True)
 
@@ -1076,7 +1076,7 @@ class BottomToolbar(QWidget):
         # ── infobar strip (doubles as the collapse handle) ──
         self._strip = QWidget()
         self._strip.setFixedHeight(self._STRIP_H)
-        self._strip.setCursor(Qt.PointingHandCursor)
+        self._strip.setCursor(Qt.CursorShape.PointingHandCursor)
         self._strip.setStyleSheet("background: transparent;")
         strip_layout = QHBoxLayout(self._strip)
         strip_layout.setContentsMargins(0, 0, 0, 0)
@@ -1087,13 +1087,13 @@ class BottomToolbar(QWidget):
         self._ledger_state = "off"
         self._ledger_dot = QLabel("●", self._strip)
         self._ledger_dot.setFixedWidth(24)   # wide enough for the larger OFF glyph
-        self._ledger_dot.setAlignment(Qt.AlignCenter)
-        self._ledger_dot.setCursor(Qt.ArrowCursor)
+        self._ledger_dot.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._ledger_dot.setCursor(Qt.CursorShape.ArrowCursor)
         install_tooltip(self._ledger_dot)   # family pill tooltip; reads toolTip() live on hover
         strip_layout.addWidget(self._ledger_dot)
         self._info = QLabel("", self._strip)
-        self._info.setAlignment(Qt.AlignCenter)
-        self._info.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self._info.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._info.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
         self._info.setFont(chandler42(size_px=self._INFO_FONT_PX))
         self._info.setStyleSheet(f"color: {Fam.textPrimary};")
         strip_layout.addWidget(self._info, stretch=1)
@@ -1111,7 +1111,7 @@ class BottomToolbar(QWidget):
         self._buttons: list[QPushButton] = []
         for name in self._PLACEHOLDERS:
             btn = QPushButton(name)
-            btn.setCursor(Qt.PointingHandCursor)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setMinimumWidth(96)
             btn.setStyleSheet(self._placeholder_qss())
             btn.clicked.connect(lambda _c=False, n=name: self.feature_clicked.emit(n))

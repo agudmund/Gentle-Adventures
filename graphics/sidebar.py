@@ -69,11 +69,11 @@ class Sidebar(QWidget):
         # travel full height. (Per Intricate's layout note.)
         sliders_row = QWidget()
         sliders_row.setStyleSheet("background: transparent;")
-        sliders_row.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        sliders_row.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         sr = QHBoxLayout(sliders_row)
         sr.setContentsMargins(0, 0, 0, 0)
         sr.setSpacing(0)
-        sr.setAlignment(Qt.AlignHCenter)
+        sr.setAlignment(Qt.AlignmentFlag.AlignHCenter)
         for _ in range(3):
             sr.addSpacerItem(self._slot())
         layout.addWidget(sliders_row)
@@ -85,12 +85,12 @@ class Sidebar(QWidget):
         br = QHBoxLayout(bars_row)
         br.setContentsMargins(0, 0, 0, 0)
         br.setSpacing(0)
-        br.setAlignment(Qt.AlignHCenter | Qt.AlignBottom)
+        br.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignBottom)
         br.addSpacerItem(self._slot())
         br.addSpacerItem(self._slot())
         self._bar = self._make_bar()
-        br.addWidget(self._bar, alignment=Qt.AlignBottom)
-        layout.addWidget(bars_row, alignment=Qt.AlignHCenter)
+        br.addWidget(self._bar, alignment=Qt.AlignmentFlag.AlignBottom)
+        layout.addWidget(bars_row, alignment=Qt.AlignmentFlag.AlignHCenter)
         layout.addSpacing(4)
 
         # The working meter rests invisible; it fades in only while busy.
@@ -105,7 +105,7 @@ class Sidebar(QWidget):
     def _slot(self) -> QSpacerItem:
         """A reserved cell — the exact footprint a real control would occupy, so
         the two rows' columns line up. The whole 2×3 alignment trick."""
-        return QSpacerItem(self._bar_w, self._bar_h, QSizePolicy.Fixed, QSizePolicy.Fixed)
+        return QSpacerItem(self._bar_w, self._bar_h, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
     def _bar_qss(self) -> str:
         # Canonical family progress-bar look: vertical 4-stop pink gradient,
@@ -120,7 +120,7 @@ class Sidebar(QWidget):
 
     def _make_bar(self) -> QProgressBar:
         bar = QProgressBar()
-        bar.setOrientation(Qt.Vertical)
+        bar.setOrientation(Qt.Orientation.Vertical)
         bar.setRange(0, 100)
         bar.setValue(0)
         bar.setTextVisible(False)
@@ -158,14 +158,14 @@ class Sidebar(QWidget):
         self._fade = anim
 
     def _start_breathe(self) -> None:
-        if self._breathe is not None and self._breathe.state() == QPropertyAnimation.Running:
+        if self._breathe is not None and self._breathe.state() == QPropertyAnimation.State.Running:
             return
         anim = QPropertyAnimation(self._bar, b"value", self)
         anim.setStartValue(0)
         anim.setKeyValueAt(0.5, 100)
         anim.setEndValue(0)
         anim.setDuration(1600)
-        anim.setEasingCurve(QEasingCurve.InOutSine)
+        anim.setEasingCurve(QEasingCurve.Type.InOutSine)
         anim.setLoopCount(-1)
         anim.start()
         self._breathe = anim

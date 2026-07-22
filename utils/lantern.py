@@ -135,7 +135,7 @@ class LanternWatch(QThread):
         self.label = label
 
     def run(self):
-        self.setPriority(QThread.LowestPriority)   # a quiet background tidy
+        self.setPriority(QThread.Priority.LowestPriority)   # a quiet background tidy
         code, raw, classification = watch_command(self.cmd, on_line=self.line.emit)
         if code != 0:
             _log.warning(f"[lantern] {' '.join(self.cmd)} exited {code}:\n{raw}")

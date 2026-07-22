@@ -80,9 +80,9 @@ class WeatherOverlay(QWidget):
         # siblings below show through wherever no droplet is painted. Painted
         # alpha composites against the shared backing store — true transparency
         # without promoting to a native window.
-        self.setAttribute(Qt.WA_TransparentForMouseEvents, True)
-        self.setAttribute(Qt.WA_NoSystemBackground, True)
-        self.setFocusPolicy(Qt.NoFocus)
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, True)
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         # The scene image is a "dry" cozy window: rain and fog never paint over
         # it, so the vibe reads as storming OUTSIDE while it's snug inside the ship
@@ -224,7 +224,7 @@ class WeatherOverlay(QWidget):
             return
         h = self.height()
         p = QPainter(self)
-        p.setRenderHint(QPainter.Antialiasing, True)
+        p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
 
         # Keep the scene image dry — clip its rect out of every stroke below, so
         # rain/fog fall AROUND the cozy window, never on it. Mapped via globals so
@@ -262,7 +262,7 @@ class WeatherOverlay(QWidget):
             col = QColor(self._tint); col.setAlpha(a)
             pen = QPen(col)
             pen.setWidthF(0.8 + d.depth * 1.1)
-            pen.setCapStyle(Qt.RoundCap)
+            pen.setCapStyle(Qt.PenCapStyle.RoundCap)
             p.setPen(pen)
             # streak runs along the fall, slanted by the wind it's feeling
             dx = self._wind * d.depth * 1.6

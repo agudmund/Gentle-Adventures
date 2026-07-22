@@ -52,7 +52,7 @@ class CaptainsLog(QWidget):
 
         self._area = QScrollArea()
         self._area.setWidgetResizable(True)
-        self._area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._area.setStyleSheet(self._area_qss())
 
         layout = QVBoxLayout(self)
@@ -111,7 +111,7 @@ class CaptainsLog(QWidget):
         col.setSpacing(8)
 
         header = QLabel("✦ the captain's log — conversations with the ship ✦")
-        header.setAlignment(Qt.AlignCenter)
+        header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         hfont = QFont()
         hfont.setPointSize(11)
         hfont.setItalic(True)
@@ -121,7 +121,7 @@ class CaptainsLog(QWidget):
 
         if not self._entries:
             empty = QLabel("✦ the log is empty — ask the ship something and it will remember ✦")
-            empty.setAlignment(Qt.AlignCenter)
+            empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
             empty.setWordWrap(True)
             empty.setStyleSheet(f"color: {Fam.primaryBorder}; font-size: 11pt;")
             col.addStretch(1)
@@ -133,7 +133,7 @@ class CaptainsLog(QWidget):
         for title, path in self._entries:
             btn = QPushButton(title)
             btn.setStyleSheet(self._btn_qss())
-            btn.setCursor(Qt.PointingHandCursor)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.clicked.connect(
                 lambda _checked=False, t=title, p=path: self._open(t, p))
             col.addWidget(btn)
@@ -153,12 +153,12 @@ class CaptainsLog(QWidget):
 
         back = QPushButton("✦ back to the log ✦")
         back.setStyleSheet(self._btn_qss())
-        back.setCursor(Qt.PointingHandCursor)
+        back.setCursor(Qt.CursorShape.PointingHandCursor)
         back.clicked.connect(self._back)
         col.addWidget(back)
 
         header = QLabel(title)
-        header.setAlignment(Qt.AlignCenter)
+        header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         hfont = QFont()
         hfont.setPointSize(11)
         hfont.setItalic(True)
@@ -172,10 +172,10 @@ class CaptainsLog(QWidget):
             text = "✦ this page would not open — the file may have sailed on ✦"
 
         body = QLabel(text)
-        body.setTextFormat(Qt.PlainText)   # transcripts render as written, no markup surprises
+        body.setTextFormat(Qt.TextFormat.PlainText)   # transcripts render as written, no markup surprises
         body.setWordWrap(True)
-        body.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        body.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        body.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         body.setStyleSheet(f"color: {Fam.textPrimary}; font-size: 10.5pt;")
         col.addWidget(body)
 

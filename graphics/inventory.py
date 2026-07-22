@@ -53,7 +53,7 @@ class KeepsakeShelf(QWidget):
 
         self._area = QScrollArea()
         self._area.setWidgetResizable(True)
-        self._area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._area.setStyleSheet(self._area_qss())
 
         layout = QVBoxLayout(self)
@@ -95,7 +95,7 @@ class KeepsakeShelf(QWidget):
         col.setSpacing(10)
 
         header = QLabel("✦ the keepsake shelf ✦")
-        header.setAlignment(Qt.AlignCenter)
+        header.setAlignment(Qt.AlignmentFlag.AlignCenter)
         hfont = QFont()
         hfont.setPointSize(11)
         hfont.setItalic(True)
@@ -105,7 +105,7 @@ class KeepsakeShelf(QWidget):
 
         if not self._stickers:
             empty = QLabel("✦ no keepsakes yet — true beats press stickers into your hands ✦")
-            empty.setAlignment(Qt.AlignCenter)
+            empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
             empty.setWordWrap(True)
             empty.setStyleSheet(f"color: {Fam.primaryBorder}; font-size: 11pt;")
             col.addStretch(1)
@@ -122,7 +122,7 @@ class KeepsakeShelf(QWidget):
             cell.setSpacing(6)
 
             art = QLabel()
-            art.setAlignment(Qt.AlignCenter)
+            art.setAlignment(Qt.AlignmentFlag.AlignCenter)
             pix = QPixmap(path)
             if pix.isNull():
                 # Silent absence, in miniature: a keepsake whose asset went
@@ -132,10 +132,10 @@ class KeepsakeShelf(QWidget):
             else:
                 art.setPixmap(pix.scaled(
                     self._STICKER_PX, self._STICKER_PX,
-                    Qt.KeepAspectRatio, Qt.SmoothTransformation))
+                    Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
 
             tag = QLabel(name)
-            tag.setAlignment(Qt.AlignCenter)
+            tag.setAlignment(Qt.AlignmentFlag.AlignCenter)
             tag.setWordWrap(True)
             tag.setStyleSheet(f"color: {Fam.textPrimary}; font-size: 10pt;")
 
@@ -143,7 +143,7 @@ class KeepsakeShelf(QWidget):
             cell.addWidget(tag)
             holder = QWidget()
             holder.setLayout(cell)
-            grid.addWidget(holder, i // self._COLS, i % self._COLS, Qt.AlignTop)
+            grid.addWidget(holder, i // self._COLS, i % self._COLS, Qt.AlignmentFlag.AlignTop)
 
         col.addLayout(grid)
         col.addStretch(1)

@@ -100,7 +100,7 @@ class ShipsCodex(QWidget):
 
         self._area = QScrollArea()
         self._area.setWidgetResizable(True)
-        self._area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self._area.setStyleSheet(self._area_qss())
 
         layout = QVBoxLayout(self)
@@ -145,7 +145,7 @@ class ShipsCodex(QWidget):
 
     def _whisper(self, text: str) -> QLabel:
         lbl = QLabel(text)
-        lbl.setAlignment(Qt.AlignCenter)
+        lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         f = QFont()
         f.setPointSize(11)
         f.setItalic(True)
@@ -163,7 +163,7 @@ class ShipsCodex(QWidget):
 
         entry = QPushButton("the recovered fragment  ·  status: undeciphered")
         entry.setStyleSheet(self._btn_qss())
-        entry.setCursor(Qt.PointingHandCursor)
+        entry.setCursor(Qt.CursorShape.PointingHandCursor)
         entry.clicked.connect(self._open_fragment)
         col.addWidget(entry)
 
@@ -186,7 +186,7 @@ class ShipsCodex(QWidget):
 
         back = QPushButton("✦ back to the codex ✦")
         back.setStyleSheet(self._btn_qss())
-        back.setCursor(Qt.PointingHandCursor)
+        back.setCursor(Qt.CursorShape.PointingHandCursor)
         back.clicked.connect(self._back)
         col.addWidget(back)
 
@@ -202,12 +202,12 @@ class ShipsCodex(QWidget):
         col.addWidget(intro)
 
         glyphs = QLabel("\n".join(_FRAGMENT_ROWS))
-        glyphs.setTextFormat(Qt.PlainText)
-        glyphs.setAlignment(Qt.AlignCenter)
+        glyphs.setTextFormat(Qt.TextFormat.PlainText)
+        glyphs.setAlignment(Qt.AlignmentFlag.AlignCenter)
         gfont = QFont("Consolas")
         gfont.setPointSize(10)
         glyphs.setFont(gfont)
-        glyphs.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        glyphs.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         glyphs.setStyleSheet(
             f"color: {Fam.textPrimary}; background-color: {Fam.backDrop};"
             f" border: 1px dashed {Fam.primaryBorder}; border-radius: 8px;"
