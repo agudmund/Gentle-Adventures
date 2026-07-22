@@ -24,7 +24,7 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from utils.logger import get_logger          # noqa: E402
-from utils.proc import CREATE_NO_WINDOW       # noqa: E402
+from shared_braincell.console import CREATE_NO_WINDOW  # noqa: E402
 
 logger = get_logger("gentle")
 

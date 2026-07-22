@@ -15,7 +15,7 @@ import subprocess
 from PySide6.QtCore import QThread, Signal
 
 from utils.logger import get_logger
-from utils.proc import CREATE_NO_WINDOW
+from shared_braincell.console import CREATE_NO_WINDOW
 
 _log = get_logger("gentle")
 

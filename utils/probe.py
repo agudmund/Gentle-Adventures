@@ -12,7 +12,7 @@ import logging
 import os
 import subprocess
 
-from utils.proc import CREATE_NO_WINDOW
+from shared_braincell.console import CREATE_NO_WINDOW
 import urllib.error
 import urllib.request
 
