@@ -160,20 +160,46 @@ class BuildManager:
         prevExeFile = archiveDir / cls.prevExe
         archExeFile = archiveDir / cls.archExe
 
+        # Ring ops are BEST-EFFORT: the detached stagehand (Compass/
+        # archive_sweep.py) may hold a claim in this dir mid-ship, and archive
+        # churn must never crash a build (review 2026-07-23). A skipped hop
+        # reconciles on the next cycle.
         if archExeFile.exists():
-            send2trash(str(archExeFile))
+            try:
+                send2trash(str(archExeFile))
+            except OSError:
+                pass
 
         if prevExeFile.exists():
-            prevExeFile.rename(archExeFile)
-            rotationSummary.append(f"BuildArchive/{cls.prevExe} -> BuildArchive/{cls.archExe}")
+            try:
+                prevExeFile.rename(archExeFile)
+                rotationSummary.append(f"BuildArchive/{cls.prevExe} -> BuildArchive/{cls.archExe}")
+            except OSError:
+                pass
 
         if currentExeFile.exists():
             try:
-                # shutil.move, not rename: BuildArchive junctions to another
-                # volume these days (D:\BuildArchive, the slow-churn SD card),
-                # and os.rename cannot cross devices (WinError 17, 2026-07-23).
-                shutil.move(str(currentExeFile), str(prevExeFile))
-                rotationSummary.append(f"{cls.exeName} -> BuildArchive/{cls.prevExe}")
+                try:
+                    # os.rename FIRST: atomic on the same volume and it FAILS
+                    # CLEANLY on an occupied seat — unlike shutil.move, whose
+                    # copy2 fallback silently OVERWRITES an existing destination
+                    # file (review ND-1, 2026-07-23). The stagehand can re-seat
+                    # a claim at any instant; only rename CLOSES that window
+                    # rather than narrowing it.
+                    os.rename(str(currentExeFile), str(prevExeFile))
+                    rotationSummary.append(f"{cls.exeName} -> BuildArchive/{cls.prevExe}")
+                except FileExistsError:
+                    # Seat occupied (a failed hop above, or a re-seated claim) —
+                    # leave current in place; the next cycle reconciles.
+                    rotationSummary.append(f"{cls.exeName} kept in place — previous seat occupied")
+                except OSError as e:
+                    if getattr(e, "winerror", None) == 17 and not prevExeFile.exists():
+                        # Cross-volume staging (a future relocation): the copy-
+                        # move fallback, its precheck window accepted there.
+                        shutil.move(str(currentExeFile), str(prevExeFile))
+                        rotationSummary.append(f"{cls.exeName} -> BuildArchive/{cls.prevExe}")
+                    else:
+                        raise
             except PermissionError:
                 return None, []
 
@@ -404,6 +430,22 @@ def buildApp(launch: bool = True):
             print(f"  ** RESTART {appName} to load it - any running instance is")
             print(f"  ** still the OLD build until you close and reopen it.")
             print("  " + "=" * 62)
+
+    # The archive stagehand (2026-07-23): staged generations ship to the
+    # offload shelf on a detached timeline — never in this build's path.
+    # Resolved via the required family env anchor; when Compass is out of
+    # reach, staging simply waits for the next sweep.
+    util = os.environ.get("SingleSharedBraincell_Util")
+    if util:
+        try:
+            from shared_braincell.console import DAEMON_FLAGS
+            subprocess.Popen([sys.executable, "-m", "Compass.archive_sweep"],
+                             cwd=util, creationflags=DAEMON_FLAGS,
+                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL, close_fds=True)
+            print("Archive stagehand dispatched (detached).")
+        except Exception:
+            pass
     return 0
 
 
