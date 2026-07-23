@@ -169,7 +169,10 @@ class BuildManager:
 
         if currentExeFile.exists():
             try:
-                currentExeFile.rename(prevExeFile)
+                # shutil.move, not rename: BuildArchive junctions to another
+                # volume these days (D:\BuildArchive, the slow-churn SD card),
+                # and os.rename cannot cross devices (WinError 17, 2026-07-23).
+                shutil.move(str(currentExeFile), str(prevExeFile))
                 rotationSummary.append(f"{cls.exeName} -> BuildArchive/{cls.prevExe}")
             except PermissionError:
                 return None, []

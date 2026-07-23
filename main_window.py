@@ -1146,9 +1146,32 @@ class GentleAdventuresApp(QMainWindow):
     def _drain_summons(self) -> None:
         from shared_braincell import drain_commands
         for cmd in drain_commands("Gentle Adventures"):
-            if cmd.get("cmd") == "show":
+            verb = cmd.get("cmd")
+            if verb == "show":
                 logger.info("[singleton] summons received — restoring from tray")
                 self._restore_from_tray()
+            elif verb == "frozen-arrival":
+                if getattr(sys, "frozen", False):
+                    # An ordinary duplicate exe knocked — front ourselves,
+                    # exactly as with 'show'.
+                    logger.info("[singleton] frozen twin knocked — fronting the running exe")
+                    self._restore_from_tray()
+                else:
+                    # The changing of the guard (owner decision 2026-07-23):
+                    # a fresh build wants the stage and a live dev instance
+                    # yields it — running a build inherently means the exe.
+                    # The stage key is handed over FIRST (release now, not at
+                    # atexit) so the newcomer binds within its short poll and
+                    # the exit ritual runs lock-less behind the curtain; the
+                    # short window is what keeps a lingering poller from
+                    # resurrecting a tray-Exited app (review 2026-07-23).
+                    logger.info("[singleton] fresh exe arrived — live instance "
+                                "yielding the stage (the build→exe swap)")
+                    from shared_braincell import release_singleton
+                    release_singleton("Gentle Adventures")
+                    self._quitting = True
+                    self.close()
+                    QApplication.quit()
 
     def _on_tray_activated(self, reason) -> None:
         # The log line is the forensic breadcrumb the 2026-07-20 wake mystery
@@ -2072,24 +2095,84 @@ class GentleAdventuresApp(QMainWindow):
             return None
         return (root, py)
 
+    def _reclaim_singleton(self) -> bool:
+        """Take the lock back after a failed Live hand-off — it was released
+        optimistically before the spawn, and staying alive without it would
+        leave the door open to a genuine double instance. Returns True when
+        the stage is ours again (or nothing rival was PROVEN — the
+        never-refuse-to-run philosophy), False when a RIVAL primary answered
+        the probe: in that case the caller must bow out, because two
+        instances on stage is the one outcome this seam exists to prevent
+        (review 2026-07-23 — the ignored False was a real two-instance bug)."""
+        try:
+            from shared_braincell import is_singleton
+            # Keep in step with main.py's _INSTANCE_START_PORT (suite
+            # convention: Intricate 47321, Settlers 47322, GA 47323).
+            got = is_singleton("Gentle Adventures", start_port=47323)
+            if not got:
+                logger.warning("[live] reclaim found a rival primary already on the stage")
+            return got
+        except Exception:
+            logger.debug("[live] singleton reclaim failed — running unlocked", exc_info=True)
+            return True
+
+    def _bow_out_to_rival(self) -> None:
+        """Another instance claimed the stage while we stood unlocked (the
+        release-before-spawn window makes this race possible): it is the
+        rightful primary now — leave gracefully rather than stand beside it."""
+        logger.info("[live] bowing out to the rival primary")
+        self.bottom_toolbar.set_info("✦ another instance took the stage — bowing out ✦")
+        self._quitting = True
+        self.close()
+        QApplication.quit()
+
     def _go_live(self) -> None:
         """Tray 'Live': relaunch from the live source main.py through a real
         Python (its own console for the dev log), then leave this frozen instance
         for good — a single-instance hand-off frozen → live so the edit→test loop
-        needs no terminal. _quitting makes closeEvent skip the ✕-relaunch."""
+        needs no terminal. _quitting makes closeEvent skip the ✕-relaunch.
+
+        Hardened 2026-07-23 (the two failure modes of the original): the
+        singleton releases BEFORE the spawn, mirroring closeEvent's _restarting
+        branch, so the live child's probe can never misread this dying instance
+        as a duplicate and exit silently (the intermittent nothing-left-running
+        race the 2026-07-13 lock introduced); and the child gets a short
+        doorstep watch — die within the grace window (bad interpreter, an
+        import error at the threshold) and we reclaim the lock and stay
+        frozen instead of abandoning the stage to nobody."""
+        if getattr(self, "_going_live", False):
+            return               # a second tray click during the doorstep watch
+        self._going_live = True
         found = self._resolve_live_source()
         if not found:
             self.bottom_toolbar.set_info("✦ live source not found ✦")
+            self._going_live = False
             return
         root, py = found
+        from shared_braincell import release_singleton
+        release_singleton("Gentle Adventures")   # idempotent; atexit stays the net
         try:
             flags = getattr(subprocess, "CREATE_NEW_CONSOLE", 0) if sys.platform == "win32" else 0
-            subprocess.Popen([py, str(root / "main.py")], cwd=str(root), creationflags=flags)
+            proc = subprocess.Popen([py, str(root / "main.py")], cwd=str(root), creationflags=flags)
             logger.info(f"[live] handing off to source main.py via {py} @ {root}")
         except Exception as e:
             logger.warning(f"[live] hand-off spawn failed: {e}")
             self.bottom_toolbar.set_info("✦ couldn't go live ✦")
+            if not self._reclaim_singleton():
+                self._bow_out_to_rival()
+            self._going_live = False
             return
+        import time
+        for _ in range(10):                      # ~3s doorstep watch
+            QApplication.processEvents()
+            time.sleep(0.3)
+            if proc.poll() is not None:
+                logger.warning(f"[live] child died at the doorstep (exit {proc.returncode}) — staying frozen")
+                self.bottom_toolbar.set_info("✦ couldn't go live — the child fell at the doorstep ✦")
+                if not self._reclaim_singleton():
+                    self._bow_out_to_rival()
+                self._going_live = False
+                return
         self._quitting = True   # leave the frozen build for good — the live child takes over
         self.close()
         QApplication.quit()     # explicit: lastWindowClosed won't fire from the tray
