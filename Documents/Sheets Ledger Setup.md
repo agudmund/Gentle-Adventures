@@ -112,38 +112,24 @@ What the Sheet cannot do alone is bump the version on **human browser edits** �
 that needs a tiny Apps Script trigger, and Apps Script triggers can only be
 installed from the Sheet's own script project in the browser.
 
-**To arm the guard** — open the Sheet → Extensions → Apps Script, paste this
-alongside the proxy code, and save:
+**To arm the guard** — the `onEdit` function in
+[`apps_script/Code.gs`](../apps_script/Code.gs) (the proxy's **source of
+record** since 2026-07-23 — the browser project should always match that file).
+Paste the whole file over the project's Code.gs and save. The trigger **creates
+`_meta` itself** on the first content edit, so there is no separate tab-creation
+step — paste, save, edit any content cell once, and the next GA session logs
+`v1` instead of `vNone`.
 
-```javascript
-function onEdit(e) {
-  if (!e || !e.range) return;
-  const name = e.range.getSheet().getName();
-  // Content tabs only: state, signals, and the meta tab itself never bump.
-  if (name === '_meta' || name === 'Player_State' || name === '_signals') return;
-  const ss = e.source;
-  let meta = ss.getSheetByName('_meta');
-  if (!meta) {
-    meta = ss.insertSheet('_meta');
-    meta.getRange(1, 1, 1, 2).setValues([['key', 'value']]);
-    // insertSheet makes the new tab active — hand the view straight back to the
-    // sheet the human was editing, so arming never yanks them off their cell.
-    e.range.getSheet().activate();
-  }
-  const rows = meta.getDataRange().getValues();
-  for (let i = 0; i < rows.length; i++) {
-    if (String(rows[i][0]).trim().toLowerCase() === 'version') {
-      meta.getRange(i + 1, 2).setValue(Number(rows[i][1] || 0) + 1);
-      return;
-    }
-  }
-  meta.appendRow(['version', 1]);
-}
-```
+**The deploy ritual** (for the doGet/doPost half): web-app changes only go live
+after Deploy → Manage deployments → edit → **New version** — the `/exec` URL
+(`GA_WebApp`) never changes. The `onEdit` trigger is the exception: simple
+triggers run from the saved head script immediately, no redeploy needed.
 
-The trigger **creates `_meta` itself** on the first content edit, so there is no
-separate tab-creation step — paste, save, edit any content cell once, and the
-next GA session logs `v1` instead of `vNone`.
+**The token lives in Script Properties, never in the source**: Project Settings
+→ Script Properties → `GA_TOKEN`, same value as the `GA_Ledger` environment
+variable. Rotation is a one-property flip on each side. (Set the property
+BEFORE deploying a new version — the upgraded proxy answers `unauthorized`
+until it's there.)
 
 Worth knowing (verified live, 2026-07-23):
 
@@ -151,12 +137,22 @@ Worth knowing (verified live, 2026-07-23):
   Proxy/API writes don't fire it, which is the right shape: `--push` bumps the
   version itself, and any future writer daemon must do the same (mirror
   `_bump_meta_version` in `sanitize_sheets.py`).
-- The proxy's **GET throws uncaught on a missing tab** (Google answers an HTML
-  error page, which the client can only classify as auth-shaped), while POST
-  answers a clean `{"error": "no such sheet"}`. So a `vNone` with an otherwise
-  healthy Ledger simply means the `_meta` tab doesn't exist yet — not an auth
-  problem.
-- The proxy **cannot create tabs**; only the trigger above (or a human) can.
+- Pre-upgrade lore, kept for era-dating: the original proxy's **GET threw
+  uncaught on a missing tab** (Google answered an HTML error page, which the
+  client could only classify as auth-shaped), while POST answered a clean
+  `{"error": "no such sheet"}`. The upgraded proxy wraps doGet so every failure
+  answers JSON. A `vNone` with an otherwise healthy Ledger still simply means
+  the `_meta` tab doesn't exist yet.
+- The original proxy **could not create tabs**; the upgraded one can, opt-in
+  only (`create: true` on POST, plus the self-creating `_signals` intercom
+  socket) — a typo'd tab name stays an error, never a tab.
+- The upgrade also completed the `_signals` **append handler** (stamped rows,
+  the client's `write_signal` now actually delivers), added `op=list` /
+  `op=version` GETs (tab discovery + the cheap heartbeat token), attached
+  `version` to every read, and planted the **type-fidelity guard** — the
+  Player_State value column is forced to plain text on every upsert, so a
+  time-shaped string is never again coerced onto the 1899 spreadsheet epoch
+  (the 2026-06-03 DISCOVERY finding, closed at the proxy).
 
 ---
 
