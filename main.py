@@ -63,16 +63,24 @@ def _ring_fallback() -> None:
     import subprocess
     if os.environ.get("GA_SWAP_FALLBACK"):
         return
-    prev = (Path(os.environ.get("LOCALAPPDATA", "")) / "SingleSharedBraincell"
-            / "BuildArchive" / "Gentle Adventures" / "Gentle Adventures_previous.exe")
+    # Two homes since the stagehand era (2026-07-23): the C: staging tier
+    # first (hot, pre-sweep), then the offload shelf on the spare SD — the
+    # understudy may already have been carried to storage.
+    candidates = (
+        Path(os.environ.get("LOCALAPPDATA", "")) / "SingleSharedBraincell"
+        / "BuildArchive" / "Gentle Adventures" / "Gentle Adventures_previous.exe",
+        Path("D:/BuildArchive") / "Gentle Adventures" / "Gentle Adventures_previous.exe",
+    )
     try:
-        if prev.exists():
-            from shared_braincell.console import DAEMON_FLAGS
-            env = dict(os.environ, GA_SWAP_FALLBACK="1")
-            subprocess.Popen([str(prev)], env=env, creationflags=DAEMON_FLAGS,
-                             stdin=subprocess.DEVNULL, close_fds=True)
-            print("Gentle Adventures — the fresh build fell mid-boot; the "
-                  "previous generation steps in from the ring.")
+        for prev in candidates:
+            if prev.exists():
+                from shared_braincell.console import DAEMON_FLAGS
+                env = dict(os.environ, GA_SWAP_FALLBACK="1")
+                subprocess.Popen([str(prev)], env=env, creationflags=DAEMON_FLAGS,
+                                 stdin=subprocess.DEVNULL, close_fds=True)
+                print("Gentle Adventures — the fresh build fell mid-boot; the "
+                      "previous generation steps in from the ring.")
+                break
     except Exception:
         pass   # the net must never add its own crash to the crash
 

@@ -40,7 +40,7 @@ Gentle Adventures comes up on every login. The canonical rail is a Windows Sched
 
 The task passes `--minimized` everywhere. Per-machine startup behaviour is the app's own decision, not the launcher's: on the TV-role machine (Sakura) `utils/identity.is_wake_display()` overrides the flag and GA wakes maximized as the boot heartbeat, while every other machine keeps the tray autostart. One task definition, one flag; the fleet's differences live in code that can explain itself. The trigger carries no delay, so login behaviour matches the old immediate shortcut on both machines.
 
-GA carries the family singleton port guard (port 47323, the suite convention), and since 2026-07-20 a duplicate launch is a summons — it asks the running instance to show itself, then exits. Still keep exactly one autostart rail per machine: the moment the task registers, any old Startup-folder `.lnk` should retire, so login doesn't race two instances at the knock.
+GA carries the family singleton port guard (port 47323, the suite convention), and a duplicate launch is a summons — a live-python duplicate asks the running instance to show itself and exits (2026-07-20), while since 2026-07-23 a FROZEN duplicate is a changing of the guard: a live dev incumbent yields the stage to the fresh exe (the build→exe swap, with the ring's previous generation as crash-net understudy), and a frozen incumbent simply fronts itself. Still keep exactly one autostart rail per machine: the moment the task registers, any old Startup-folder `.lnk` should retire, so login doesn't race two instances at the knock.
 
 ```powershell
 Get-ScheduledTask -TaskName 'Gentle Adventures Autostart'   # State -> Ready
