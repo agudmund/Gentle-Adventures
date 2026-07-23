@@ -117,11 +117,16 @@ class SheetsClient:
         try:
             data = json.loads(raw)
         except json.JSONDecodeError:
-            # Not JSON — almost always Google's auth/login HTML, i.e. the web app
-            # isn't deployed with access set to 'Anyone'.
+            # Not JSON — Google's HTML, not the proxy's envelope. Two known causes:
+            # the web app not deployed with access 'Anyone' (login page), or the
+            # proxy script throwing uncaught — a GET on a missing tab does exactly
+            # this (doGet has no error envelope for it, while doPost answers a
+            # clean {"error": "no such sheet"} for the same case; verified live
+            # 2026-07-23 while arming the _meta revert guard).
             raise SheetsAuthError(
-                "proxy did not return JSON — check the web app is deployed with "
-                "access set to 'Anyone'."
+                "proxy did not return JSON — the web app may not be deployed with "
+                "access set to 'Anyone', or the proxy script threw (a GET on a "
+                "missing tab does this)."
             )
         if isinstance(data, dict) and data.get("error"):
             err = str(data["error"])

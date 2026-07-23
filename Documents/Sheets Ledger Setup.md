@@ -97,6 +97,69 @@ thing you lose is live editing of scenes from the Sheet and the heartbeat.
 
 ---
 
+## The revert guard (`_meta`) — arming it
+
+The Ledger carries an optional **revert arbiter** (State Sync v2, principles 8–9):
+a `_meta` tab holding a monotonic `version` integer. The game records the version
+it loaded and **quarantines any pull whose version went backward** (a silent
+backward step is suspect) — last-good kept, banner surfaced. When `_meta` is
+absent the game runs on content-hash detection alone (every edit still
+propagates; only the explicit revert guard is unavailable) and logs `vNone`.
+
+The client side is fully wired and arms itself the moment the tab exists.
+`sanitize_sheets.py --push --apply` already bumps the version when it writes.
+What the Sheet cannot do alone is bump the version on **human browser edits** —
+that needs a tiny Apps Script trigger, and Apps Script triggers can only be
+installed from the Sheet's own script project in the browser.
+
+**To arm the guard** — open the Sheet → Extensions → Apps Script, paste this
+alongside the proxy code, and save:
+
+```javascript
+function onEdit(e) {
+  if (!e || !e.range) return;
+  const name = e.range.getSheet().getName();
+  // Content tabs only: state, signals, and the meta tab itself never bump.
+  if (name === '_meta' || name === 'Player_State' || name === '_signals') return;
+  const ss = e.source;
+  let meta = ss.getSheetByName('_meta');
+  if (!meta) {
+    meta = ss.insertSheet('_meta');
+    meta.getRange(1, 1, 1, 2).setValues([['key', 'value']]);
+    // insertSheet makes the new tab active — hand the view straight back to the
+    // sheet the human was editing, so arming never yanks them off their cell.
+    e.range.getSheet().activate();
+  }
+  const rows = meta.getDataRange().getValues();
+  for (let i = 0; i < rows.length; i++) {
+    if (String(rows[i][0]).trim().toLowerCase() === 'version') {
+      meta.getRange(i + 1, 2).setValue(Number(rows[i][1] || 0) + 1);
+      return;
+    }
+  }
+  meta.appendRow(['version', 1]);
+}
+```
+
+The trigger **creates `_meta` itself** on the first content edit, so there is no
+separate tab-creation step — paste, save, edit any content cell once, and the
+next GA session logs `v1` instead of `vNone`.
+
+Worth knowing (verified live, 2026-07-23):
+
+- `onEdit` is a *simple trigger* — it fires on **human browser edits only**.
+  Proxy/API writes don't fire it, which is the right shape: `--push` bumps the
+  version itself, and any future writer daemon must do the same (mirror
+  `_bump_meta_version` in `sanitize_sheets.py`).
+- The proxy's **GET throws uncaught on a missing tab** (Google answers an HTML
+  error page, which the client can only classify as auth-shaped), while POST
+  answers a clean `{"error": "no such sheet"}`. So a `vNone` with an otherwise
+  healthy Ledger simply means the `_meta` tab doesn't exist yet — not an auth
+  problem.
+- The proxy **cannot create tabs**; only the trigger above (or a human) can.
+
+---
+
 ## Architecture notes (for the curious)
 
 - Transport: `utils/sheets.py` (`SheetsClient`) — raw `urllib`, the proxy always

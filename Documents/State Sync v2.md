@@ -94,8 +94,10 @@ Two things the filesystem gave free that a remote, externally-mutable store does
 - `Quest_Log` — content. Columns per `_SHEET_COLUMNS`. Written only by the author /
   daemon / the operator tool (`sanitize_sheets.py --push`). The game never writes it.
 - `Player_State` — progress. Written only by the game (`SheetsClient.write_player_state`).
-- `_meta` *(optional)* — a `version` cell (monotonic int). `--push` bumps it; a future
-  Apps Script `onEdit` trigger would auto-bump it on human browser edits.
+- `_meta` *(optional)* — a `version` cell (monotonic int). `--push` bumps it; the
+  Apps Script `onEdit` trigger (snippet in *Sheets Ledger Setup.md*, "The revert
+  guard") auto-bumps it on human browser edits once pasted into the Sheet's
+  script project — the paste is the arming step.
 - `_signals` *(reserved)* — the intercom. Game appends; daemon reads. Socket built,
   no consumer yet.
 
@@ -116,5 +118,7 @@ Two things the filesystem gave free that a remote, externally-mutable store does
   cold-start, per-row isolation, bundled floor, content-hash change detection, version
   arbitration when `_meta` present); intercom socket; heartbeat consumes the new
   contract; `--push` bumps `_meta!version` best-effort.
-- **Deferred:** Apps Script `onEdit` trigger to auto-bump version on human edits;
-  Drive `revisionId` cheap-token polling for scale; the daemon that consumes `_signals`.
+- **Deferred:** Drive `revisionId` cheap-token polling for scale; the daemon that
+  consumes `_signals`. (The `onEdit` auto-bump graduated 2026-07-23: snippet +
+  arming instructions shipped in *Sheets Ledger Setup.md*; what remains deferred
+  is only the in-browser paste, which no repo commit can perform.)

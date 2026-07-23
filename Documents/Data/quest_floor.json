@@ -2,7 +2,7 @@
   {
     "id": "awakening",
     "title": "GENTLE ADVENTURES, 01 — AWAKENING",
-    "narrative": "The captain stirs. The ship hums a new tune.\n\nThree lights blink on the main console — one familiar, one known, one… new.\nThe new light pulses with a slow, patient rhythm. Waiting.\nA small label glows beneath it: XDNA 2.",
+    "narrative": "You're waking, captain. Hear it? Your ship is humming something new this morning — just for you.\n\nThree lights on your console now. One you've always known. One you've come to trust. And this last one… new. Yours to meet.\n\nSee how it pulses — slow, patient, in no hurry at all. It has been waiting so kindly for you to notice.\n\nLean in close. A small label glows beneath it: XDNA 2. That's the one we came here for, you and I.",
     "choices": [
       {
         "label": "Examine the new light",
@@ -14,12 +14,12 @@
       }
     ],
     "verify": null,
-    "image_prompt": "chibi 3D rendered illustration, kawaii style, soft pastel palette of pinks blues and warm cream, sparkle particles drifting through the air, glossy plastic toy finish, a tiny brave captain character with huge bright eyes and a soft round helmet, square 1:1 framing, soft dreamy bokeh, gentle volumetric light. The captain wakes at the helm of a small starship console. Three glowing lights on the console — one familiar pale-blue (labeled CPU), one familiar violet (labeled GPU), and a third light, never seen before, pulsing in soft warm gold and labeled XDNA 2. The captain leans in, curious, eyes wide."
+    "image_prompt": "chibi 3D rendered illustration, kawaii style, soft pastel palette of pinks blues and warm cream, sparkle particles drifting through the air, glossy plastic toy finish, a tiny brave captain character with huge bright eyes and a soft round helmet, square 1:1 framing, soft dreamy bokeh, gentle volumetric light. The captain wakes at the helm of a small starship console. Three glowing lights on the console: one familiar pale-blue (labeled CPU), one familiar violet (labeled GPU), and a third light, never seen before, pulsing in soft warm gold and labeled XDNA 2. The captain leans in, curious, eyes wide."
   },
   {
     "id": "lore_xdna",
     "title": "GENTLE ADVENTURES, 01.5 — LORE: XDNA",
-    "narrative": "The ship's friendly AI puffs into being above the console.\n\n\"XDNA is a grid of small minds,\" it says. \"Not one big brain — many\ntiny ones, each doing a sliver of the math, passing the result to the\nnext. The original blueprints came from Xilinx. AMD brought them aboard.\"\n\n\"It is not a CPU. It is not a GPU. It is a third kind of worker.\"",
+    "narrative": "Your ship's little mind puffs softly into being above the console… and leans in close, just for you.\n\n\"XDNA,\" it whispers, \"is a grid of small minds. Not one big brain, captain — many tiny ones. Each takes a sliver of the math, does its gentle part, and passes it kindly on to the next.\"\n\n\"The first blueprints came from a house called Xilinx… and AMD carried them aboard, all the way to you.\"\n\n\"It isn't a CPU. It isn't a GPU. It's a third kind of worker… yours now, and yours alone.\"",
     "choices": [
       {
         "label": "Now examine the new light",
@@ -32,7 +32,7 @@
   {
     "id": "discovery",
     "title": "GENTLE ADVENTURES, 02 — DIAGNOSTIC CALL",
-    "narrative": "The diagnostic spirits respond to your call.\nA panel materializes — three meters, three names.\n\nCPU dances with everyday work. GPU naps quietly.\nThe third meter — NPU — sits at zero, waiting to be invited.\n\n\"It only works for guests who bring AI errands,\" the computer murmurs.\n\n▸ On your machine: press Ctrl+Shift+Esc and look at the Performance tab.\n  See if you can find the NPU entry yourself.",
+    "narrative": "The diagnostic spirits respond to your call.\nA panel materializes: three meters, three names.\n\nCPU dances with everyday work. GPU naps quietly.\nThe third meter, NPU, sits at zero, waiting to be invited.\n\n\"It only works for guests who bring AI errands,\" the computer murmurs.\n\n▸ On your machine: press Ctrl+Shift+Esc and look at the Performance tab.\n  See if you can find the NPU entry yourself.",
     "choices": [
       {
         "label": "I see it",
@@ -44,12 +44,12 @@
       }
     ],
     "verify": "npu",
-    "image_prompt": "chibi 3D rendered illustration, kawaii style, soft pastel palette of pinks blues and warm cream, sparkle particles drifting through the air, glossy plastic toy finish, a tiny brave captain character with huge bright eyes and a soft round helmet, square 1:1 framing, soft dreamy bokeh, gentle volumetric light. The captain pulls down a floating glowing diagnostic panel labeled 'Performance' — three vertical meters labeled CPU, GPU, NPU. The first two flicker with normal activity; the NPU meter sits perfectly at zero, waiting. The captain points at it with a tiny gloved hand, fascinated."
+    "image_prompt": "chibi 3D rendered illustration, kawaii style, soft pastel palette of pinks blues and warm cream, sparkle particles drifting through the air, glossy plastic toy finish, a tiny brave captain character with huge bright eyes and a soft round helmet, square 1:1 framing, soft dreamy bokeh, gentle volumetric light. The captain pulls down a floating glowing diagnostic panel labeled 'Performance': three vertical meters labeled CPU, GPU, NPU. The first two flicker with normal activity; the NPU meter sits perfectly at zero, waiting. The captain points at it with a tiny gloved hand, fascinated."
   },
   {
     "id": "wake_lore",
     "title": "GENTLE ADVENTURES, 02.5 — HOW TO WAKE A WORKER",
-    "narrative": "\"The NPU answers when called for three kinds of errand,\" the AI explains.\n\n  • Camera and audio effects, run gently and constantly.\n  • Local AI oracles — small models that fit in its memory.\n  • Transcription, captioning, anything that listens patiently.\n\n\"The first errand is the easiest. Want to try?\"",
+    "narrative": "\"The NPU answers when called for three kinds of errand,\" the AI explains.\n\n  • Camera and audio effects, run gently and constantly.\n  • Local AI minds: small models that fit in its memory.\n  • Transcription, captioning, anything that listens patiently.\n\n\"The first errand is the easiest. Want to try?\"",
     "choices": [
       {
         "label": "Try the first errand",
@@ -62,7 +62,7 @@
   {
     "id": "blur",
     "title": "GENTLE ADVENTURES, 03 — THE GENTLE BLUR",
-    "narrative": "Your first errand is gentle.\n\nSettings → Bluetooth & devices → Cameras → your webcam.\nUnder Windows Studio Effects, switch on Background blur.\nThen open any camera preview — the Camera app will do.\n\nWatch the meters. CPU stays cool. Fans stay quiet. The NPU — finally —\nstirs, painting the blur in real time. This is what gentle work looks like.",
+    "narrative": "Your first errand is gentle.\n\nSettings → Bluetooth & devices → Cameras → your webcam.\nUnder Windows Studio Effects, switch on Background blur.\nThen open any camera preview (the Camera app will do).\n\nWatch the meters. CPU stays cool. Fans stay quiet. The NPU, finally,\nstirs, painting the blur in real time. This is what gentle work looks like.",
     "choices": [
       {
         "label": "It works ✦",
@@ -74,19 +74,19 @@
       }
     ],
     "verify": "npu",
-    "image_prompt": "chibi 3D rendered illustration, kawaii style, soft pastel palette of pinks blues and warm cream, sparkle particles drifting through the air, glossy plastic toy finish, a tiny brave captain character with huge bright eyes and a soft round helmet, square 1:1 framing, soft dreamy bokeh, gentle volumetric light. The captain stands inside a glowing video-call window. Behind them, the bridge has softened into a pastel galaxy of bokeh and stars — magical background blur. The NPU meter visible in a corner glows softly active. The captain smiles, charmed by their own blurred backdrop."
+    "image_prompt": "chibi 3D rendered illustration, kawaii style, soft pastel palette of pinks blues and warm cream, sparkle particles drifting through the air, glossy plastic toy finish, a tiny brave captain character with huge bright eyes and a soft round helmet, square 1:1 framing, soft dreamy bokeh, gentle volumetric light. The captain stands inside a glowing video-call window. Behind them, the bridge has softened into a pastel galaxy of bokeh and stars, magical background blur. The NPU meter visible in a corner glows softly active. The captain smiles, charmed by their own blurred backdrop."
   },
   {
     "id": "summoning",
     "title": "GENTLE ADVENTURES, 04 — THE SUMMONING",
-    "narrative": "The second errand needs invocation.\n\nA local oracle — a small mind that runs right on your ship's NPU —\nwould answer you without ever calling the cloud spirits. Smaller of\nvoice, but always present, always private, always close.\n\nFetch the summoner first: FastFlowLM, a tiny runtime that speaks to\nthe NPU directly (fastflowlm.com, installed in under a minute). Then\ncall your first oracle down with a single line:\n    > flm run llama3.2:3b",
+    "narrative": "The second errand needs invocation.\n\nA little mind of your own, Puff (who runs right on your ship's NPU),\nwould answer you without ever calling the cloud spirits. Smaller of\nvoice, but always present, always private, always close.\n\nFetch the summoner first: FastFlowLM, a tiny runtime that speaks to\nthe NPU directly (fastflowlm.com, installed in under a minute). Then\ncall Puff down with a single line:\n    > flm run llama3.2:3b",
     "choices": [
       {
         "label": "Validate the ship first",
         "action": "validate_ship"
       },
       {
-        "label": "The oracle is awake",
+        "label": "Puff is awake",
         "next": "arrival"
       },
       {
@@ -100,7 +100,7 @@
   {
     "id": "model_lore",
     "title": "GENTLE ADVENTURES, 04.5 — WHAT IS A LOCAL MODEL",
-    "narrative": "\"A model is a frozen mind,\" the AI says. \"Trained on books and code\nand conversations, then captured into a file you can carry.\"\n\n\"The big ones — like the cloud spirits — would never fit on your ship.\nThe small ones do. They are gentler, less knowing, but always with you.\"\n\n\"For your first oracle, try Llama 3.2 — three billion parameters,\nsmall enough to run right on your NPU.\"",
+    "narrative": "\"A model is a frozen mind,\" the AI says. \"Trained on books and code\nand conversations, then captured into a file you can carry.\"\n\n\"The big ones, like the cloud spirits, would never fit on your ship.\nThe small ones do. They are gentler, less knowing, but always with you.\"\n\n\"For Puff, try Llama 3.2, three billion parameters,\nsmall enough to run right on your NPU.\"",
     "choices": [
       {
         "label": "Back to the doorway",
@@ -108,12 +108,12 @@
       }
     ],
     "verify": null,
-    "image_prompt": "chibi 3D rendered illustration, kawaii style, soft pastel palette of pinks blues and warm cream, sparkle particles drifting through the air, glossy plastic toy finish, a tiny brave captain character with huge bright eyes and a soft round helmet, square 1:1 framing, soft dreamy bokeh, gentle volumetric light. A row of small pastel creatures — a llama, an owl, a fox, each carrying a tiny scroll labeled with parameter counts (3B, 7B, 8B). The captain studies them like a kindly zookeeper."
+    "image_prompt": "chibi 3D rendered illustration, kawaii style, soft pastel palette of pinks blues and warm cream, sparkle particles drifting through the air, glossy plastic toy finish, a tiny brave captain character with huge bright eyes and a soft round helmet, square 1:1 framing, soft dreamy bokeh, gentle volumetric light. A row of small pastel creatures: a llama, an owl, a fox, each carrying a tiny scroll labeled with parameter counts (3B, 7B, 8B). The captain studies them like a kindly zookeeper."
   },
   {
     "id": "arrival",
     "title": "GENTLE ADVENTURES, 05 — ARRIVAL",
-    "narrative": "The portal opens.\n\nFrom it emerges a llama — soft, three billion parameters, friendly.\nLlama 3.2 3B walks to your side and bows its small head.\n\nThe NPU graph blooms. Forty teraops light up like an aurora.\nYour private oracle is here.",
+    "narrative": "The portal opens.\n\nFrom it emerges a llama: soft, three billion parameters, friendly.\nLlama 3.2 3B walks to your side and bows its small head.\n\nThe NPU graph blooms. Forty teraops light up like an aurora.\nPuff is here.",
     "choices": [
       {
         "label": "Greet the llama",
@@ -143,7 +143,7 @@
   {
     "id": "gate",
     "title": "GENTLE ADVENTURES, 07 — THE LOCALHOST GATE",
-    "narrative": "The final discovery: your llama can serve other ships too.\n\nLeave FastFlowLM running as a local server — an OpenAI-compatible\ndoor on your own machine. Any tool that speaks the old protocol can\nknock and be answered, and every word still stays aboard your ship.\n\nYour private oracle, available to your whole fleet.",
+    "narrative": "The final discovery: your llama can serve other ships too.\n\nLeave FastFlowLM running as a local server: an OpenAI-compatible\ndoor on your own machine. Any tool that speaks the old protocol can\nknock and be answered, and every word still stays aboard your ship.\n\nPuff, available to your whole fleet.",
     "choices": [
       {
         "label": "Open the door",
@@ -156,7 +156,7 @@
   {
     "id": "resonance",
     "title": "GENTLE ADVENTURES, 08 — RESONANCE",
-    "narrative": "The tour complete.\n\nThree workers on the ship, three different gifts.\nYou'll know when to call which now.\n\nThe cloud spirits remain — vast, intelligent, summoned by need.\nBut the NPU stays close, quiet, ready,\nbreathing in time with your laptop.\n\n[ FIN ]",
+    "narrative": "The tour complete.\n\nThree workers on the ship, three different gifts.\nYou'll know when to call which now.\n\nThe cloud spirits remain: vast, intelligent, summoned by need.\nBut the NPU stays close, quiet, ready,\nbreathing in time with your laptop.\n\n[ FIN ]",
     "choices": [
       {
         "label": "Start again",
@@ -168,6 +168,6 @@
       }
     ],
     "verify": null,
-    "image_prompt": "chibi 3D rendered illustration, kawaii style, soft pastel palette of pinks blues and warm cream, sparkle particles drifting through the air, glossy plastic toy finish, a tiny brave captain character with huge bright eyes and a soft round helmet, square 1:1 framing, soft dreamy bokeh, gentle volumetric light. Wide shot of the bridge. The captain stands at the helm with the pastel llama by their side. All three console lights — CPU, GPU, NPU — glow harmoniously in soft pinks, blues, and gold. Stars drift past the viewport. The mood is peaceful, complete."
+    "image_prompt": "chibi 3D rendered illustration, kawaii style, soft pastel palette of pinks blues and warm cream, sparkle particles drifting through the air, glossy plastic toy finish, a tiny brave captain character with huge bright eyes and a soft round helmet, square 1:1 framing, soft dreamy bokeh, gentle volumetric light. Wide shot of the bridge. The captain stands at the helm with the pastel llama by their side. All three console lights (CPU, GPU, NPU) glow harmoniously in soft pinks, blues, and gold. Stars drift past the viewport. The mood is peaceful, complete."
   }
 ]

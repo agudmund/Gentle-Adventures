@@ -276,6 +276,27 @@ class LedgerRefreshWorker(QThread):
         self.refreshed.emit(result)
 
 
+class FloorResyncWorker(QThread):
+    """Launch-time mirror maintenance: refresh the committed offline floor files
+    (Documents/Data/*_floor.json) from the live Sheet so a fresh clone opens on
+    current canon. Write-on-change and best-effort — offline, the floor on disk
+    stands, exactly as the fallback ladder intends. Quiet by design: this is a
+    janitor with a broom, not a painter at work. The Ledger's own content pull is
+    untouched; canon flows down (the Sheet is canon), this just keeps the deep
+    mirror tier from ghosting behind it. See utils/resync_floor.py."""
+
+    def run(self):
+        try:
+            from utils.resync_floor import resync
+            updated, failures = resync()
+            if updated:
+                logger.info(f"[floor] committed offline floor refreshed ({updated} tab(s))")
+            elif failures:
+                logger.debug(f"[floor] launch resync left {failures} tab(s) as-was (offline or absent)")
+        except Exception as e:
+            logger.debug(f"[floor] launch resync skipped ({e})")
+
+
 class PuffWorker(QThread):
     """Put one question to Puff — the local NPU llama (flm) — off the UI thread. The
     first ask wakes the server (model load onto the NPU, a few seconds) — that's the
@@ -699,6 +720,11 @@ class GentleAdventuresApp(QMainWindow):
             hydr = PlayerStateSyncWorker(self.player_state, hydrate=True)
             hydr.synced.connect(self._on_state_hydrated)
             self._workers.run(hydr)
+            # Mirror maintenance (the Sheet is canon; mirrors flow down): refresh
+            # the committed offline floor once per launch, write-on-change, so a
+            # fresh clone heals on its first online run. Offline, the disk floor
+            # stands — the ladder's intended fallback, just kept from ghosting.
+            self._workers.run(FloorResyncWorker(), quiet=True)
         else:
             self._set_ledger_indicator("off")
 
@@ -1403,6 +1429,10 @@ class GentleAdventuresApp(QMainWindow):
         hydr = PlayerStateSyncWorker(self.player_state, hydrate=True)
         hydr.synced.connect(self._on_state_hydrated)
         self._workers.run(hydr)
+        # The launch-time floor resync was gated off too (no creds then) — run it
+        # now, so "a fresh clone heals on its first online run" holds even when
+        # that first run began credential-less and came online via scene 0.5.
+        self._workers.run(FloorResyncWorker(), quiet=True)
         return True
 
     # ───── quest ─────

@@ -10,16 +10,22 @@
 #   report (default) — grep EVERY cell of the live ledger tabs for retired phrases
 #                      and print where they linger. Read-only; surfaces the signal,
 #                      never auto-heals (the family's drift-accountability posture).
-#   --push           — re-mint the Quest_Log tab from the bundled QUEST in
-#                      quest.py (code is canon, the sheet is its mirror).
-#                      Diff-preview by default; --apply actually writes.
+#   --push           — re-seed the Quest_Log tab from the bundled QUEST mirror in
+#                      quest.py. The Sheet is canon (the author writes the Sheet;
+#                      mirrors flow down — quest.py's _Ledger docstring and
+#                      State Sync v2.md are the doctrine of record): this verb is
+#                      a repair-and-bootstrap device — first mint of an empty
+#                      Sheet, or correcting a recorded deviation — never an
+#                      authoring rail. Diff-preview by default; --apply writes.
 #
 # Why this and not a generated Sheets CLI: the family already owns an Apps Script
 # proxy (utils/sheets.py over raw urllib). A Sheets-API CLI would drag in OAuth2 +
 # the Google SDK — two breaks with raw-HTTP / no-SDK sovereignty. So we reuse the
-# courier we already have. NOTE: replace_rows() has never run against the live
-# proxy before, so the first --apply also exercises that write path — hence the
-# dry-run-first guard.
+# courier we already have. The write path is field-proven: replace_rows() first
+# ran against the live proxy 2026-06-05 (the sheet_edit --apply backups on disk),
+# and the Quest_Log was re-minted 2026-07-05 (commit e6b721d) to correct the
+# July-4 authoring deviation. The dry-run-first guard stays as standing
+# discipline, not as a maiden-voyage precaution.
 
 from __future__ import annotations
 
@@ -128,7 +134,7 @@ def report() -> int:
     print(f"  ⚠ {len(hits)} stale cell(s):\n")
     for h in hits:
         print(f"    {h['tab']}!{h['cell']}  /{h['pattern']}/  →  {h['value']!r}")
-    print("\n  Re-mint Quest_Log from canon with:  python utils/sanitize_sheets.py --push")
+    print("\n  Re-seed Quest_Log from the bundled mirror with:  python utils/sanitize_sheets.py --push")
     return 1
 
 
@@ -154,7 +160,7 @@ def _bump_meta_version(client: SheetsClient) -> None:
 def push(apply: bool) -> int:
     client = SheetsClient()
     header, current, fresh = _quest_log_state(client)
-    print("✦ Quest_Log re-mint — bundled QUEST (canon) → sheet ✦\n")
+    print("✦ Quest_Log re-seed — bundled QUEST mirror → sheet (repair/bootstrap; the Sheet is canon) ✦\n")
     changed = 0
     for i, (scene, fresh_row) in enumerate(zip(QUEST, fresh)):
         cur_row = current[i] if i < len(current) else []
@@ -163,16 +169,16 @@ def push(apply: bool) -> int:
             print(f"    ~ row {i + 2} ({scene['id']}) differs")
     extra = len(current) - len(QUEST)
     if extra > 0:
-        print(f"    - {extra} trailing sheet row(s) beyond canon would be dropped")
+        print(f"    - {extra} trailing sheet row(s) beyond the bundled mirror would be dropped")
     if changed == 0 and extra == 0:
-        print("  ✓ Quest_Log already matches canon — nothing to push.")
+        print("  ✓ Quest_Log already matches the bundled mirror — nothing to push.")
         return 0
-    print(f"\n  {changed} row(s) differ; writing {len(fresh)} canon row(s) total.")
+    print(f"\n  {changed} row(s) differ; writing {len(fresh)} mirror row(s) total.")
     if not apply:
         print("  (dry run — re-run with --push --apply to write to the live sheet)")
         return 0
     client.replace_rows("Quest_Log", fresh)
-    print("  ✓ Quest_Log re-minted from canon.")
+    print("  ✓ Quest_Log re-seeded from the bundled mirror.")
     _bump_meta_version(client)
     return 0
 
@@ -180,7 +186,8 @@ def push(apply: bool) -> int:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Grep / sanitize the GA Google Sheet ledger.")
     ap.add_argument("--push", action="store_true",
-                    help="re-mint Quest_Log from bundled QUEST (diff preview by default)")
+                    help="re-seed Quest_Log from the bundled QUEST mirror — repair/bootstrap, "
+                         "the Sheet is canon (diff preview by default)")
     ap.add_argument("--apply", action="store_true",
                     help="with --push: actually write the sheet (otherwise dry-run only)")
     args = ap.parse_args(argv)

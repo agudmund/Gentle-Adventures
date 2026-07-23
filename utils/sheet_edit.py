@@ -6,11 +6,12 @@
 -Built using a single shared braincell by Yours Truly and various Intelligences
 """
 
-# One-line tweaks to the live Ledger WITHOUT the re-mint clobber. The sanitize
-# --push path rewrites every row from the (often stale) bundled canon; this finds
-# exactly one cell containing `old`, replaces the substring, and writes the rows
-# back — everything else byte-for-byte untouched. Backs up first, verifies after,
-# and auto-restores if the read-after-write check fails.
+# One-line tweaks to the live Ledger WITHOUT the re-seed clobber. The sanitize
+# --push path rewrites every row from the bundled QUEST mirror (a repair /
+# bootstrap device — the Sheet is canon); this finds exactly one cell containing
+# `old`, replaces the substring, and writes the rows back — everything else
+# byte-for-byte untouched. Backs up first, verifies after, and auto-restores if
+# the read-after-write check fails.
 #
 #   python utils/sheet_edit.py Quest_Log "old text" "new text"            # dry run
 #   python utils/sheet_edit.py Quest_Log "old text" "new text" --apply    # write
