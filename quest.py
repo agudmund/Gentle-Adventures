@@ -350,8 +350,8 @@ QUEST: list[dict] = [
 # The Ledger — the quest's source of truth.
 #
 # The 11 scenes above are now the BUNDLED FALLBACK. The live source is the
-# Quest_Log tab of the shared Google Sheet (read through utils/sheets.py over
-# the Apps Script proxy). When the sheet is populated, edits made in a browser
+# Quest_Log tab of the shared Google Sheet (read through the family courier,
+# shared_braincell.sheets, over the Apps Script proxy). When the sheet is populated, edits made in a browser
 # flow into the game; when it's empty or unreachable, the bundled scenes keep
 # the quest fully playable. Either way main_window's get_scene() contract is
 # unchanged.
@@ -642,14 +642,15 @@ class _Ledger:
     # ── fetch (worker-thread safe; never raises to the caller) ─────────────────
     def _fetch_live(self) -> list[dict] | None:
         # Deferred import: keeps quest.py free of network deps until first use,
-        # and lets the bundled fallback work even if utils/sheets is absent.
+        # and lets the bundled fallback work even if the family courier is absent.
         try:
-            from utils.sheets import SheetsClient, SheetsError
+            from utils.identity import sheets_client
+            from shared_braincell.sheets import SheetsError
         except Exception as e:
             logger.warning(f"[ledger] sheets client unavailable: {e}")
             return None
         try:
-            rows = SheetsClient().read_sheet(self._tab)
+            rows = sheets_client().read_sheet(self._tab)
         except SheetsError as e:
             logger.debug(f"[ledger] Quest_Log unavailable ({e}); keeping previous content")
             return None
@@ -667,8 +668,8 @@ class _Ledger:
         then change-detection rests on the content hash alone (any edit still
         propagates; only the explicit revert guard is unavailable)."""
         try:
-            from utils.sheets import SheetsClient
-            rows = SheetsClient().read_sheet("_meta")
+            from utils.identity import sheets_client
+            rows = sheets_client().read_sheet("_meta")
             for row in rows or []:
                 cells = [str(c).strip() for c in row]
                 if len(cells) >= 2 and cells[0].lower() == "version":

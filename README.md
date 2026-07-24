@@ -57,8 +57,10 @@ graphics/                  Self-contained UI citizens: widgets, scene map,
                            keepsake shelf, captain's log, ship's codex,
                            sidebar, psychological weather
 utils/                     Fail-able features, lazy-imported so a fault stays
-                           scoped to one file: sheets client, player state,
-                           NPU probe, oracle, text backends, sticker loot
+                           scoped to one file: player state, NPU probe, oracle,
+                           text backends, sticker loot (the sheets courier now
+                           rides in shared_braincell; GA binds its slots in
+                           utils/identity.py)
 Images/                    Icons (brand mark, stickers) and cached
                            Gemini-rendered scene art
 Audio/                     Narrator takes, played when their scene lands

@@ -19,7 +19,7 @@
 #                      authoring rail. Diff-preview by default; --apply writes.
 #
 # Why this and not a generated Sheets CLI: the family already owns an Apps Script
-# proxy (utils/sheets.py over raw urllib). A Sheets-API CLI would drag in OAuth2 +
+# proxy (shared_braincell.sheets over raw urllib). A Sheets-API CLI would drag in OAuth2 +
 # the Google SDK — two breaks with raw-HTTP / no-SDK sovereignty. So we reuse the
 # courier we already have. The write path is field-proven: replace_rows() first
 # ran against the live proxy 2026-06-05 (the sheet_edit --apply backups on disk),
@@ -41,7 +41,8 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from utils.sheets import SheetsClient, SheetsError          # noqa: E402
+from utils.identity import sheets_client                     # noqa: E402
+from shared_braincell.sheets import SheetsProxyClient, SheetsError   # noqa: E402
 from quest import QUEST, _SHEET_COLUMNS                # noqa: E402
 
 # ── Control surfaces — edit these like a console ─────────────────────────────
@@ -67,7 +68,7 @@ def _col_letter(idx: int) -> str:
     return s
 
 
-def scan(client: SheetsClient) -> list[dict]:
+def scan(client: SheetsProxyClient) -> list[dict]:
     """Grep every cell of every TAB against STALE_PATTERNS. Read-only."""
     pats = [(p, re.compile(p, re.IGNORECASE)) for p in STALE_PATTERNS]
     hits: list[dict] = []
@@ -111,7 +112,7 @@ def _scene_to_row(scene: dict, header: list[str], current_row: list | None) -> l
     return row
 
 
-def _quest_log_state(client: SheetsClient):
+def _quest_log_state(client: SheetsProxyClient):
     """(header, current_data_rows, fresh_data_rows) for Quest_Log, so a push can be
     reviewed before it's made."""
     rows = client.read_sheet("Quest_Log")
@@ -125,7 +126,7 @@ def _quest_log_state(client: SheetsClient):
 
 
 def report() -> int:
-    client = SheetsClient()
+    client = sheets_client()
     print("✦ Ledger sanitizer — scanning for retired phrases ✦\n")
     hits = scan(client)
     if not hits:
@@ -138,7 +139,7 @@ def report() -> int:
     return 1
 
 
-def _bump_meta_version(client: SheetsClient) -> None:
+def _bump_meta_version(client: SheetsProxyClient) -> None:
     """Best-effort: advance _meta!version after a content re-mint, so the game's
     revert guard has a fresh monotonic number to arbitrate with. Silently skipped if
     there's no _meta tab — the core last-good/hash/floor protections don't need it."""
@@ -158,7 +159,7 @@ def _bump_meta_version(client: SheetsClient) -> None:
 
 
 def push(apply: bool) -> int:
-    client = SheetsClient()
+    client = sheets_client()
     header, current, fresh = _quest_log_state(client)
     print("✦ Quest_Log re-seed — bundled QUEST mirror → sheet (repair/bootstrap; the Sheet is canon) ✦\n")
     changed = 0

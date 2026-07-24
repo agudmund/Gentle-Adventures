@@ -34,7 +34,8 @@ except Exception:
 from quest import _FLOOR_FILES, _rows_to_scenes
 from utils.logger import get_logger
 from utils.paths import app_root
-from utils.sheets import SheetsClient, SheetsError
+from utils.identity import sheets_client
+from shared_braincell.sheets import SheetsError
 
 logger = get_logger("gentle")
 
@@ -45,10 +46,10 @@ def resync(emit=None) -> tuple[int, int]:
     file — and therefore the git tree — untouched. Per-tab best-effort: a tab
     that's unreachable or empty keeps its existing floor and counts as a
     failure; the caller decides how loudly that matters. Constructing the
-    SheetsClient raises SheetsAuthError when the proxy isn't configured —
+    courier raises SheetsAuthError when the proxy isn't configured —
     also the caller's call."""
     say = emit or (lambda line: logger.debug(f"[floor] {line}"))
-    client = SheetsClient()
+    client = sheets_client()
     data_dir = app_root() / "Documents" / "Data"
     updated = failures = 0
     for tab, fn in _FLOOR_FILES.items():

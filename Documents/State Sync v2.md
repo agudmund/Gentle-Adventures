@@ -47,7 +47,7 @@ version). The game informs; the operator authors.
 A player choice that should reshape the world does not write the world — it speaks
 into the intercom; the daemon decides and re-fires. This is the principled home for
 every "exception to one-way": never a reversal of a pipe, always a second wire. We
-**reserve the socket now** (`SheetsClient.write_signal`) even before anything
+**reserve the socket now** (`SheetsProxyClient.write_signal`) even before anything
 consumes it, so the dynamic-story future plugs in without re-architecting.
 
 ## The machinery (seven borrowed principles + two remote compensations)
@@ -93,7 +93,7 @@ Two things the filesystem gave free that a remote, externally-mutable store does
 
 - `Quest_Log` — content. Columns per `_SHEET_COLUMNS`. Written only by the author /
   daemon / the operator tool (`sanitize_sheets.py --push`). The game never writes it.
-- `Player_State` — progress. Written only by the game (`SheetsClient.write_player_state`).
+- `Player_State` — progress. Written only by the game (`SheetsProxyClient.write_state("Player_State", …)`).
 - `_meta` *(optional)* — a `version` cell (monotonic int). `--push` bumps it; the
   Apps Script `onEdit` trigger (snippet in *Sheets Ledger Setup.md*, "The revert
   guard") auto-bumps it on human browser edits once pasted into the Sheet's

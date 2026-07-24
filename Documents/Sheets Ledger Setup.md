@@ -158,11 +158,14 @@ Worth knowing (verified live, 2026-07-23):
 
 ## Architecture notes (for the curious)
 
-- Transport: `utils/sheets.py` (`SheetsClient`) — raw `urllib`, the proxy always
+- Transport: `shared_braincell.sheets` (`SheetsProxyClient`) — the family courier,
+  lifted from `utils/sheets.py` 2026-07-24. Raw `urllib`, the proxy always
   answers **HTTP 200** with errors in the body, so the client inspects the body.
+  GA binds its slots + identity in `utils/identity.py` (`sheets_client()`).
 - Content: `quest.py` (`_Ledger`) maps `Quest_Log` rows → scene dicts by
   **column name** (robust to column reordering), with the bundled `QUEST` as the
   fallback.
-- Config resolution: `load_proxy_config()` — environment first, then
-  `.sheets_proxy.json`. Raises `SheetsAuthError` if neither yields both values,
-  which is exactly what flips the Ledger to OFF (gracefully).
+- Config resolution: `load_proxy_config()` — the app's own env-key slots first
+  (GA passes `GA_WebApp` / `GA_Ledger`), then `.sheets_proxy.json`. Raises
+  `SheetsAuthError` if neither yields both values, which is exactly what flips
+  the Ledger to OFF (gracefully).

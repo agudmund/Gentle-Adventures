@@ -46,11 +46,11 @@ from shared_braincell.gemini_image import (
     save_api_key,
     validate_key,
 )
-from utils.identity import GEMINI_KEY_ENV, user_agent
+from utils.identity import GEMINI_KEY_ENV, user_agent, sheets_client
 from utils.probe import probe_fastflowlm, probe_npu, raw_hardware_spec, resolve_flm
 from shared_braincell.llama import Llama
 from utils.scene_cache import SceneCache
-from utils.sheets import SheetsClient, SheetsError
+from shared_braincell.sheets import SheetsProxyClient, SheetsError
 from utils.player_state import PlayerStateStore
 from utils.text import build_text_backend
 from utils.sticker_loot import award_for_scene
@@ -425,7 +425,7 @@ class GentleAdventuresApp(QMainWindow):
         # once; None (silently) when the proxy isn't configured — contextual
         # absence, never an error banner. The sync runs off the UI thread.
         try:
-            self.sheets: SheetsClient | None = SheetsClient()
+            self.sheets: SheetsProxyClient | None = sheets_client()
         except SheetsError as e:
             self.sheets = None
             # Clear, actionable, once at startup — this is a graceful fallback,
@@ -1397,8 +1397,9 @@ class GentleAdventuresApp(QMainWindow):
             self._enter_quest()
             return
         try:
-            from utils.sheets import load_proxy_config
-            load_proxy_config(self.app_dir)   # raises if neither env nor file configures it
+            from shared_braincell.sheets import load_proxy_config
+            from utils.identity import SHEETS_URL_ENVS, SHEETS_TOKEN_ENVS
+            load_proxy_config(SHEETS_URL_ENVS, SHEETS_TOKEN_ENVS, self.app_dir)   # raises if unconfigured
             configured = True
         except Exception:
             configured = False
@@ -1438,8 +1439,7 @@ class GentleAdventuresApp(QMainWindow):
         session instead of waiting for a relaunch. Best-effort: a bad URL/token just
         fails the first read and the game keeps its local log."""
         try:
-            from utils.sheets import SheetsClient
-            self.sheets = SheetsClient()
+            self.sheets = sheets_client()
         except Exception as e:
             logger.info(f"[sheets] Ledger still offline after setup: {e}")
             return False

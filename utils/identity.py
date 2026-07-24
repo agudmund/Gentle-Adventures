@@ -19,6 +19,22 @@ _APP_NAME = "GentleAdventures"
 # so this app's painter is keyed independently of its siblings.
 GEMINI_KEY_ENV = "GEMINI_GENTLE_KEY"
 
+# GA's Sheets-proxy slots — the app-side half of the shared courier's per-app
+# env-key contract (shared_braincell.sheets, lifted from utils/sheets.py
+# 2026-07-24). Canonical spellings first; the variants are accepted aliases.
+SHEETS_URL_ENVS = ("GA_WebApp", "GA_WEBAPP", "GA_WEB_APP")
+SHEETS_TOKEN_ENVS = ("GA_Ledger", "GA_LEDGER")
+
+
+def sheets_client(app_dir=None, timeout: float = 25.0):
+    """GA's one construction point for the family Sheets courier — binds the
+    app's env slots and outbound identity so call sites stay a bare
+    ``sheets_client()``, exactly as ``SheetsClient()`` read before the lift."""
+    from shared_braincell.sheets import SheetsProxyClient
+    return SheetsProxyClient(SHEETS_URL_ENVS, SHEETS_TOKEN_ENVS,
+                             app_dir=app_dir, timeout=timeout,
+                             user_agent=user_agent("Sheets"))
+
 
 def user_agent(feature: str = "") -> str:
     """Family User-Agent: ``GentleAdventures[/<Feature>]/<version> (SingleSharedBraincell)``.

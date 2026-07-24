@@ -14,7 +14,7 @@
 // Settings -> Script Properties -> add GA_TOKEN with the same value as the
 // GA_Ledger environment variable. Rotation is a one-property flip on each side.
 //
-// Contract (mirrors utils/sheets.py, the raw-urllib client):
+// Contract (mirrors shared_braincell.sheets, the family's raw-urllib courier):
 //   - Always answers HTTP 200 JSON; errors arrive in the body as {"error": ...}.
 //     doGet is wrapped so even a missing tab answers JSON, never Google's HTML
 //     error page (which the client can only classify as auth trouble —

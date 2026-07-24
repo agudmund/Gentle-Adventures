@@ -37,7 +37,7 @@ class PlayerStateStore:
     """
 
     def __init__(self, sheets, app_dir: Path):
-        self._sheets = sheets                              # SheetsClient | None
+        self._sheets = sheets                              # SheetsProxyClient | None
         self._path = Path(app_dir) / "player_state.json"
         self._tmp = self._path.parent / (self._path.name + ".tmp")
         self._lock = threading.Lock()
@@ -116,7 +116,9 @@ class PlayerStateStore:
                 return True
             snapshot = dict(self._pending)
         try:
-            self._sheets.write_player_state(snapshot)
+            # The SPINE write-path Systems 4 and 5 call back into — Player_State
+            # upserts, through the family courier's generalized key-value surface.
+            self._sheets.write_state("Player_State", snapshot)
         except Exception as e:
             logger.info(f"[state] flush deferred — {len(snapshot)} key(s) kept on board ({e})")
             return False
@@ -138,7 +140,7 @@ class PlayerStateStore:
         if self._sheets is None:
             return False
         try:
-            remote = self._sheets.read_player_state()
+            remote = self._sheets.read_state("Player_State")
         except Exception as e:
             logger.info(f"[state] remote hydrate unavailable; sailing on the local logbook ({e})")
             return False

@@ -6,7 +6,8 @@ How Gentle Adventures uses its shared Google Sheet, and the tools that keep it h
 
 The `Quest_Log` tab of the shared Google Sheet is the **live, dynamically-editable
 source of truth** — the state machine. At startup the `_Ledger` (in `quest.py`)
-reads `Quest_Log` through the Apps Script proxy (`utils/sheets.py`, raw urllib) and
+reads `Quest_Log` through the Apps Script proxy (`shared_braincell.sheets`, the
+family courier, raw urllib) and
 serves scenes from it; the bundled `QUEST` list in `quest.py` is the **fallback
 baseline** used only when the sheet is empty or unreachable.
 

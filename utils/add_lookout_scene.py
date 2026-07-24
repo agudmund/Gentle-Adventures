@@ -13,7 +13,7 @@
 
 import json
 
-from utils.sheets import SheetsClient
+from utils.identity import sheets_client
 
 LOOKOUT_NARRATIVE = (
     "A narrow stair curls up from the games wall to a small glass dome — "
@@ -50,7 +50,7 @@ LOOKOUT_CHOICES = [
 
 
 def main() -> int:
-    client = SheetsClient()
+    client = sheets_client()
     rows = client.read_sheet("HY_World")
     header = [str(h).strip() for h in rows[0]]
     data = [r for r in rows[1:] if str(r[0] if r else "").strip()]

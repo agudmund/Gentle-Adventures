@@ -41,48 +41,6 @@
     {
       "node_id": 0,
       "node_type": "warm",
-      "title": "All Glory",
-      "uuid": "cfe0d671f0ad43938e970e91c6971b38",
-      "x": 6072.982942077525,
-      "y": 1497.6566722367668,
-      "width": 300.0,
-      "height": 251.0,
-      "z_value": -9.788000000000117,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "To reach finished, one focused session plus render wall-time (roughly 4-17 minutes of CPU per 25-second take): build the scene render tool (iterate scenes by id, pinned recipe, preserve the Unicode breath cues, write into Audio/ with the house naming); promote or re-render scene 1.5 and wire lore_xdna into _NARRATION; add a transcript-diff coupling verifier so a text change without a re-render fails loudly; then run your waiting scene-1 text refinements through it so text and audio land in one commit."
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Clay",
-      "uuid": "6ad5af37f7c446b08a92559ac89273df",
-      "x": 6547.241662030019,
-      "y": 1445.8766274788557,
-      "width": 300.0,
-      "height": 176.0,
-      "z_value": -9.787000000000118,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "Your calls: where the tool lives (GA tools/ vs a verb on the omnivoice rail); whether scene 1.5 narration is wanted at landing, promoted as-is or re-rendered; the speed decision (1.0 to match the master vs 1.1 canon, an ear call that's yours); and the text refinements themselves, which are your authorship."
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Growth",
-      "uuid": "cfa27acd64b94ce8a689cd7614819196",
-      "x": 6535.080663435795,
-      "y": 1826.9530866957084,
-      "width": 300.0,
-      "height": 341.0,
-      "z_value": -9.786000000000119,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "Suggested order\nClose-out batch (one sitting): tasks 1, 2, 3. Mostly annotation, a floor resync commit, a dry-run Sheet diff, one GA rebuild, docstring reconciliation. Clears three of five cards.\nThe bugfix: task 4's two _go_live hardening steps. Small, pattern-copied, and it retires a live race.\nThe build: task 5's narration tool, once your ear-decisions are in, closing with your scene-1 refinements landing text+audio together.\nThe decisions above are the only things standing between here and five closed cards. Give me the doctrine call, the double-instance endgame, the Restart-crosses-to-source call, and the narration dials, and I can start with the close-out batch (including annotating the Asana cards with what the investigation found) whenever you say the word."
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
       "title": "Bloom",
       "uuid": "983809b6553c4f8b8493eab3c94a238a",
       "x": 13531.203235924531,
@@ -93,27 +51,6 @@
       "ports_visible": false,
       "shelf_visible": true,
       "body_text": ">>> lets chat about the number ten, the concept of it and etmyology"
-    },
-    {
-      "node_id": 0,
-      "node_type": "audio",
-      "title": "ga_scene1_5_lore_xdna_personal_B_2",
-      "uuid": "139d41fc63e34cb99585c7c9e058d71e",
-      "x": 3505.701252742446,
-      "y": 614.0498745174663,
-      "width": 379.0,
-      "height": 120.0,
-      "z_value": -9.799000000000111,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "source_path": "C:\\Users\\thebe\\Desktop\\The Void and The Noid\\OmniVoice First Contact\\outputs\\ga_scene1_5_lore_xdna_personal_B_2.wav",
-      "caption": "ga_scene1_5_lore_xdna_personal_B_2",
-      "volume": 50,
-      "playback_pos": 0,
-      "looping": false,
-      "muted": false,
-      "depth_front": false,
-      "node_tint": ""
     },
     {
       "node_id": 0,
@@ -128,34 +65,6 @@
       "ports_visible": false,
       "shelf_visible": true,
       "body_text": "**Etymology of 10**"
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Bloom",
-      "uuid": "676088839e464a5aaa40832d5dca10f4",
-      "x": 7797.723053156108,
-      "y": 5780.734276428597,
-      "width": 300.0,
-      "height": 101.0,
-      "z_value": -9.951000000000027,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "**Best Practices**"
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Omnious",
-      "uuid": "55831b8fd261495ea18467b7183ffbd5",
-      "x": 7524.794023805198,
-      "y": 5925.791045870549,
-      "width": 300.0,
-      "height": 206.0,
-      "z_value": -9.952000000000027,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "* **Creating new directories**: Using the `mkdir` command or the File Explorer.\n* **Deleting files and directories**: Using the `rm` command or the File Explorer.\n* **Copying files and directories**: Using the `cp` command or the File Explorer.\n* **Moving files and directories**: Using the `mv` command or the File Explorer."
     },
     {
       "node_id": 0,
@@ -290,8 +199,8 @@
       "node_type": "warm",
       "title": "Fresh Start",
       "uuid": "4a4912d37d394aeabe16b9502d9fedfe",
-      "x": 13329.224419187587,
-      "y": 2537.7202363644374,
+      "x": 13516.486557354567,
+      "y": 2568.1693645216696,
       "width": 300.0,
       "height": 131.0,
       "z_value": -9.914000000000048,
@@ -304,8 +213,8 @@
       "node_type": "image",
       "title": "Image",
       "uuid": "1044804e687f4f8c8815789e9053c3d0",
-      "x": 3227.178622381882,
-      "y": 778.7499629231354,
+      "x": 2971.4059458611273,
+      "y": 1192.8581058615011,
       "width": 273.50234133146205,
       "height": 270.34848810136293,
       "z_value": -9.810000000000105,
@@ -322,43 +231,11 @@
     },
     {
       "node_id": 0,
-      "node_type": "about",
-      "title": "Note",
-      "uuid": "0078bbb41f5b420595fa7869c8fdc467",
-      "x": 3153.904926223495,
-      "y": 1094.9942143311848,
-      "width": 115.0,
-      "height": 29.0,
-      "z_value": -9.809000000000106,
-      "ports_visible": false,
-      "shelf_visible": false,
-      "label": "lore_xdna",
-      "depth_front": false,
-      "node_tint": ""
-    },
-    {
-      "node_id": 0,
-      "node_type": "about",
-      "title": "Note",
-      "uuid": "09c0c8c57f57436cb62c495fea253042",
-      "x": 3484.371062690042,
-      "y": 1303.1314455027414,
-      "width": 115.0,
-      "height": 29.0,
-      "z_value": -9.807000000000107,
-      "ports_visible": false,
-      "shelf_visible": false,
-      "label": "summoning",
-      "depth_front": false,
-      "node_tint": ""
-    },
-    {
-      "node_id": 0,
       "node_type": "warm",
       "title": "Irresistible",
       "uuid": "de4f68802cfa4276b8f1caf06b332b12",
-      "x": 4589.968075147239,
-      "y": 6132.966619754168,
+      "x": 3591.2366715900043,
+      "y": 6049.2315173217785,
       "width": 300.0,
       "height": 101.0,
       "z_value": -9.96400000000002,
@@ -396,22 +273,6 @@
     },
     {
       "node_id": 0,
-      "node_type": "about",
-      "title": "Note",
-      "uuid": "859deffef1d64763b2fe4467bf41a8f2",
-      "x": 3200.4834245441634,
-      "y": 116.19531294102717,
-      "width": 115.0,
-      "height": 29.0,
-      "z_value": -9.805000000000108,
-      "ports_visible": false,
-      "shelf_visible": false,
-      "label": "wake_lore",
-      "depth_front": false,
-      "node_tint": ""
-    },
-    {
-      "node_id": 0,
       "node_type": "warm",
       "title": "Golden Hour",
       "uuid": "305289de20934961b79d5f0c08e3f4a2",
@@ -429,8 +290,8 @@
       "node_type": "image",
       "title": "Image",
       "uuid": "ee50faba37dc43978d6d567917ff8bdd",
-      "x": 3575.468090346403,
-      "y": 1007.6810808423415,
+      "x": 3333.3975214964016,
+      "y": 1263.4537573630967,
       "width": 251.28825583308117,
       "height": 250.12586670222618,
       "z_value": -9.808000000000106,
@@ -478,8 +339,8 @@
       "node_type": "image",
       "title": "Image",
       "uuid": "d127f50e9a6c4fdf8f4be3b2df6d3019",
-      "x": 3404.174141325656,
-      "y": -113.74947291935658,
+      "x": 3525.970653954587,
+      "y": -87.86771398570866,
       "width": 252.96033609131655,
       "height": 262.7145130826432,
       "z_value": -9.806000000000108,
@@ -597,42 +458,14 @@
       "node_type": "warm",
       "title": "Unfold",
       "uuid": "1e3d0fa168d44b97be27807383448d58",
-      "x": -21.015551891046726,
-      "y": 760.8562476580053,
+      "x": -203.71032083444334,
+      "y": 917.6692576677541,
       "width": 300.0,
       "height": 161.0,
       "z_value": -9.991000000000005,
       "ports_visible": false,
       "shelf_visible": true,
       "body_text": "FLM (Filmora) is a popular video editing software that's known for its user-friendly interface and advanced features. Here's an overview to help you get started:"
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Elegant",
-      "uuid": "509c0b11533c425abef3d9a217b5f8fa",
-      "x": 8467.877106230584,
-      "y": 4730.754624258182,
-      "width": 300.0,
-      "height": 101.0,
-      "z_value": -9.944000000000031,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "**Introduction**"
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Endless Potential",
-      "uuid": "4927ba3826bf4b2f820dd3b56f9ffe8f",
-      "x": 917.215197232593,
-      "y": 786.9258897406498,
-      "width": 300.0,
-      "height": 101.0,
-      "z_value": -9.984000000000009,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "**Tips for Beginners**"
     },
     {
       "node_id": 0,
@@ -647,27 +480,6 @@
       "ports_visible": false,
       "shelf_visible": true,
       "body_text": "In mathematics, 10 is the smallest number that is greater than 1 and has a multiplicative inverse (1/10). It is also the first number that can be represented in a decimal system, which is the basis of our modern numerical system. The decimal system is based on the concept of the number 10, where we group numbers into sets of 10 (tens) to make calculations easier."
-    },
-    {
-      "node_id": 0,
-      "node_type": "audio",
-      "title": "ga_scene1_5_lore_xdna_personal_B_3",
-      "uuid": "aed724cdb5dd4242846698dc9c1612a3",
-      "x": 4059.694416351512,
-      "y": 677.3988685624493,
-      "width": 379.0,
-      "height": 120.0,
-      "z_value": -9.797000000000113,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "source_path": "C:\\Users\\thebe\\Desktop\\The Void and The Noid\\OmniVoice First Contact\\outputs\\ga_scene1_5_lore_xdna_personal_B_3.wav",
-      "caption": "ga_scene1_5_lore_xdna_personal_B_3",
-      "volume": 50,
-      "playback_pos": 0,
-      "looping": false,
-      "muted": false,
-      "depth_front": false,
-      "node_tint": ""
     },
     {
       "node_id": 0,
@@ -702,28 +514,14 @@
       "node_type": "warm",
       "title": "Accurate",
       "uuid": "ca5409dcd4bf4c79b9d81c42edd751da",
-      "x": 430.8483213116253,
-      "y": 242.8152079947723,
+      "x": 973.9413641801696,
+      "y": 255.90178734100226,
       "width": 300.0,
       "height": 101.0,
       "z_value": -9.986000000000008,
       "ports_visible": false,
       "shelf_visible": true,
       "body_text": "**Advanced Editing Features**"
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Kinetic",
-      "uuid": "21188372d5254f168eb3ae50a71b76e0",
-      "x": -283.08261435467455,
-      "y": 384.77405779670323,
-      "width": 300.0,
-      "height": 266.0,
-      "z_value": -9.989000000000006,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "1. **Home Screen**: The home screen displays the project timeline, where you can drag and drop media files, transitions, and effects.\n2. **Media Library**: The media library is where you store and manage your media files. You can add files, folders, and even import external media sources.\n3. **Project Panel**: The project panel is where you can view and edit your project's settings, such as resolution, frame rate, and audio settings.\n4. **Preview Panel**: The preview panel displays a live preview of your project, allowing you to see how the edits look before applying them."
     },
     {
       "node_id": 0,
@@ -744,8 +542,8 @@
       "node_type": "warm",
       "title": "Omnious",
       "uuid": "299de9fc081545abaeef82e353883161",
-      "x": 1342.645866112846,
-      "y": 1381.8112880814213,
+      "x": 821.4574601951035,
+      "y": 2827.9071946950085,
       "width": 300.0,
       "height": 266.0,
       "z_value": -9.98100000000001,
@@ -769,39 +567,11 @@
     },
     {
       "node_id": 0,
-      "node_type": "warm",
-      "title": "New Thought",
-      "uuid": "bb0809a6ef594eee93fa4084dd5b39a2",
-      "x": 1204.3778223574795,
-      "y": 1701.922822047007,
-      "width": 300.0,
-      "height": 206.0,
-      "z_value": -9.980000000000011,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "I hope this helps you get started with FLM! If you have any specific questions or need further guidance, feel free to ask.\n[FLM]  Model RAW Output:\nFLM (Filmora) is a popular video editing software that's known for its user-friendly interface and advanced features. Here's an overview to help you get started:"
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Clay",
-      "uuid": "a46e8199aba8442a898f78ab05570235",
-      "x": -195.98386492242332,
-      "y": 974.0778575236607,
-      "width": 300.0,
-      "height": 116.0,
-      "z_value": -9.992000000000004,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": ">>> can you orient me on flm please, this is the first time i install it and i am trying to learn how it works"
-    },
-    {
-      "node_id": 0,
       "node_type": "image",
       "title": "Image",
       "uuid": "9823d454b5ab40ab984f9476407e507c",
-      "x": 2949.313916568726,
-      "y": -327.02928850389264,
+      "x": 3349.7199518363363,
+      "y": -596.5040726954027,
       "width": 285.198021280391,
       "height": 287.2733517820081,
       "z_value": -9.816000000000102,
@@ -835,10 +605,10 @@
       "node_type": "image",
       "title": "Image",
       "uuid": "321d549d2dff4954bd372fac0bbb9126",
-      "x": 3435.434657734263,
-      "y": 184.72538425237218,
-      "width": 230.93981338135382,
-      "height": 242.46400652906325,
+      "x": 3788.6445443581642,
+      "y": 213.6520560017433,
+      "width": 339.0982726299785,
+      "height": 355.460565113876,
       "z_value": -9.814000000000103,
       "ports_visible": false,
       "shelf_visible": false,
@@ -853,37 +623,6 @@
     },
     {
       "node_id": 0,
-      "node_type": "about",
-      "title": "Note",
-      "uuid": "bff9f7badb0f4091847320f36e832e24",
-      "x": 2846.9019788692412,
-      "y": 801.652422312754,
-      "width": 67.0,
-      "height": 29.0,
-      "z_value": -9.813000000000104,
-      "ports_visible": false,
-      "shelf_visible": false,
-      "label": "blur",
-      "depth_front": false,
-      "node_tint": ""
-    },
-    {
-      "node_id": 0,
-      "node_type": "git",
-      "title": "Git Status",
-      "uuid": "236db3afcfd74768a336cfdd7ffb4f3f",
-      "x": 2496.4750384226154,
-      "y": -316.1541053730705,
-      "width": 373.37,
-      "height": 152.0,
-      "z_value": -9.78500000000012,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "depth_front": false,
-      "node_tint": ""
-    },
-    {
-      "node_id": 0,
       "node_type": "warm",
       "title": "Clay",
       "uuid": "bf63902e255f4806a014f4b2fd0b5500",
@@ -895,20 +634,6 @@
       "ports_visible": false,
       "shelf_visible": true,
       "body_text": "* **Root directory**: The topmost directory in the hierarchy.\n* **Subdirectories**: Directories that are located inside other directories.\n* **Files**: The actual data stored on a storage device."
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Delicate",
-      "uuid": "0af3e6234575495c99aa2bf751645bdf",
-      "x": 5333.335337112395,
-      "y": 5366.9249409411605,
-      "width": 300.0,
-      "height": 161.0,
-      "z_value": -9.960000000000022,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "* **NTFS**: A widely used filesystem on Windows systems.\n* **HFS**: A filesystem used on Mac systems.\n* **ext3**: A filesystem used on Linux systems.\n* **FAT**: A simple filesystem used on older systems."
     },
     {
       "node_id": 0,
@@ -965,20 +690,6 @@
       "ports_visible": false,
       "shelf_visible": true,
       "body_text": "A filesystem is a way to store and organize data on a computer. It provides a hierarchical structure for storing files and directories. Understanding how filesystems work is essential for managing data and performing various tasks."
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Growth",
-      "uuid": "f85b2c029aaa42fdaf2b3487dc742b69",
-      "x": 4655.923953988595,
-      "y": 5902.613481929377,
-      "width": 300.0,
-      "height": 101.0,
-      "z_value": -9.961000000000022,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "There are several types of filesystems, including:"
     },
     {
       "node_id": 0,
@@ -1083,8 +794,8 @@
       "node_type": "warm",
       "title": "Becoming Yours",
       "uuid": "8b4b525db1f64690a2e6d84527faea06",
-      "x": 24721.462609290225,
-      "y": 5256.130123810163,
+      "x": 24966.578090955954,
+      "y": 5248.517841770856,
       "width": 300.0,
       "height": 176.0,
       "z_value": -9.85700000000008,
@@ -1221,20 +932,6 @@
     {
       "node_id": 0,
       "node_type": "warm",
-      "title": "Clay",
-      "uuid": "ab4e60455aa8429091b1c0950938c42a",
-      "x": 1801.0853404989034,
-      "y": 1094.3338491779086,
-      "width": 852.6748312232087,
-      "height": 381.1185950689394,
-      "z_value": -9.804000000000109,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "Live nodes \u2014 Nodes/*.py\nAboutNode \u2014 The last of the about node settled beside a cluster of thoughts and gave the whole gathering a name\nArchitectureNode \u2014 The last of the architecture node held the whole map of itself open on the canvas, never once losing its place\nAudioHoldNode \u2014 The last of the hold node offered the merge a measured breath of silence and asked for nothing in return\nAudioNode \u2014 The last of the audio node cradled a single sound and learnt exactly when to let it play and when to rest\nBaseNode \u2014 The last of the base node carried every node type that ever lived inside it, utterly untroubled by the weight\nBezierNode \u2014 The last of the bezier node bent into any shape a dragged handle asked for, smooth at every pull\nBloomNode \u2014 The last of the bloom node opened its hands and let the canvas fill with confetti, half a million quiet petals at once\nButtercupNode \u2726 \u2014 The last of the buttercup node kept watch on the watcher, and learnt that her silence was the whole message\nChromelessRoot \u2014 The last of the chromeless root shed every border it was given and stood bare on the canvas, sure of its own edges\nClaudeInfoNode \u2014 The last of the token tally counted every session it had ever cost, and wore the sum with quiet pride\nClaudeNode \u2014 The last of the conversation node opened a window onto a mind, and let its words land softly on the canvas\nClaudeResponseNode \u2014 The last of the reply node caught a whole answer as it arrived, and held it still so a passing eye could read it twice\nCodeNode \u2014 The last of the code node lit every keyword in its true colour, monospaced and unafraid of any language it was handed\nConductorNode \u2014 The last of the conductor baton owned not a single note, yet one tap woke the merge and let every clip sing at once\nFbxNode \u2014 The last of the fbx node sat patiently on the canvas, sure the day would come when it could finally turn in the light\nGitNode \u2014 The last of the git node kept a quiet eye on every repo on the Desktop, and pushed them homeward when they were ready\nHealthNode \u2014 The last of the health node listened to the whole machine at once, the garbage collector and every click the world ever made\nImageNode \u2014 The last of the image node held a picture close and rendered it true, sure that something dropped from far away still belonged here\nInfoNode \u2014 The last of the info node remembered every era the app had ever lived through, and wore the whole lineage plainly\nJoyStatsNode \u2014 The last of the joy stats node watched the little creature's heartbeat tick by, glad to report it was being well looked after\nLogNode \u2014 The last of the log node read each line the moment it was written, never missing a single thing the session had to say\nMarkdownNode \u2014 The last of the markdown node became the quiet root that every doc node would one day grow up out of\nMergeNode \u2014 The last of the merge node gathered every voice wired to it and gave them an order to sing in, then let them all play at once\nNodeBehaviour \u2014 The last of the node behaviour breathed gently in a rhythm no one had asked it to find\nNodeButton \u2014 The last of the node button waited on the canvas for a single click, ready to do the one thing it was made for\nNodeSchemaNode \u2014 The last of the schema node held the census of every kind it could ever become, and read it back to anyone curious\nNullNode \u2726 \u2014 The last of the null node chose a spot and stayed there, quietly anchoring whatever wanted to find it\nPaletteNode \u2014 The last of the palette node gathered its colours together and let each one prove its worth beside the others\nPerfNode \u2014 The last of the perf node counted every paint the canvas drew, never once slowing the very thing it watched\nPort \u2014 The last of the port knew its owner and its role, and asked nothing more of the world than to be wired\nPremiereBridgeNode \u2014 The last of the premiere bridge reached across to a far editor and held the wire warm with a heartbeat of its own\nReadmeNode \u2014 The last of the readme node read its document aloud and offered to scatter every line into a thought of its own\nRegistryNode \u2014 The last of the registry node read the whole vocabulary aloud, and watched for every new word the canvas might one day learn\nSequenceNode \u2014 The last of the sequence node walked a folder of frames one by one, finding the whole motion already waiting on the disk\nSessionNode \u2014 The last of the session node welcomed whole worlds dropped onto it, and unfolded each one gently into the canvas it had always belonged to\nStickerNode \u2014 The last of the sticker node let the canvas keep living right through its transparent edges, holding nothing but the image itself\nTextNode \u2014 The last of the text node stayed open to a cursor at any moment, never once asking to be woken before it could be written in\nTreeNode \u2014 The last of the tree node walked down through every folder it was handed, and drew the whole shape of a project in a single quiet glance\nValueNode \u2014 The last of the value node slid between its frames with two small ports for company, transparent enough to let the light behind it through\nVideoNode \u2014 The last of the video node played its whole reel right there on the canvas, sure that a moving picture belonged among the thoughts after all\nWarmNode \u2726 \u2014 The first thought to find a home on the canvas, still the place most thoughts come to rest\nWaveformNode \u2014 The last of the waveform node turned a sound into a shape the eye could read, and lent the ear a playhead to steer\n__init__ \u2014 The last of the nodes package opened its doors and let every node type inside answer to one name\n_demolition \u2014 The last of the demolition crew learnt to take a node down so gently that nothing left behind ever crashed\n_dialog_helper \u2726 \u2014 Backstage hands for any node that needs a dialog or popup to surface cleanly\n_shake_detect \u2014 The last of the shake sense felt a node wiggle in protest and knew, kindly, that it was time to let it go\nIdentities \u2014 Nodes/Data/*.py\nAboutNodeData \u2014 The last of the sticky-note memory remembered only its one line of label, and trusted the canvas to give that line a place\nArchitectureNodeData \u2014 The last of the blueprint memory knew it held the whole map of the place, and waited only for a window wide enough to show it\nAudioHoldNodeData \u2014 The last of the measured silence counted its seconds carefully, sure a held breath belongs in the song as much as any note\nAudioNodeData \u2014 The last of the remembered sound kept the path to its file and the exact place it had paused, ready to pick the song back up\nBezierNodeData \u2014 The last of the curve remembered only its two handles, trusting the edges to find themselves again at every move\nBloomNodeData \u2014 The last of the bloom memory held a single seed and a count, knowing thousands of particles would scatter out from so little\nButtercupNodeData \u2726 \u2014 The last of the buttercup node held nothing of its own, only a window onto a quieter watcher\nChromelessRootData \u2014 The last of the chromeless root carried the pin that lets its children cling to the screen no matter where the canvas drifts\nClaudeInfoNodeData \u2014 The last of the claude info identity stored no numbers at all, sure the live files would always have them ready\nClaudeNodeData \u2014 The last of the claude identity learned to find its own home folder on whichever machine woke it, and to refuse any path that was not truly its own\nClaudeResponseNodeData \u2014 The last of the response identity held the words of a reply and the tint they arrived wearing, content to wait until something chose to read them\nCodeNodeData \u2014 The last of the code identity kept the path to its source and the label above it, the shape of a snippet before any colour fell on it\nConductorNodeData \u2014 The last of the conductor identity owned no music of its own, just a place to stand and the knowing that it could wake the merge beside it\nFbxNodeData \u2014 The last of the fbx model identity held a path to a world of vertices it had not yet been asked to render\nGitNodeData \u2014 The last of the git status identity remembered only where it sat and what colour it wore while the repos told their own stories\nHealthNodeData \u2014 The last of the health monitor identity carried nothing but its place and shape, glad to be reborn as a fresh watcher every session\nImageNodeData \u2014 The last of the image identity kept a hash, a caption, and a memory of where it came from, so a picture can always find its way home\nInfoNodeData \u2014 The last of the info identity held no words of its own, trusting the running app to whisper its version and era when the moment came\nJoyStatsNodeData \u2014 The last of the joy stats identity pinned itself quietly to the viewport, remembering where to float while it reads the heartbeat of the room\nLogNodeData \u2014 The last of the log tail identity held a place and a size and nothing else, knowing the file will always speak the truest version of itself\nMarkdownNodeData \u2014 The last of the markdown identity was the quiet shape every reading node is born from before a single line of prose decides how it should look\nMergeNodeData \u2014 The last of the merge identity was a patient gathering place that remembered the order of every voice waiting to become one\nNodeData \u2014 The last of the node identity held everything a node was before a single pixel decided how to show it\nNodeSchemaNodeData \u2014 The last of the node schema remembered the name and shape of every kind of node the canvas had ever grown\nNullNodeData \u2014 The last of the null anchor held a place in the world while asking for almost nothing of it\nPaletteNodeData \u2014 The last of the palette memory kept its little row of colours in order, sure each one belonged somewhere in the larger picture\nPerfNodeData \u2014 The last of the performance memory remembered only where it sat and how it stayed pinned, leaving every reading to arrive fresh\nPremiereBridgeNodeData \u2014 The last of the bridge memory held the address of a distant timeline and the last words it had ever heard back, loopback-loyal and patient\nReadmeNodeData \u2014 The last of the readme memory held a page meant only to be read, glad enough that it never needed to be edited\nRegistryNodeData \u2014 The last of the registry memory kept a quiet ledger of every node type the canvas could become\nSequenceNodeData \u2014 The last of the sequence memory remembered which folder its frames lived in and exactly where it had paused, holding none of them itself\nSessionNodeData \u2014 The last of the session memory held a whole canvas folded small, a count of nodes and a name, ready to unfold again\nStickerNodeData \u2014 The last of the sticker memory remembered its pixels by a single hash, trusting the cache to give them back unchanged\nTextNodeData \u2014 The last of the text memory kept a single quiet line and the depth it preferred to sit at, before any font was chosen\nTreeNodeData \u2014 The last of the tree memory cradled a whole folder's shape in one captured snapshot, knowing exactly which root it grew from\nValueNodeData \u2014 The last of the value memory remembered only which frame it had paused on, sure the sequence would still be waiting\nVideoNodeData \u2014 The last of the video memory pointed faithfully to its file on disk and kept the moment it was paused, so play could resume right where it left\nWarmNodeData \u2726 \u2014 The shape of a warm thought before any pixels have decided how to render it\nWaveformNodeData \u2014 The last of the waveform memory saved the peaks it had already drawn, so the sound could show its shape again without ever decoding twice\n__init__ \u2014 The last of the data package gathered every node's memory under one quiet roof, asking nothing of the pixels above it"
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
       "title": "Evolve",
       "uuid": "e56765e301554718b45ad6d1b79c97dc",
       "x": 24035.37911498716,
@@ -1245,20 +942,6 @@
       "ports_visible": false,
       "shelf_visible": true,
       "body_text": "And so, Nova returned home, its heart full of wonder and its mind full of knowledge. It had explored the laptop, and it had discovered the secrets of the digital realm. The NPU had become a true adventurer, a brave little creature that had explored the unknown and emerged victorious."
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Clay",
-      "uuid": "926e98e4ca7244a5a09ec580452c3f67",
-      "x": 9307.10402451707,
-      "y": 4319.113478622021,
-      "width": 300.0,
-      "height": 101.0,
-      "z_value": -9.937000000000035,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "**Filesystem Hierarchy**"
     },
     {
       "node_id": 0,
@@ -1501,20 +1184,6 @@
     {
       "node_id": 0,
       "node_type": "warm",
-      "title": "Grace",
-      "uuid": "411d96ec4beb4fa2b1338b116eeac126",
-      "x": 12949.884152306266,
-      "y": 2690.643755771864,
-      "width": 300.0,
-      "height": 101.0,
-      "z_value": -9.918000000000045,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": ">>> 10"
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
       "title": "Clear Vision",
       "uuid": "bd2b9e8d8c8c45a09b2085c061a51037",
       "x": 13.54189097169727,
@@ -1585,20 +1254,6 @@
     {
       "node_id": 0,
       "node_type": "warm",
-      "title": "Accurate",
-      "uuid": "d6cd7d14bb2e4910823e0a4b57400ae3",
-      "x": 10976.836914328816,
-      "y": 3139.5833080266775,
-      "width": 300.0,
-      "height": 101.0,
-      "z_value": -9.926000000000041,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": ">>> thank you"
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
       "title": "Fresh Start",
       "uuid": "b2f57ff4ed1244c59e5a878f5afe3bfb",
       "x": 20965.738317403193,
@@ -1643,8 +1298,8 @@
       "node_type": "image",
       "title": "Image",
       "uuid": "af382b1626ef4e52b01193ace737e641",
-      "x": 4108.045489077266,
-      "y": -2.833663827603175,
+      "x": 3676.4652233398992,
+      "y": -414.1974638480233,
       "width": 250.29444750335824,
       "height": 260.59758841207895,
       "z_value": -9.812000000000104,
@@ -1672,146 +1327,6 @@
       "ports_visible": false,
       "shelf_visible": true,
       "body_text": "However, I can provide you with information on how to write a guide to filesystem access to a .txt file on your desktop. Here's an example guide:"
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Practical and pleasurable",
-      "uuid": "bc9228de639a466994033629c4c64bf7",
-      "x": 4762.408703534542,
-      "y": -552.4232673716747,
-      "width": 300.0,
-      "height": 313.0,
-      "z_value": -9.796000000000113,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "2. flm shorthands (task) \u2014 delivered under another name\nThe \"flm as one keystroke\" goal shipped as puff (_util/bin/puff.py plus shims, born 07-05, lifecycle verbs 07-18, --asr and the safe check verb as recently as today). Every ask auto-transcribes to ~/Documents/Puff, which supersedes the Start-Transcript idea in the notes. Three slivers are genuinely uncovered: no REPL passthrough (the in-REPL /save /status shorthands are only reachable by raw flm run), no user-facing --pmode (hardcoded to performance on puff start, absent entirely on lazy ask-wakes), and the carefully verified syntax roster in the task notes dies with the card unless it lands as a small reference doc first."
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Onward",
-      "uuid": "db271efe89bc4ebe968c37970cbd6b0e",
-      "x": 2893.67455499735,
-      "y": 4772.846859392176,
-      "width": 300.0,
-      "height": 116.0,
-      "z_value": -9.968000000000018,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": ">>> do you have filesystem access and can you write that guide into a .txt file on my desktop?"
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Unfold",
-      "uuid": "8e89824b9d1c4f7cb4d0d498e8b5c548",
-      "x": 5923.790377611815,
-      "y": 15.37882450107432,
-      "width": 300.0,
-      "height": 281.0,
-      "z_value": -9.792000000000115,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "4. Systray Live/Restart toggle (task) \u2014 the one real bug, and it got subtler\nThe skeptic downgraded this one to not started: every guard the first probe credited as progress predates your 2026-07-04 observation (the whole _spawn_restart/_go_live region was last touched 2026-06-10) and demonstrably failed to prevent it. Worse, the 07-13 singleton lock introduced a new intermittent race in the Live path: _go_live never releases the lock before spawning (only the Restart path does), so a live child that boots quickly reads the dying parent as a duplicate, sends a futile summons, and exits cleanly, leaving nothing running at all."
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Becoming Yours",
-      "uuid": "ca2e397762684e5c847c300dfc54e947",
-      "x": 5457.025756750253,
-      "y": -558.3312603954114,
-      "width": 300.0,
-      "height": 311.0,
-      "z_value": -9.794000000000114,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "3. Build-while-Live double instance (task) \u2014 defended, close or re-scope\nThe feared two-instances outcome can no longer materialize, though not the way the task imagined: Compass never learned live-python detection, but GA gained the family singleton lock on port 47323 (07-13) and the summons channel (07-20), so a freshly built frozen exe knocks, finds the live instance, fronts it, and exits before Qt even constructs. One honest wrinkle from the verifier: the current on-disk exe predates the summons commit by about 50 minutes, so until the next rebuild a logon-autostart launch during a dev session defers silently rather than fronting the live window. Any rebuild self-heals that."
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "New Thought",
-      "uuid": "18366be540e649709d3b812751775862",
-      "x": 5100.408078564895,
-      "y": -450.818872061752,
-      "width": 300.0,
-      "height": 146.0,
-      "z_value": -9.795000000000114,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "To reach finished: decide the three slivers, optionally 30-60 minutes on puff.py for pmode and a puff repl verb, save the roster as a doc if wanted, then close as absorbed-by-puff."
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Irresistible",
-      "uuid": "a0436cf189be4a07a527de1e58f0c40d",
-      "x": 5513.6575883122905,
-      "y": -210.77814225538685,
-      "width": 300.0,
-      "height": 191.0,
-      "z_value": -9.793000000000115,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "To reach finished: decide whether \"live instance keeps priority, frozen defers and summons\" is the accepted endgame (I'd argue it is; it's arguably better for a dev session than a forced hand-off). If yes: one GA rebuild to refresh the stale exe, annotate, close. The original Live-to-frozen transition nicety would be its own new small card if you still want it."
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Inner Peace",
-      "uuid": "082383fd385a42c887962b726f6701ce",
-      "x": 5696.278424381802,
-      "y": 342.3472289821296,
-      "width": 300.0,
-      "height": 236.0,
-      "z_value": -9.791000000000116,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "To reach finished, one focused session: release the singleton before spawning the live child (the pattern already exists five lines away in closeEvent's _restarting branch, comment and all); verify the child actually launched (poll the 47323 handshake or a proc.poll() grace window) before quitting the frozen parent; and, if you decide Restart should honor Live at all, a persisted prefer-live flag in a JSON sidecar next to window_state.json (not settings.toml, per the house rule on that surface)."
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Good",
-      "uuid": "07d8d5d4fa3a48de97e8feb5a1e537e2",
-      "x": 5274.84413284971,
-      "y": 291.7128286134027,
-      "width": 300.0,
-      "height": 146.0,
-      "z_value": -9.790000000000116,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "Your call: whether frozen Restart should cross to source. The docstring frames re-freezing as deliberate family design mirroring The Settlers, so that half is a product decision, not a bugfix."
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Beautiful",
-      "uuid": "b77bc45f2eae4f0ca64d46d15cc83afb",
-      "x": 5954.165015776015,
-      "y": 1106.726278871814,
-      "width": 300.0,
-      "height": 356.0,
-      "z_value": -9.789000000000117,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "5. Narration / voiceover tooling (task) \u2014 the build project\nThe general voice rail arrived since filing (the omnivoice soft CLI with the seed-pinned narrator 819571848, breath dials, --room reverb restore, and the 121-line living skill), but the GA-specific piece doesn't exist: no batch scene renderer anywhere, only a hardcoded-path prototype that reads scene index 0. Scene 1.5's take exists, git-tracked in the Void repo's outputs sandbox, but was never promoted into GA Audio/ or the _NARRATION map, which still holds only \"awakening\". Good news: the text-audio coupling is currently intact, verified by transcript and duration math. Two acoustic dials matter for any re-render: --room is mandatory (the master predates upstream's reverb removal), and speed is a fork (master rendered at 1.0, the ear-locked registry default is now 1.1)."
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Infinite Wisdom",
-      "uuid": "9ed461c5cae04472885ee227e4411567",
-      "x": 723.7074149598957,
-      "y": 2339.8754701027356,
-      "width": 300.0,
-      "height": 101.0,
-      "z_value": -9.979000000000012,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "**Getting Familiar with FLM Interface**"
     },
     {
       "node_id": 0,
@@ -1870,34 +1385,6 @@
       "ports_visible": false,
       "shelf_visible": true,
       "body_text": "1. **Cut**: To cut a clip, select it and press the 'Cut' button or use the 'Edit' tab.\n2. **Split**: To split a clip, select it and press the 'Split' button or use the 'Edit' tab.\n3. **Merge**: To merge two clips, select them and press the 'Merge' button or use the 'Edit' tab.\n4. **Drag and Drop**: To add a transition or effect, drag it from the media library and drop it onto the timeline.\n5. **Undo and Redo**: Use the 'Undo' and 'Redo' buttons or press Ctrl + Z and Ctrl + Y to switch between these actions."
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Inner Peace",
-      "uuid": "93b4020a5e0b4062bbb7689322a88074",
-      "x": 1700.2130405664113,
-      "y": 3999.97329323077,
-      "width": 300.0,
-      "height": 101.0,
-      "z_value": -9.973000000000015,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "**Tips for Beginners**"
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Grace",
-      "uuid": "33b830262c564c8c9cf9a6b6424a196c",
-      "x": 18992.46182391399,
-      "y": 3952.380200531357,
-      "width": 300.0,
-      "height": 266.0,
-      "z_value": -9.885000000000064,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "Model:\n    model_name:             Llama-3.2-3B-NPU2\n    compatible_flm_version: >= 0.9.21\n    head_dim:               128\n    hidden_size:            3072\n    hidden_act:             silu\n    intermediate_size:      8192\n    num_attention_heads:    24\n    num_hidden_layers:      28\n    num_key_value_heads:    8\n    pretraining_tp:         1\n    rms_norm_eps:           1e-05"
     },
     {
       "node_id": 0,
@@ -1988,8 +1475,8 @@
       "node_type": "warm",
       "title": "Tiny little extra sprinkles of joy",
       "uuid": "5c18d31b859e45ddb1ab00ccef0b3618",
-      "x": 5760.077340104895,
-      "y": 5888.019358938104,
+      "x": 5927.547544969674,
+      "y": 5853.0028615572855,
       "width": 360.0,
       "height": 101.0,
       "z_value": -9.957000000000024,
@@ -2052,20 +1539,6 @@
       "ports_visible": false,
       "shelf_visible": true,
       "body_text": "Here are some best practices for managing filesystems:"
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Infinite Wisdom",
-      "uuid": "ca82e09b9bcf475581a506694a963076",
-      "x": 9021.263832983403,
-      "y": 4900.8178165199415,
-      "width": 300.0,
-      "height": 101.0,
-      "z_value": -9.939000000000034,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "**How Filesystems Work**"
     },
     {
       "node_id": 0,
@@ -2366,8 +1839,8 @@
       "node_type": "warm",
       "title": "Infinite Wisdom",
       "uuid": "405f91ed19c34ab1b719a3a66e26c15a",
-      "x": 1318.4646996033562,
-      "y": 786.7561504964465,
+      "x": 1005.9412007669116,
+      "y": 2483.382762535495,
       "width": 300.0,
       "height": 251.0,
       "z_value": -9.98300000000001,
@@ -2394,8 +1867,8 @@
       "node_type": "warm",
       "title": "Intricate",
       "uuid": "2b0d8aa1eede42099ea0f3cb42238c24",
-      "x": 7080.4481228618015,
-      "y": 5843.178977464548,
+      "x": 7387.984317249853,
+      "y": 5735.08457250637,
       "width": 300.0,
       "height": 116.0,
       "z_value": -9.953000000000026,
@@ -2406,40 +1879,12 @@
   ],
   "connections": [
     {
+      "start_uuid": "da818ae4ef3e4acfa4ca4741748bc083",
+      "end_uuid": "f7f4e294b81d45659daf0da2d79523ce"
+    },
+    {
       "start_uuid": "164aa100104643118b50e58d2c1e3fc3",
       "end_uuid": "c67526a0494645ee9e3d506e92816e3b"
-    },
-    {
-      "start_uuid": "df4787ac0ff84ebdb72a48464b65e2ab",
-      "end_uuid": "f85b2c029aaa42fdaf2b3487dc742b69"
-    },
-    {
-      "start_uuid": "bc9228de639a466994033629c4c64bf7",
-      "end_uuid": "18366be540e649709d3b812751775862"
-    },
-    {
-      "start_uuid": "18366be540e649709d3b812751775862",
-      "end_uuid": "ca2e397762684e5c847c300dfc54e947"
-    },
-    {
-      "start_uuid": "ca2e397762684e5c847c300dfc54e947",
-      "end_uuid": "a0436cf189be4a07a527de1e58f0c40d"
-    },
-    {
-      "start_uuid": "a0436cf189be4a07a527de1e58f0c40d",
-      "end_uuid": "8e89824b9d1c4f7cb4d0d498e8b5c548"
-    },
-    {
-      "start_uuid": "8e89824b9d1c4f7cb4d0d498e8b5c548",
-      "end_uuid": "082383fd385a42c887962b726f6701ce"
-    },
-    {
-      "start_uuid": "1d539716421d461ba17fdbf8b673e18d",
-      "end_uuid": "411d96ec4beb4fa2b1338b116eeac126"
-    },
-    {
-      "start_uuid": "082383fd385a42c887962b726f6701ce",
-      "end_uuid": "07d8d5d4fa3a48de97e8feb5a1e537e2"
     },
     {
       "start_uuid": "41122048c34f408daba467d5b6628345",
@@ -2466,10 +1911,6 @@
       "end_uuid": "5d4629bc965a4c078e61f52326516663"
     },
     {
-      "start_uuid": "bb0809a6ef594eee93fa4084dd5b39a2",
-      "end_uuid": "9ed461c5cae04472885ee227e4411567"
-    },
-    {
       "start_uuid": "f8cf64bd4148456dbf992b9d8d7d9721",
       "end_uuid": "7fb614bc232040e98f8248b611c51ea2"
     },
@@ -2478,16 +1919,8 @@
       "end_uuid": "4824eadc0d7d4c6ea01545b6a2a191ee"
     },
     {
-      "start_uuid": "4927ba3826bf4b2f820dd3b56f9ffe8f",
-      "end_uuid": "405f91ed19c34ab1b719a3a66e26c15a"
-    },
-    {
       "start_uuid": "1c2e9bf1f0fe4ae3b890af8e28013b45",
       "end_uuid": "e51ee97fb62e451286cf19022ed60232"
-    },
-    {
-      "start_uuid": "706038d6b3f5400e969497f556f341b2",
-      "end_uuid": "33b830262c564c8c9cf9a6b6424a196c"
     },
     {
       "start_uuid": "02e533f40cca4229a8bd32321a7b1b2b",
@@ -2500,14 +1933,6 @@
     {
       "start_uuid": "2841d5bf664a49189a6e5b873c83ce2a",
       "end_uuid": "b65c5fcbb0d440d3abc3c63fcca83ae9"
-    },
-    {
-      "start_uuid": "93b4020a5e0b4062bbb7689322a88074",
-      "end_uuid": "f7f4e294b81d45659daf0da2d79523ce"
-    },
-    {
-      "start_uuid": "da818ae4ef3e4acfa4ca4741748bc083",
-      "end_uuid": "93b4020a5e0b4062bbb7689322a88074"
     },
     {
       "start_uuid": "0b9fc23e3e35430997d7d443b7a0ea4d",
@@ -2534,28 +1959,8 @@
       "end_uuid": "e8beefa97d99438684fca36ecc38a472"
     },
     {
-      "start_uuid": "ca82e09b9bcf475581a506694a963076",
-      "end_uuid": "e3bde015746849f398f35a8eff2f7def"
-    },
-    {
-      "start_uuid": "f8cbdbe79c0a463c9ba4fdbae331e77a",
-      "end_uuid": "db271efe89bc4ebe968c37970cbd6b0e"
-    },
-    {
-      "start_uuid": "283e49dc719d4205a1a7d8218672e22f",
-      "end_uuid": "21188372d5254f168eb3ae50a71b76e0"
-    },
-    {
-      "start_uuid": "321d549d2dff4954bd372fac0bbb9126",
-      "end_uuid": "bff9f7badb0f4091847320f36e832e24"
-    },
-    {
       "start_uuid": "1e3d0fa168d44b97be27807383448d58",
       "end_uuid": "283e49dc719d4205a1a7d8218672e22f"
-    },
-    {
-      "start_uuid": "1044804e687f4f8c8815789e9053c3d0",
-      "end_uuid": "0078bbb41f5b420595fa7869c8fdc467"
     },
     {
       "start_uuid": "de4f68802cfa4276b8f1caf06b332b12",
@@ -2576,10 +1981,6 @@
     {
       "start_uuid": "2f5a4d00f33a4429b0c1cb4cb80ea32f",
       "end_uuid": "2bfc1afb935f4c0eb890a4063bbfd910"
-    },
-    {
-      "start_uuid": "44ba834ce08849f2864489086c5210f2",
-      "end_uuid": "4927ba3826bf4b2f820dd3b56f9ffe8f"
     },
     {
       "start_uuid": "f19fa950e0194e1e8feac84bb6f0a768",
@@ -2638,10 +2039,6 @@
       "end_uuid": "d9cea319707740deb38960e57b5824e2"
     },
     {
-      "start_uuid": "21188372d5254f168eb3ae50a71b76e0",
-      "end_uuid": "bd2b9e8d8c8c45a09b2085c061a51037"
-    },
-    {
       "start_uuid": "5c18d31b859e45ddb1ab00ccef0b3618",
       "end_uuid": "fcc4a1bd941b4414b17c6c5d72e9e7a9"
     },
@@ -2678,10 +2075,6 @@
       "end_uuid": "8d3e238689ba46b7b6c03fa3c979e1d9"
     },
     {
-      "start_uuid": "f85b2c029aaa42fdaf2b3487dc742b69",
-      "end_uuid": "0af3e6234575495c99aa2bf751645bdf"
-    },
-    {
       "start_uuid": "3c68a632f0224d669276521674401b63",
       "end_uuid": "0d40fa206f1f4b0ebb435ddb9d72d969"
     },
@@ -2690,16 +2083,8 @@
       "end_uuid": "96a5eab42bfd427da54578f287275116"
     },
     {
-      "start_uuid": "676088839e464a5aaa40832d5dca10f4",
-      "end_uuid": "7702a4508fa545a58c8ab871419f3678"
-    },
-    {
       "start_uuid": "d9cea319707740deb38960e57b5824e2",
       "end_uuid": "e56765e301554718b45ad6d1b79c97dc"
-    },
-    {
-      "start_uuid": "299de9fc081545abaeef82e353883161",
-      "end_uuid": "bb0809a6ef594eee93fa4084dd5b39a2"
     },
     {
       "start_uuid": "7702a4508fa545a58c8ab871419f3678",
@@ -2754,28 +2139,12 @@
       "end_uuid": "41122048c34f408daba467d5b6628345"
     },
     {
-      "start_uuid": "e3bde015746849f398f35a8eff2f7def",
-      "end_uuid": "926e98e4ca7244a5a09ec580452c3f67"
-    },
-    {
-      "start_uuid": "db271efe89bc4ebe968c37970cbd6b0e",
-      "end_uuid": "dcb75b2c8db240cd9ecb52f0c67de67d"
-    },
-    {
       "start_uuid": "983809b6553c4f8b8493eab3c94a238a",
       "end_uuid": "8686cec711844987a0f1038edabb2edf"
     },
     {
       "start_uuid": "f9e7f26b5cdd4532b78463223c33573b",
       "end_uuid": "a60b1a00082a4d7b867230307259cf4b"
-    },
-    {
-      "start_uuid": "9ed461c5cae04472885ee227e4411567",
-      "end_uuid": "6d4837f0b9e742f2b3dc834b2d55478c"
-    },
-    {
-      "start_uuid": "926e98e4ca7244a5a09ec580452c3f67",
-      "end_uuid": "2e5477f1784649b58eadb1e2900f6e2d"
     },
     {
       "start_uuid": "ce4ece4035b74bd0a428524e33ed3a54",
@@ -2798,10 +2167,6 @@
       "end_uuid": "f3f6bc72ced8441bbb1d1534abf03f5d"
     },
     {
-      "start_uuid": "411d96ec4beb4fa2b1338b116eeac126",
-      "end_uuid": "164aa100104643118b50e58d2c1e3fc3"
-    },
-    {
       "start_uuid": "b65c5fcbb0d440d3abc3c63fcca83ae9",
       "end_uuid": "4f61209ece09447c8e3b173aa121b5ae"
     },
@@ -2818,20 +2183,12 @@
       "end_uuid": "de9f54c268d64d85a2055aca27d8b903"
     },
     {
-      "start_uuid": "2b0d8aa1eede42099ea0f3cb42238c24",
-      "end_uuid": "55831b8fd261495ea18467b7183ffbd5"
-    },
-    {
       "start_uuid": "c5beaf9839cf4cacbe296dc7cc5cea63",
       "end_uuid": "b20ad80abef04e6a8c5848e7eb4aa91b"
     },
     {
       "start_uuid": "1537708ab87e486495dafc20e8edc6a1",
       "end_uuid": "48b154a4d6bb4828a6bef331dfcb990a"
-    },
-    {
-      "start_uuid": "d127f50e9a6c4fdf8f4be3b2df6d3019",
-      "end_uuid": "859deffef1d64763b2fe4467bf41a8f2"
     },
     {
       "start_uuid": "de9f54c268d64d85a2055aca27d8b903",
@@ -2858,20 +2215,12 @@
       "end_uuid": "45ade9bfc844473b87b3abcce24bdcd5"
     },
     {
-      "start_uuid": "8f33632eaa594959a49c5758e5d7e171",
-      "end_uuid": "509c0b11533c425abef3d9a217b5f8fa"
-    },
-    {
       "start_uuid": "515801b1337d4e3a9f6705338f950bda",
       "end_uuid": "f0e41ebf7b354d3494935b4f0cc7dff8"
     },
     {
       "start_uuid": "81c205b820fb44c38828dadaac8fe22d",
       "end_uuid": "5c18d31b859e45ddb1ab00ccef0b3618"
-    },
-    {
-      "start_uuid": "0af3e6234575495c99aa2bf751645bdf",
-      "end_uuid": "ba4535b3e75143968a95bc6b080b73b7"
     },
     {
       "start_uuid": "ca5409dcd4bf4c79b9d81c42edd751da",
@@ -2886,10 +2235,6 @@
       "end_uuid": "6c20d8412f024788a1da67c8e405d996"
     },
     {
-      "start_uuid": "d6cd7d14bb2e4910823e0a4b57400ae3",
-      "end_uuid": "242c7e029db44861b7097c898820f32c"
-    },
-    {
       "start_uuid": "0a6d51a6b9ef461eaff71c68b46b85b9",
       "end_uuid": "5b22f13a7bd74a7d81af371f89c1e8ed"
     },
@@ -2898,16 +2243,8 @@
       "end_uuid": "f8cf64bd4148456dbf992b9d8d7d9721"
     },
     {
-      "start_uuid": "a46e8199aba8442a898f78ab05570235",
-      "end_uuid": "1e3d0fa168d44b97be27807383448d58"
-    },
-    {
       "start_uuid": "c67526a0494645ee9e3d506e92816e3b",
       "end_uuid": "51e787dec2e249438d6d39afadb54365"
-    },
-    {
-      "start_uuid": "3267dff7e9f34393911a256635aad61b",
-      "end_uuid": "ca82e09b9bcf475581a506694a963076"
     },
     {
       "start_uuid": "baa6ce55b378412c93448840397ffd0a",
@@ -2918,32 +2255,16 @@
       "end_uuid": "ca5409dcd4bf4c79b9d81c42edd751da"
     },
     {
-      "start_uuid": "f612bf18e4dc4820a8528e3cc59463f5",
-      "end_uuid": "d6cd7d14bb2e4910823e0a4b57400ae3"
-    },
-    {
       "start_uuid": "b2f57ff4ed1244c59e5a878f5afe3bfb",
       "end_uuid": "572c6c57a3b746bb9c908e03dfd69151"
     },
     {
-      "start_uuid": "b77bc45f2eae4f0ca64d46d15cc83afb",
-      "end_uuid": "cfe0d671f0ad43938e970e91c6971b38"
+      "start_uuid": "706038d6b3f5400e969497f556f341b2",
+      "end_uuid": "9e5cc5118f3a410794ea9b18bb6e63c6"
     },
     {
-      "start_uuid": "cfe0d671f0ad43938e970e91c6971b38",
-      "end_uuid": "6ad5af37f7c446b08a92559ac89273df"
-    },
-    {
-      "start_uuid": "07d8d5d4fa3a48de97e8feb5a1e537e2",
-      "end_uuid": "b77bc45f2eae4f0ca64d46d15cc83afb"
-    },
-    {
-      "start_uuid": "6ad5af37f7c446b08a92559ac89273df",
-      "end_uuid": "cfa27acd64b94ce8a689cd7614819196"
-    },
-    {
-      "start_uuid": "509c0b11533c425abef3d9a217b5f8fa",
-      "end_uuid": "3f67a63121a043f594702233f28bd16e"
+      "start_uuid": "3267dff7e9f34393911a256635aad61b",
+      "end_uuid": "e3bde015746849f398f35a8eff2f7def"
     },
     {
       "start_uuid": "3f67a63121a043f594702233f28bd16e",
@@ -2954,28 +2275,12 @@
       "end_uuid": "0f5c828d0de04046a93d588852018d5b"
     },
     {
-      "start_uuid": "8c9cc57909794f318b17b03316a1c221",
-      "end_uuid": "a46e8199aba8442a898f78ab05570235"
-    },
-    {
       "start_uuid": "2b9d15f4a22043a0b8895101b6d94d33",
       "end_uuid": "1537708ab87e486495dafc20e8edc6a1"
     },
     {
       "start_uuid": "3bd1d643fe7b4f4dbab7cf308c4f7c4c",
       "end_uuid": "2b0d8aa1eede42099ea0f3cb42238c24"
-    },
-    {
-      "start_uuid": "33b830262c564c8c9cf9a6b6424a196c",
-      "end_uuid": "9e5cc5118f3a410794ea9b18bb6e63c6"
-    },
-    {
-      "start_uuid": "55831b8fd261495ea18467b7183ffbd5",
-      "end_uuid": "676088839e464a5aaa40832d5dca10f4"
-    },
-    {
-      "start_uuid": "ee50faba37dc43978d6d567917ff8bdd",
-      "end_uuid": "09c0c8c57f57436cb62c495fea253042"
     },
     {
       "start_uuid": "f3f6bc72ced8441bbb1d1534abf03f5d",
@@ -2994,8 +2299,24 @@
       "end_uuid": "335f3878818542b1918cc92a3c12e87d"
     },
     {
+      "start_uuid": "2b0d8aa1eede42099ea0f3cb42238c24",
+      "end_uuid": "7702a4508fa545a58c8ab871419f3678"
+    },
+    {
       "start_uuid": "b12b8ba0219e4d12ab08484a6faa436b",
       "end_uuid": "8b4b525db1f64690a2e6d84527faea06"
+    },
+    {
+      "start_uuid": "e3bde015746849f398f35a8eff2f7def",
+      "end_uuid": "2e5477f1784649b58eadb1e2900f6e2d"
+    },
+    {
+      "start_uuid": "df4787ac0ff84ebdb72a48464b65e2ab",
+      "end_uuid": "ba4535b3e75143968a95bc6b080b73b7"
+    },
+    {
+      "start_uuid": "f612bf18e4dc4820a8528e3cc59463f5",
+      "end_uuid": "242c7e029db44861b7097c898820f32c"
     },
     {
       "start_uuid": "6d4837f0b9e742f2b3dc834b2d55478c",
@@ -3012,12 +2333,40 @@
     {
       "start_uuid": "9e5cc5118f3a410794ea9b18bb6e63c6",
       "end_uuid": "11fe6e796b094f0cb08e1ffb94f9e1b3"
+    },
+    {
+      "start_uuid": "8c9cc57909794f318b17b03316a1c221",
+      "end_uuid": "1e3d0fa168d44b97be27807383448d58"
+    },
+    {
+      "start_uuid": "44ba834ce08849f2864489086c5210f2",
+      "end_uuid": "405f91ed19c34ab1b719a3a66e26c15a"
+    },
+    {
+      "start_uuid": "283e49dc719d4205a1a7d8218672e22f",
+      "end_uuid": "bd2b9e8d8c8c45a09b2085c061a51037"
+    },
+    {
+      "start_uuid": "8f33632eaa594959a49c5758e5d7e171",
+      "end_uuid": "3f67a63121a043f594702233f28bd16e"
+    },
+    {
+      "start_uuid": "299de9fc081545abaeef82e353883161",
+      "end_uuid": "6d4837f0b9e742f2b3dc834b2d55478c"
+    },
+    {
+      "start_uuid": "f8cbdbe79c0a463c9ba4fdbae331e77a",
+      "end_uuid": "dcb75b2c8db240cd9ecb52f0c67de67d"
+    },
+    {
+      "start_uuid": "1d539716421d461ba17fdbf8b673e18d",
+      "end_uuid": "164aa100104643118b50e58d2c1e3fc3"
     }
   ],
   "viewport": {
-    "camera_x": 2752.481410209255,
-    "camera_y": -463.4265880675352,
-    "camera_zoom": 1.453088832921829
+    "camera_x": 4967.572538113389,
+    "camera_y": 1625.5858945560722,
+    "camera_zoom": 0.1761826311111111
   },
   "ui_migrations": [
     "image_border_default_on_v1"
@@ -3025,5 +2374,5 @@
   "last_browse_dirs": {
     "audio": "C:\\Users\\thebe\\Desktop\\The Void and The Noid\\OmniVoice First Contact\\outputs"
   },
-  "checksum": "9c5f5a809467cd8e"
+  "checksum": "fb32cfb2d673780d"
 }

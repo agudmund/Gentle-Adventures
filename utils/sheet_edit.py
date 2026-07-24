@@ -30,11 +30,11 @@ except Exception:
     pass
 
 from utils.paths import app_root
-from utils.sheets import SheetsClient
+from utils.identity import sheets_client
 
 
 def edit_cell(tab: str, old: str, new: str, apply: bool = False) -> int:
-    c = SheetsClient()
+    c = sheets_client()
     rows = c.read_sheet(tab)
     if not rows:
         print(f"tab {tab!r} is empty or unreadable"); return 1
