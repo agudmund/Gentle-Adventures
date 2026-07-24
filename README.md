@@ -58,8 +58,9 @@ graphics/                  Self-contained UI citizens: widgets, scene map,
                            sidebar, psychological weather
 utils/                     Fail-able features, lazy-imported so a fault stays
                            scoped to one file: player state, NPU probe, oracle,
-                           text backends, sticker loot (the sheets courier now
-                           rides in shared_braincell; GA binds its slots in
+                           text backends, sticker loot, the Sheets round-trip
+                           fidelity probe (the sheets courier now rides in
+                           shared_braincell; GA binds its slots in
                            utils/identity.py)
 Images/                    Icons (brand mark, stickers) and cached
                            Gemini-rendered scene art

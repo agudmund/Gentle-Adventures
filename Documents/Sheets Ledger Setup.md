@@ -154,6 +154,22 @@ Worth knowing (verified live, 2026-07-23):
   time-shaped string is never again coerced onto the 1899 spreadsheet epoch
   (the 2026-06-03 DISCOVERY finding, closed at the proxy).
 
+- **2026-07-24 — the Sakura-lessons hardening** (deployed same day). `doPost`
+  mutations now serialize under `LockService` (one writer at a time at the
+  seam), every write path passes the `_scalar`/`_literal` guards — non-scalar
+  values store as deterministic JSON text, leading-`=` strings store as
+  literal text instead of executing as formulas — and the bulk-rows path
+  carries the same `'@'` type guard as updates (a virgin column had been
+  coercing `'03:00:33'` onto the 1899 epoch and eating a `3-1` Scene_ID as
+  March 1st, both live-proven before the fix).
+
+- **The proof half of the deploy ritual**: after every Code.gs paste-and-
+  redeploy, run `python -m utils.probe_sheets` — the standing round-trip
+  fidelity probe writes the known hazard matrix through both write paths
+  against the `_probe` scratch tab and reports per-value PASS/FAIL. All 28
+  green is the finish line; formula FAILs against an older deployment are the
+  expected "not deployed yet" signature, not a courier bug.
+
 ---
 
 ## Architecture notes (for the curious)
