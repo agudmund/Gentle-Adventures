@@ -398,6 +398,14 @@ def _rows_to_scenes(rows: list[list]) -> list[dict]:
         except Exception as e:
             logger.warning(f"[ledger] scene {sid!r}: bad Choices_JSON ({e}); using empty choices")
             choices = []
+        # Element-shape guard at the parse seam: a valid-JSON-but-wrong-shape
+        # hand edit (a bare string, a dict with no label) would otherwise reach
+        # choice["label"] on the UI thread at render time.
+        kept = [c for c in choices if isinstance(c, dict) and isinstance(c.get("label"), str)]
+        if len(kept) != len(choices):
+            logger.warning(f"[ledger] scene {sid!r}: dropped {len(choices) - len(kept)} "
+                           f"malformed choice(s) (need a dict with a string 'label')")
+        choices = kept
         scene = {
             "id": sid,
             "title": str(cells.get("Title", "") or ""),
@@ -414,6 +422,8 @@ def _rows_to_scenes(rows: list[list]) -> list[dict]:
         if raw_absent and str(raw_absent).strip():
             try:
                 ca = json.loads(raw_absent) if isinstance(raw_absent, str) else raw_absent
+                if isinstance(ca, list):
+                    ca = [c for c in ca if isinstance(c, dict) and isinstance(c.get("label"), str)]
                 if isinstance(ca, list) and ca:
                     scene["choices_absent"] = ca
             except Exception as e:
@@ -652,14 +662,14 @@ class _Ledger:
         try:
             rows = sheets_client().read_sheet(self._tab)
         except SheetsError as e:
-            logger.debug(f"[ledger] Quest_Log unavailable ({e}); keeping previous content")
+            logger.debug(f"[ledger] {self._tab} unavailable ({e}); keeping previous content")
             return None
         except Exception as e:
-            logger.warning(f"[ledger] unexpected Quest_Log read error: {e}; keeping previous content")
+            logger.warning(f"[ledger] unexpected {self._tab} read error: {e}; keeping previous content")
             return None
         scenes = _rows_to_scenes(rows)
         if not scenes:
-            logger.info("[ledger] Quest_Log empty; keeping previous content")
+            logger.info(f"[ledger] {self._tab} empty; keeping previous content")
             return None
         return scenes
 
