@@ -1875,6 +1875,62 @@
       "ports_visible": false,
       "shelf_visible": true,
       "body_text": "There are several ways to manage filesystems, including:"
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Kinetic",
+      "uuid": "4d65b78ff9684eec9489076b50e2a83a",
+      "x": 3455.0995109739665,
+      "y": 284.7146165137638,
+      "width": 300.0,
+      "height": 200.0,
+      "z_value": -9.805000000000108,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "Great instinct \u2014 and yes, v0.3.23 gives you the knobs for exactly this. What you loved in 0.3.9 was the model's raw, non-deterministic breathiness; the \"smoothing\" from 0.3.15 on is postprocess_output (silence/artifact cleanup) doing its job. It wasn't a bug we fixed \u2014 it's cleanup you can now turn off."
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Kinetic",
+      "uuid": "3fb1bf07cbff4c6dbfb4a14000934fb2",
+      "x": 3502.4613307575,
+      "y": 710.6245898963364,
+      "width": 300.0,
+      "height": 266.0,
+      "z_value": -9.804000000000109,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "Two paths:\nDefault engine (dial the rawness back in): there's no dedicated breath tag, but those sharp inhales are the artifact class that cleanup strips and that higher sampling temperature makes more likely. In Production Overrides turn postprocess_output OFF and raise class_temperature (and a bit of position_temperature) \u2014 you'll get more of those \"too-loud\" breaths back, non-deterministically. New in v0.3.23: these are exposed in the Audiobook tab too, not just the Voice page (#1208). The ... ellipsis trick doesn't invoke it \u2014 it's not a breath cue."
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Beautiful",
+      "uuid": "8b32157149524ce0bd8687133bb14e3f",
+      "x": 3893.945701894053,
+      "y": 619.5037507845581,
+      "width": 300.0,
+      "height": 161.0,
+      "z_value": -9.80300000000011,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "On demand / placed exactly where you want it: switch to CosyVoice 3 (opt-in, Settings \u2192 Engines) and drop an inline [breath] tag \u2014 it's the one engine with a real audible-breath token. VoxCPM2 also takes an instruct-style (out of breath, speaking fast) prefix."
+    },
+    {
+      "node_id": 0,
+      "node_type": "warm",
+      "title": "Clay",
+      "uuid": "1d731161fa5a4df9a75344c6388dcaac",
+      "x": 4228.773139780824,
+      "y": 555.5969698833676,
+      "width": 300.0,
+      "height": 161.0,
+      "z_value": -9.80200000000011,
+      "ports_visible": false,
+      "shelf_visible": true,
+      "body_text": "Full write-up is in docs/expressive-speech.md (corrected in v0.3.23 so the \"coax a breath\" recipe actually matches what's reachable). Have fun with it \u2014 that \"breathing way too loud\" character is very doable now."
     }
   ],
   "connections": [
@@ -2361,12 +2417,24 @@
     {
       "start_uuid": "1d539716421d461ba17fdbf8b673e18d",
       "end_uuid": "164aa100104643118b50e58d2c1e3fc3"
+    },
+    {
+      "start_uuid": "4d65b78ff9684eec9489076b50e2a83a",
+      "end_uuid": "3fb1bf07cbff4c6dbfb4a14000934fb2"
+    },
+    {
+      "start_uuid": "3fb1bf07cbff4c6dbfb4a14000934fb2",
+      "end_uuid": "8b32157149524ce0bd8687133bb14e3f"
+    },
+    {
+      "start_uuid": "8b32157149524ce0bd8687133bb14e3f",
+      "end_uuid": "1d731161fa5a4df9a75344c6388dcaac"
     }
   ],
   "viewport": {
-    "camera_x": 4967.572538113389,
-    "camera_y": 1625.5858945560722,
-    "camera_zoom": 0.1761826311111111
+    "camera_x": 4129.9150710766935,
+    "camera_y": 622.6347709928096,
+    "camera_zoom": 1.0484477102990746
   },
   "ui_migrations": [
     "image_border_default_on_v1"
@@ -2374,5 +2442,5 @@
   "last_browse_dirs": {
     "audio": "C:\\Users\\thebe\\Desktop\\The Void and The Noid\\OmniVoice First Contact\\outputs"
   },
-  "checksum": "fb32cfb2d673780d"
+  "checksum": "644ecda0467967c2"
 }
