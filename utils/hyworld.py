@@ -110,14 +110,45 @@ def status_hyworld(settings: dict) -> tuple[str, str] | None:
 
 
 def tuck_in_hyworld(settings: dict) -> bool:
-    """Send the twin back to sleep on app exit — a DETACHED stop-instances that
-    outlives the dying process (the Intricate exit-housekeeping pattern), so the
-    exit ritual never waits on AWS. Fire-and-forget: stop on an already-stopped
-    instance is a no-op, an unreachable cloud just means the whisper is lost.
-    True when the whisper was sent (configured + CLI present), False otherwise."""
+    """Send the twin back to sleep on app exit — DETACHED, so the exit ritual
+    never waits (the Intricate exit-housekeeping pattern). Fire-and-forget: a stop
+    on an already-stopped instance is a no-op, an unreachable cloud just means the
+    whisper is lost. True when the whisper was sent, False otherwise.
+
+    PREFERS THE `twin` WRAPPER (2026-08-02), for symmetry with the wake half.
+    `_raise_tunnel_detached` below has always shelled `twin tunnel start --wait`
+    after a wake, so the wake side already routed through the family verb while
+    this side went straight to the aws CLI — and that asymmetry has teeth now that
+    `twin mount` exists. A raw stop-instances SEVERS a live sshfs mount: the drive
+    dies, and what remains is a retrying process and a stale pid marker. `twin
+    sleep` unmounts and drops the forwards FIRST, so the filesystem closes cleanly
+    rather than being cut.
+
+    The direct aws whisper stays as the fallback, so a machine without the wrapper
+    behaves exactly as before — contextual absence, not an error. Both paths target
+    the family's single twin; if GA is ever pointed at a DIFFERENT instance than the
+    wrapper hardcodes, this preference needs revisiting."""
     cfg = _cfg(settings)
     if not cfg:
         return False
+
+    twin_cmd = shutil.which("twin")
+    if twin_cmd:
+        try:
+            import os
+            flags = 0
+            if os.name == "nt":
+                flags = (subprocess.DETACHED_PROCESS
+                         | subprocess.CREATE_NEW_PROCESS_GROUP
+                         | CREATE_NO_WINDOW)
+            subprocess.Popen([twin_cmd, "sleep"], creationflags=flags,
+                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL)
+            logger.info("[hyworld] tuck-in via `twin sleep` — unmounts first, then stops")
+            return True
+        except Exception as e:
+            logger.debug(f"[hyworld] `twin sleep` stumbled ({e}) — falling back to aws")
+
     exe = shutil.which("aws")
     if not exe:
         logger.debug("[hyworld] aws CLI not on PATH — no tuck-in from here")
