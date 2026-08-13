@@ -923,24 +923,24 @@
     {
       "node_id": 0,
       "node_type": "warm",
-      "title": "Kinetic",
+      "title": "Two Paths",
       "uuid": "3fb1bf07cbff4c6dbfb4a14000934fb2",
-      "x": 3502.4613307575,
-      "y": 710.6245898963364,
-      "width": 300.0,
-      "height": 266.0,
+      "x": 3831.7757914394656,
+      "y": 955.0214852452167,
+      "width": 480.1909313165479,
+      "height": 208.0,
       "z_value": -9.804000000000109,
       "ports_visible": false,
       "shelf_visible": true,
-      "body_text": "Two paths:\nDefault engine (dial the rawness back in): there's no dedicated breath tag, but those sharp inhales are the artifact class that cleanup strips and that higher sampling temperature makes more likely. In Production Overrides turn postprocess_output OFF and raise class_temperature (and a bit of position_temperature) \u2014 you'll get more of those \"too-loud\" breaths back, non-deterministically. New in v0.3.23: these are exposed in the Audiobook tab too, not just the Voice page (#1208). The ... ellipsis trick doesn't invoke it \u2014 it's not a breath cue."
+      "body_text": "Default engine (dial the rawness back in): there's no dedicated breath tag, but those sharp inhales are the artifact class that cleanup strips and that higher sampling temperature makes more likely. In Production Overrides turn postprocess_output OFF and raise class_temperature (and a bit of position_temperature) \u2014 you'll get more of those \"too-loud\" breaths back, non-deterministically. New in v0.3.23: these are exposed in the Audiobook tab too, not just the Voice page (#1208). The ... ellipsis trick doesn't invoke it \u2014 it's not a breath cue."
     },
     {
       "node_id": 0,
       "node_type": "warm",
       "title": "Beautiful",
       "uuid": "8b32157149524ce0bd8687133bb14e3f",
-      "x": 3893.945701894053,
-      "y": 619.5037507845581,
+      "x": 4357.195184320885,
+      "y": 1175.9554390647768,
       "width": 300.0,
       "height": 161.0,
       "z_value": -9.80300000000011,
@@ -953,8 +953,8 @@
       "node_type": "warm",
       "title": "Clay",
       "uuid": "1d731161fa5a4df9a75344c6388dcaac",
-      "x": 4228.773139780824,
-      "y": 555.5969698833676,
+      "x": 4729.568946186261,
+      "y": 1314.6791786110366,
       "width": 300.0,
       "height": 161.0,
       "z_value": -9.80200000000011,
@@ -967,29 +967,14 @@
       "node_type": "warm",
       "title": "Kinetic",
       "uuid": "4d65b78ff9684eec9489076b50e2a83a",
-      "x": 3455.0995109739665,
-      "y": 284.7146165137638,
-      "width": 300.0,
-      "height": 200.0,
+      "x": 3661.5251372714665,
+      "y": 624.3848778461061,
+      "width": 399.40301906054265,
+      "height": 147.03121367875713,
       "z_value": -9.805000000000108,
       "ports_visible": false,
       "shelf_visible": true,
       "body_text": "Great instinct \u2014 and yes, v0.3.23 gives you the knobs for exactly this. What you loved in 0.3.9 was the model's raw, non-deterministic breathiness; the \"smoothing\" from 0.3.15 on is postprocess_output (silence/artifact cleanup) doing its job. It wasn't a bug we fixed \u2014 it's cleanup you can now turn off."
-    },
-    {
-      "node_id": 0,
-      "node_type": "git",
-      "title": "Git Status",
-      "uuid": "215f5643ebee4e24b6bd45b64b2d1263",
-      "x": 3965.906194995645,
-      "y": -292.8919252103074,
-      "width": 373.37,
-      "height": 292.0,
-      "z_value": -9.80100000000011,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "depth_front": false,
-      "node_tint": ""
     },
     {
       "node_id": 0,
@@ -1018,20 +1003,6 @@
       "ports_visible": false,
       "shelf_visible": true,
       "body_text": ">>> lets chat about the number ten, the concept of it and etmyology"
-    },
-    {
-      "node_id": 0,
-      "node_type": "warm",
-      "title": "Golden Hour",
-      "uuid": "305289de20934961b79d5f0c08e3f4a2",
-      "x": -4.452366008532735,
-      "y": -127.30239726790302,
-      "width": 300.0,
-      "height": 266.0,
-      "z_value": -9.987000000000007,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "body_text": "1. **Cut**: To cut a clip, select it and press the 'Cut' button or use the 'Edit' tab.\n2. **Split**: To split a clip, select it and press the 'Split' button or use the 'Edit' tab.\n3. **Merge**: To merge two clips, select them and press the 'Merge' button or use the 'Edit' tab.\n4. **Drag and Drop**: To add a transition or effect, drag it from the media library and drop it onto the timeline.\n5. **Undo and Redo**: Use the 'Undo' and 'Redo' buttons or press Ctrl + Z and Ctrl + Y to switch between these actions."
     },
     {
       "node_id": 0,
@@ -1954,10 +1925,6 @@
       "end_uuid": "234516964a8540d782998ebc75025364"
     },
     {
-      "start_uuid": "bd2b9e8d8c8c45a09b2085c061a51037",
-      "end_uuid": "305289de20934961b79d5f0c08e3f4a2"
-    },
-    {
       "start_uuid": "ba4535b3e75143968a95bc6b080b73b7",
       "end_uuid": "81c205b820fb44c38828dadaac8fe22d"
     },
@@ -2394,10 +2361,6 @@
       "end_uuid": "2b9d15f4a22043a0b8895101b6d94d33"
     },
     {
-      "start_uuid": "305289de20934961b79d5f0c08e3f4a2",
-      "end_uuid": "ca5409dcd4bf4c79b9d81c42edd751da"
-    },
-    {
       "start_uuid": "8c9cc57909794f318b17b03316a1c221",
       "end_uuid": "1e3d0fa168d44b97be27807383448d58"
     },
@@ -2438,6 +2401,10 @@
       "end_uuid": "ba4535b3e75143968a95bc6b080b73b7"
     },
     {
+      "start_uuid": "bd2b9e8d8c8c45a09b2085c061a51037",
+      "end_uuid": "ca5409dcd4bf4c79b9d81c42edd751da"
+    },
+    {
       "start_uuid": "164aa100104643118b50e58d2c1e3fc3",
       "end_uuid": "c67526a0494645ee9e3d506e92816e3b"
     },
@@ -2447,15 +2414,15 @@
     }
   ],
   "viewport": {
-    "camera_x": 4203.738495210951,
-    "camera_y": -346.226136443612,
-    "camera_zoom": 1.0484477102990746
+    "camera_x": 3739.626911001441,
+    "camera_y": 75.01827193421714,
+    "camera_zoom": 2.3567591660206175
   },
   "ui_migrations": [
     "image_border_default_on_v1"
   ],
   "last_browse_dirs": {
-    "audio": "C:\\Users\\thebe\\Desktop\\The Void and The Noid\\OmniVoice First Contact\\outputs"
+    "audio": "C:\\Users\\thebe\\Desktop\\The Void and the Noid\\The Noid and the Fourth Course\\Assets\\Audio"
   },
-  "checksum": "ddbccd28a99b66f5"
+  "checksum": "759680948da1d76a"
 }
