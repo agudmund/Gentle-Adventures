@@ -116,8 +116,9 @@ def tuck_in_hyworld(settings: dict) -> bool:
     whisper is lost. True when the whisper was sent, False otherwise.
 
     PREFERS THE `twin` WRAPPER (2026-08-02), for symmetry with the wake half.
-    `_raise_tunnel_detached` below has always shelled `twin tunnel start --wait`
-    after a wake, so the wake side already routed through the family verb while
+    `_raise_service_detached` below has always shelled the family wrapper after a
+    wake (`twin tunnel start --wait` then, `twin serv` since 2026-08-15), so the
+    wake side already routed through the family verb while
     this side went straight to the aws CLI — and that asymmetry has teeth now that
     `twin mount` exists. A raw stop-instances SEVERS a live sshfs mount: the drive
     dies, and what remains is a retrying process and a stale pid marker. `twin
@@ -179,14 +180,25 @@ def tuck_in_hyworld(settings: dict) -> bool:
         return False
 
 
-def _raise_tunnel_detached() -> None:
+def _raise_service_detached() -> None:
     """The wake ripple (2026-07-13): after a successful wake whisper, fire the
-    family `twin` wrapper detached to raise the SSM tunnel once the box reaches
-    running (--wait polls for it), so a GA wake ends with https://the-twin/
-    answering — same destination as `twin wake` from a console. Best-effort and
-    fully detached: WorldMirror itself rides the twin's own systemd unit, this
-    only adds the machine-local tunnel; absence of the wrapper is contextual
-    absence, never an error."""
+    family `twin` wrapper detached so a GA wake ends with https://the-twin/
+    answering. Best-effort and fully detached; absence of the wrapper is
+    contextual absence, never an error.
+
+    IT SHELLS `twin serv` RATHER THAN `twin tunnel start --wait` (2026-08-15).
+    It used to raise only the machine-local tunnel, because WorldMirror rode the
+    twin's own systemd unit and came up on every boot regardless of who woke the
+    box. That unit is disabled now: the box is woken far more often for a shell
+    than for the app, and a GPU rig serving a Gradio nobody asked for is rent
+    paid on an empty room. So the app became opt-in, and `twin serv` IS the
+    opt-in — it waits for running exactly as --wait did, then raises WorldMirror
+    and the tunnel together.
+
+    The one seat this leaves behind is a machine running GA with no `twin` on
+    PATH: it wakes the box and gets no app, where before systemd covered for it.
+    Every family seat carries _util/bin on PATH, so that is a hypothetical
+    rather than a regression, but it is the shape a surprise would take."""
     twin_cmd = shutil.which("twin")
     if not twin_cmd:
         logger.debug("[hyworld] no `twin` wrapper on PATH — tunnel stays a console act")
@@ -198,12 +210,12 @@ def _raise_tunnel_detached() -> None:
             flags = (subprocess.DETACHED_PROCESS
                      | subprocess.CREATE_NEW_PROCESS_GROUP
                      | CREATE_NO_WINDOW)
-        subprocess.Popen([twin_cmd, "tunnel", "start", "--wait"],
+        subprocess.Popen([twin_cmd, "serv"],
                          creationflags=flags, stdin=subprocess.DEVNULL,
                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        logger.info("[hyworld] tunnel ripple sent — https://the-twin/ once she's up")
+        logger.info("[hyworld] serve ripple sent — https://the-twin/ once she's up")
     except Exception as e:
-        logger.debug(f"[hyworld] tunnel ripple stumbled: {e}")
+        logger.debug(f"[hyworld] serve ripple stumbled: {e}")
 
 
 def wake_hyworld(settings: dict) -> str | None:
@@ -220,7 +232,7 @@ def wake_hyworld(settings: dict) -> str | None:
         state = payload["StartingInstances"][0]["CurrentState"]["Name"]
         logger.info(f"[hyworld] wake requested — twin now: {state}")
         if state in ("pending", "running"):
-            _raise_tunnel_detached()
+            _raise_service_detached()
         return str(state)
     except (TypeError, KeyError, IndexError):
         return None
