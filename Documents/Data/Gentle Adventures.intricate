@@ -1906,21 +1906,6 @@
     },
     {
       "node_id": 0,
-      "node_type": "git",
-      "title": "Git Status",
-      "uuid": "e05890c0e90149dea12f6fa77bb96ba5",
-      "x": 4184.246400635258,
-      "y": -431.2204124656654,
-      "width": 373.37,
-      "height": 652.0,
-      "z_value": -9.80100000000011,
-      "ports_visible": false,
-      "shelf_visible": true,
-      "depth_front": false,
-      "node_tint": ""
-    },
-    {
-      "node_id": 0,
       "node_type": "warm",
       "title": "Soft",
       "uuid": "41122048c34f408daba467d5b6628345",
@@ -2429,9 +2414,9 @@
     }
   ],
   "viewport": {
-    "camera_x": 4371.250256804275,
-    "camera_y": -508.98251131662846,
-    "camera_zoom": 1.040114322652376
+    "camera_x": 3797.557409081889,
+    "camera_y": 99.87179197955078,
+    "camera_zoom": 0.7409499572727393
   },
   "ui_migrations": [
     "image_border_default_on_v1"
@@ -2440,5 +2425,5 @@
     "audio": "C:\\Users\\thebe\\Desktop\\The Void and the Noid\\The Noid and the Fourth Course\\Assets\\Audio",
     "video": "C:\\Users\\thebe\\Desktop\\_asset\\Clippy,Blessed be his name\\The Other Clippy\\showTerview"
   },
-  "checksum": "6e893ea66fd016ae"
+  "checksum": "c336a0b4f30c067d"
 }
