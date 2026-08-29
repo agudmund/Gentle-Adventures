@@ -1475,6 +1475,12 @@ class GentleAdventuresApp(QMainWindow):
         if isinstance(shelf, (list, tuple)):
             self._keepsakes.update(str(s) for s in shelf)
         self._load_scene(first_scene_id())
+        # The cold load above stood up on the snapshot/floor without touching the
+        # network (quest._Ledger, 2026-08-29) — kick one immediate heartbeat so the
+        # live Quest_Log lands on a worker NOW instead of up to a pulse later; a
+        # changed pull re-streams the open scene like weather. Guarded inside
+        # _tick_ledger (no sheets / already refreshing -> a quiet no-op).
+        QTimer.singleShot(0, self._tick_ledger)
 
     def _load_scene(self, scene_id: str):
         scene = get_scene(scene_id)

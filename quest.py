@@ -617,8 +617,9 @@ class _Ledger:
     reader. The live in-memory scene set is the only thing rendered, and it is NEVER
     cleared by a bad read — a failed / empty / throttled / malformed pull keeps the
     previous content fully live (last-good, principle 4). A local snapshot persists
-    the last-good set so a cold start with no network still launches a real game, and
-    bundled QUEST is the absolute floor under that (principle 5). reload() detects
+    the last-good set, and the COLD LOAD stands up from it (or the bundled floor,
+    principle 5) without ever touching the network — every live pull happens on the
+    heartbeat's worker and swaps in like weather (2026-08-29). reload() detects
     change via a content hash (principle 8) and arbitrates reverts via an optional
     _meta!version (principle 9): a pull whose version went BACKWARD is quarantined and
     the last-good kept.
@@ -716,23 +717,25 @@ class _Ledger:
     # ── cold load + reads ──────────────────────────────────────────────────────
     def scenes(self) -> list[dict]:
         if self._scenes is None:
-            live = self._fetch_live()
-            if live:
-                self._version = self._fetch_version()
-                self._scenes, self.source, self._hash = live, "sheet", _scenes_hash(live)
-                self._save_snapshot()
-                logger.info(f"[ledger] loaded {len(live)} scene(s) from the live {self._tab} (v{self._version})")
+            # The cold load NEVER touches the network (2026-08-29): it stands up
+            # the last-good snapshot (or the floor beneath it) instantly, and the
+            # live pull rides reload() on the heartbeat's worker — the same
+            # deferred-then-swap grammar every scene render already uses. Before
+            # this, a cold start ran TWO Sheets round-trips (Quest_Log + _meta)
+            # synchronously on the UI thread and froze the opening page mid-
+            # typewriter for ~10s (field-measured 14:32:04 → 14:32:14).
+            snap = self._load_snapshot()
+            if snap:
+                self._scenes, self.source, self._hash = snap, "snapshot", _scenes_hash(snap)
+                logger.info(f"[ledger] cold start on {len(snap)} snapshot scene(s) — "
+                            f"live {self._tab} rides the heartbeat")
             else:
-                snap = self._load_snapshot()
-                if snap:
-                    self._scenes, self.source, self._hash = snap, "snapshot", _scenes_hash(snap)
-                    logger.info(f"[ledger] offline — loaded {len(snap)} scene(s) from the local snapshot")
-                else:
-                    fj = _load_floor_json(self._tab)
-                    floor = fj if fj else list(_inline_floor(self._tab))
-                    src = "floor-json" if fj else "bundled"
-                    self._scenes, self.source, self._hash = floor, src, _scenes_hash(floor)
-                    logger.info(f"[ledger] using {len(floor)} {src} scene(s) for {self._tab} — the floor")
+                fj = _load_floor_json(self._tab)
+                floor = fj if fj else list(_inline_floor(self._tab))
+                src = "floor-json" if fj else "bundled"
+                self._scenes, self.source, self._hash = floor, src, _scenes_hash(floor)
+                logger.info(f"[ledger] cold start on {len(floor)} {src} scene(s) for "
+                            f"{self._tab} — live pull rides the heartbeat")
         return self._scenes
 
     def refresh(self) -> list[dict]:
@@ -809,8 +812,9 @@ _ledger.set_tab(_tab_for(active_narrative_key()))   # honour the persisted choic
 
 
 def switch_narrative(key: str) -> list[dict]:
-    """Point the Ledger at narrative `key`'s tab, persist the choice, and re-pull.
-    Unknown key -> no-op (returns the current scenes)."""
+    """Point the Ledger at narrative `key`'s tab, persist the choice, and stand up
+    that tab's snapshot/floor instantly — the live tab content arrives on the next
+    heartbeat and swaps in place. Unknown key -> no-op (returns current scenes)."""
     if not any(n["key"] == key for n in NARRATIVES):
         logger.warning(f"[ledger] unknown narrative '{key}'; ignoring")
         return _ledger.scenes()
@@ -839,7 +843,8 @@ def first_scene_id() -> str:
 
 
 def refresh_quest() -> list[dict]:
-    """Drop the cache and re-pull the live Quest_Log. Returns the scene list."""
+    """Drop the cache and stand the scene set back up snapshot-first (no network —
+    the live pull rides the heartbeat). Returns the scene list."""
     return _ledger.refresh()
 
 

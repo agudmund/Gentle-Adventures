@@ -106,6 +106,12 @@ Two things the filesystem gave free that a remote, externally-mutable store does
 - **No creds / LEDGER OFF** → bundled floor; the dot goes big-red (loud, can't be missed).
 - **Network fails / 429 / timeout** → keep last-good in memory; cold start loads the
   local snapshot; retry next heartbeat. Never blank, never crash.
+
+- **Cold start, always (2026-08-29)** → the cold load is snapshot-first by design, not
+  only on failure: it never touches the network, standing up the last-good snapshot (or
+  the floor) in ~150 ms, and the live pull rides an immediate heartbeat kick on a worker,
+  re-streaming a changed scene in place. Before this, first launch ran two synchronous
+  Sheets round-trips on the UI thread and froze the opening page ~10 s mid-typewriter.
 - **Malformed cell / bad row** → that row dropped + logged; the rest load.
 - **Missing field** → per-field sentinel placeholder.
 - **Sheet reverted to an older version** → quarantined + bannered; last-good kept.
