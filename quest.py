@@ -651,7 +651,11 @@ class _Ledger:
         return _SNAPSHOT.with_name(f"quest_cache_{safe}.json")
 
     # ── fetch (worker-thread safe; never raises to the caller) ─────────────────
-    def _fetch_live(self) -> list[dict] | None:
+    def _fetch_live(self) -> tuple[list[dict] | None, int | None]:
+        """(scenes, ride) — the scenes plus the _meta!version that rode the same
+        proxy read (None on an older proxy). Pairing them in one GET also closes
+        the old two-read gap where an edit landing between content and version
+        could stamp fresh content with a stale counter."""
         # Deferred import: keeps quest.py free of network deps until first use,
         # and lets the bundled fallback work even if the family courier is absent.
         try:
@@ -659,20 +663,20 @@ class _Ledger:
             from shared_braincell.sheets import SheetsError
         except Exception as e:
             logger.warning(f"[ledger] sheets client unavailable: {e}")
-            return None
+            return None, None
         try:
-            rows = sheets_client().read_sheet(self._tab)
+            rows, ride = sheets_client().read_sheet_versioned(self._tab)
         except SheetsError as e:
             logger.debug(f"[ledger] {self._tab} unavailable ({e}); keeping previous content")
-            return None
+            return None, None
         except Exception as e:
             logger.warning(f"[ledger] unexpected {self._tab} read error: {e}; keeping previous content")
-            return None
+            return None, None
         scenes = _rows_to_scenes(rows)
         if not scenes:
             logger.info(f"[ledger] {self._tab} empty; keeping previous content")
-            return None
-        return scenes
+            return None, ride
+        return scenes, ride
 
     def _fetch_version(self) -> int | None:
         """Optional monotonic _meta!version (the revert arbiter). None when absent —
@@ -750,13 +754,16 @@ class _Ledger:
         True when the pull's version went backward (a suspected revert) — the live
         content is kept and the caller may surface a banner. Last-good is never cleared."""
         self.scenes()   # ensure a baseline exists (cold-start on the first call)
-        live = self._fetch_live()
+        live, ride = self._fetch_live()
         if not live:
             return {"changed": False, "quarantined": False, "source": self.source, "version": self._version}
         new_hash = _scenes_hash(live)
         if new_hash == self._hash:
             return {"changed": False, "quarantined": False, "source": self.source, "version": self._version}
-        new_version = self._fetch_version()
+        # The proxy attaches the version to every read, so the live pull above
+        # usually already carries it; the _meta round trip is only the fallback
+        # for an older proxy that sent none.
+        new_version = ride if ride is not None else self._fetch_version()
         if (new_version is not None and self._version is not None and new_version < self._version):
             logger.warning(f"[ledger] QUARANTINED a backward content pull "
                            f"(v{new_version} < live v{self._version}) — keeping last-good")

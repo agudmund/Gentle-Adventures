@@ -2325,6 +2325,21 @@ class GentleAdventuresApp(QMainWindow):
                 return
             if self.phase == "quest":
                 cmd = free_text.strip().lower()
+                if cmd in ("/?", "/help"):
+                    # The parser answers this one itself — a /? deserves the
+                    # actual help guide, not a small llama's guess at one.
+                    logger.info("Parser: /? — the ship's manual served")
+                    self.narrative.set_text(
+                        "✦ The ship's little manual ✦\n\n"
+                        "validate ship (or: validate, light) — the Lantern checks the ship end to end\n"
+                        "weather 0.0–1.0 — dial the sky by hand\n"
+                        "drizzle · mist · rain · storm · downpour — name the sky instead\n"
+                        "clear · sun · sunny · calm — rest it\n"
+                        "/? (or /help) — this manual\n\n"
+                        "Anything else you type sails straight to Puff, the ship's llama,\n"
+                        "and the sky quietly reads your mood as it passes.",
+                        verified=True, source="the ship's manual")
+                    return
                 if cmd in ("validate", "validate ship", "light"):
                     # The Lantern runs the real `flm validate` and lights any snag.
                     self._light_command([resolve_flm() or "flm", "validate"], "checking the ship")
